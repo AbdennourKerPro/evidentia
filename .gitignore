@@ -1,0 +1,5 @@
+# Raw papers and derived artifacts are local data, not source code.
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Interface conversationnelle locale pour explorer un corpus scientifique multimodal."
+    />
+    <title>Evidentia — Corpus scientifique</title>
+    <link rel="stylesheet" href="/ui/styles.css?v=corpus-20260812-2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside id="corpus-sidebar" class="corpus-sidebar" aria-label="Articles du corpus">
+        <a class="brand" href="/ui/" aria-label="Accueil Evidentia">
+          <span class="brand-mark" aria-hidden="true">E</span>
+          <span>Evidentia</span>
+        </a>
+
+        <section class="corpus-section" aria-labelledby="corpus-title">
+          <div class="sidebar-title-row">
+            <div>
+              <p class="eyebrow">CORPUS ACTIF</p>
+              <h2 id="corpus-title">Articles indexés</h2>
+            </div>
+            <span id="document-count" class="count-badge">…</span>
+          </div>
+          <p class="sidebar-copy">
+            Choisis les sources consultées par la recherche. Plusieurs articles
+            permettent une réponse comparative.
+          </p>
+          <div class="source-actions">
+            <button id="select-all-button" type="button">Tout sélectionner</button>
+            <button id="clear-selection-button" type="button">Effacer</button>
+          </div>
+          <div id="source-list" class="source-list" aria-live="polite"></div>
+          <p id="source-summary" class="source-summary">Chargement du corpus…</p>
+          <p id="source-error" class="source-error" hidden></p>
+        </section>
+
+        <div class="sidebar-footer">
+          <span class="status-dot" aria-hidden="true"></span>
+          Recherche vectorielle + Qwen local
+        </div>
+      </aside>
+
+      <div class="main-pane">
+        <header class="topbar">
+          <button id="corpus-toggle" class="corpus-toggle" type="button" aria-expanded="false">
+            Corpus
+          </button>
+          <div class="topbar-context">
+            <span class="topbar-title">Exploration scientifique</span>
+            <span id="topbar-scope" class="topbar-scope">Chargement des sources…</span>
+          </div>
+          <button id="new-chat-button" class="new-chat-button" type="button">
+            Nouvelle conversation
+          </button>
+        </header>
+
+        <main id="conversation" class="conversation" aria-live="polite">
+          <section id="welcome" class="welcome">
+            <div class="welcome-mark" aria-hidden="true">E</div>
+            <p class="eyebrow">RAG SCIENTIFIQUE LOCAL</p>
+            <h1>Explorez les articles, puis vérifiez leurs preuves.</h1>
+            <p id="welcome-scope" class="welcome-copy">
+              Sélectionnez les articles à consulter dans la bibliothèque.
+            </p>
+            <div class="suggestions" aria-label="Questions suggérées">
+              <button
+                type="button"
+                data-question="Compare the training paradigms of CLIP, DINOv2, and BLIP-2."
+              >
+                <strong>Comparer les apprentissages</strong>
+                <span>CLIP, DINOv2 et BLIP-2 : quelles différences de supervision&nbsp;?</span>
+              </button>
+              <button
+                type="button"
+                data-question="What makes Segment Anything promptable, and how does this support zero-shot transfer?"
+                data-scope="sam-2023"
+              >
+                <strong>Interroger SAM</strong>
+                <span>Pourquoi le modèle est-il promptable et transférable&nbsp;?</span>
+              </button>
+              <button
+                type="button"
+                data-question="How does LLaVA use instruction data to connect a vision encoder and a language model?"
+                data-scope="llava-2023"
+              >
+                <strong>Comprendre un VLM</strong>
+                <span>Comment LLaVA relie-t-il vision, langage et instruction tuning&nbsp;?</span>
+              </button>
+              <button
+                type="button"
+                data-question="Compare the role of language supervision in CLIP and LLaVA."
+                data-scope="clip-2021,llava-2023"
+              >
+                <strong>Comparer deux sources</strong>
+                <span>Quel rôle joue le langage dans CLIP et LLaVA&nbsp;?</span>
+              </button>
+            </div>
+          </section>
+
+          <div id="message-list" class="message-list"></div>
+        </main>
+
+        <footer class="composer-dock">
+          <form id="question-form" class="composer">
+            <label class="visually-hidden" for="question">Votre question</label>
+            <textarea
+              id="question"
+              name="question"
+              rows="1"
+              minlength="3"
+              maxlength="500"
+              required
+              placeholder="Posez une question sur les articles sélectionnés…"
+            ></textarea>
+            <button id="submit-button" class="send-button" type="submit" aria-label="Envoyer">
+              <span aria-hidden="true">↑</span>
+            </button>
+          </form>
+          <p id="form-status" class="form-status" aria-live="polite">
+            Sélectionnez au moins un article · Entrée pour envoyer
+          </p>
+        </footer>
+      </div>
+    </div>
+
+    <template id="user-message-template">
+      <article class="message message-user">
+        <div class="message-avatar" aria-hidden="true">V</div>
+        <div class="message-column">
+          <p class="message-author">Vous</p>
+          <p class="message-scope"></p>
+          <div class="message-content user-content"></div>
+        </div>
+      </article>
+    </template>
+
+    <template id="assistant-message-template">
+      <article class="message message-assistant">
+        <div class="message-avatar assistant-avatar" aria-hidden="true">E</div>
+        <div class="message-column">
+          <p class="message-author">Evidentia</p>
+          <div class="message-content answer-content"></div>
+          <p class="answer-state"></p>
+          <div class="sources-block">
+            <p class="sources-label">Citations vérifiables</p>
+            <div class="citation-list"></div>
+            <details class="evidence-disclosure">
+              <summary>
+                <span class="sources-summary"></span>
+                <span class="disclosure-icon" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="evidence-list"></div>
+            </details>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="/ui/app.js?v=corpus-20260812-2"></script>
+  </body>
+</html>

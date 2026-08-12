@@ -1,0 +1,40 @@
+name: evidentia
+
+services:
+  api:
+    # Compose builds the same image as the previous `docker build` command.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: evidentia-app:dev
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      HF_HOME: /models/huggingface
+      LLM_MODEL_PATH: /models/huggingface/qwen2.5-7b-instruct-int4-ov
+      OPENVINO_DEVICE: CPU
+    ports:
+      - "8000:8000"
+    volumes:
+      - model_cache:/models/huggingface
+      - ./data/raw:/data/raw:ro
+      - ./data/processed:/data/processed
+      # The benchmark is read-only; reports are deliberately persisted on Windows.
+      - ./data/evaluation:/data/evaluation:ro
+      - ./reports:/reports
+    # The API will later connect to Qdrant by using http://qdrant:6333.
+    depends_on:
+      - qdrant
+
+  qdrant:
+    # Pin an explicit version so that the local environment is reproducible.
+    image: qdrant/qdrant:v1.18.2
+    ports:
+      # Bind only to this computer: Qdrant is not exposed on the local network.
+      - "127.0.0.1:6333:6333"
+    volumes:
+      # A Docker-managed volume avoids Windows/WSL filesystem compatibility issues.
+      - qdrant_storage:/qdrant/storage
+
+volumes:
+  qdrant_storage:
+  model_cache:

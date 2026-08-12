@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "papers": [
+    {
+      "source_id": "clip-2021",
+      "arxiv_id": "2103.00020",
+      "version": "v1",
+      "title": "Learning Transferable Visual Models From Natural Language Supervision",
+      "categories": ["cs.CV", "cs.LG"],
+      "pdf_url": "https://arxiv.org/pdf/2103.00020v1",
+      "filename": "clip_2103.00020v1.pdf"
+    },
+    {
+      "source_id": "dinov2-2023",
+      "arxiv_id": "2304.07193",
+      "version": "v1",
+      "title": "DINOv2: Learning Robust Visual Features without Supervision",
+      "categories": ["cs.CV"],
+      "pdf_url": "https://arxiv.org/pdf/2304.07193v1",
+      "filename": "dinov2_2304.07193v1.pdf"
+    },
+    {
+      "source_id": "sam-2023",
+      "arxiv_id": "2304.02643",
+      "version": "v1",
+      "title": "Segment Anything",
+      "categories": ["cs.CV"],
+      "pdf_url": "https://arxiv.org/pdf/2304.02643v1",
+      "filename": "sam_2304.02643v1.pdf"
+    },
+    {
+      "source_id": "blip2-2023",
+      "arxiv_id": "2301.12597",
+      "version": "v1",
+      "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+      "categories": ["cs.CV", "cs.CL"],
+      "pdf_url": "https://arxiv.org/pdf/2301.12597v1",
+      "filename": "blip2_2301.12597v1.pdf"
+    },
+    {
+      "source_id": "llava-2023",
+      "arxiv_id": "2304.08485",
+      "version": "v1",
+      "title": "Visual Instruction Tuning",
+      "categories": ["cs.CV", "cs.CL"],
+      "pdf_url": "https://arxiv.org/pdf/2304.08485v1",
+      "filename": "llava_2304.08485v1.pdf"
+    }
+  ]
+}
