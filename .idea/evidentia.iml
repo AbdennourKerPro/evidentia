@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/data/processed/blip2-2023" />
+      <excludeFolder url="file://$MODULE_DIR$/data/processed/clip-2021" />
+      <excludeFolder url="file://$MODULE_DIR$/data/processed/dinov2-2023" />
+      <excludeFolder url="file://$MODULE_DIR$/data/processed/llava-2023" />
+      <excludeFolder url="file://$MODULE_DIR$/data/processed/sam-2023" />
+      <excludeFolder url="file://$MODULE_DIR$/docs/milestones" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
-  <component name="PackageRequirementsSettings" />
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />
     <option name="myDocStringFormat" value="Plain" />
   </component>
-  <component name="ReSTService" />
-  <component name="TestRunnerService" />
 </module>
