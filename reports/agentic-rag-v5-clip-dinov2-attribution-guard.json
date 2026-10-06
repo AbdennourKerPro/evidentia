@@ -1,0 +1,300 @@
+{
+  "created_at": "2026-08-15T00:01:26.885539+00:00",
+  "complete": true,
+  "completed_cases": 1,
+  "requested_cases": 1,
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_fact_plan_intent_multifacet_response_contract_v5",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 0,
+    "per_source": 1
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 1,
+    "answerable_cases": 1,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 1.0,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 175.13056341499032,
+    "response_contract_valid_rate": 1.0,
+    "fact_contract_valid_rate": 1.0,
+    "correction_rate": 1.0,
+    "planned_fact_cases": 1,
+    "fact_planning_fallback_rate": 0.0,
+    "mean_planned_fact_coverage": 1.0
+  },
+  "cases": [
+    {
+      "id": "compare-clip-dinov2-supervision-en",
+      "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 175.13056341499032,
+      "response": {
+        "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+        "answer": "The supervision signals used to pre-train CLIP and DINOv2 are fundamentally different. CLIP uses image-text pairs as its supervision signal, aiming to predict which text accompanies each image [S1, S3]. In contrast, DINOv2 does not use any supervision signals and is trained in a self-supervised manner [S2, S4]. Specifically, DINOv2 employs a teacher-student framework where the student network is trained to match the features of the teacher network, which is an exponential moving average of the student [S2, S4]. \n\nCLIP trains using a contrastive objective [S3], whereas DINOv2 uses a combination of image-level and patch-level objectives, both of which involve comparing features extracted from the student and teacher networks [S2].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.06977706150953533
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.07823154712891969
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.07923879934487457
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 30,
+            "section": "B.1 Unsupervised pre-training",
+            "score": 0.03125
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.06977706150953533,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nDue to the large size of our pre-training dataset, over-fitting is not a major concern and the details of training CLIP are simplified compared to the implementation of Zhang et al. (2020). We train CLIP from scratch without initializing the image encoder with ImageNet weights or the text encoder with pre-trained weights. We do not use the non-linear projection between the representation and the contrastive embedding space, a change which was introduced by Bachman et al. (2019) and popularized by Chen et al. (2020b). We instead use only a linear projection to map from each encoder's representation to the multi-modal embedding space. We did not notice a difference in training efficiency between the two versions and speculate that non-linear projections may be co-adapted with details of current image only in self-supervised representation learning methods. We also remove the text transformation function t u from Zhang et al. (2020) which samples a single sentence at uniform from the text since many of the (image, text) pairs in CLIP's pretraining dataset are only a single sentence. We also simplify the image transformation function t v . A random square crop from resized images is the only data augmentation used during training."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.07923879934487457,
+            "text": "4 Discriminative Self-supervised Pre-training\n- Image-level objective (Caron et al., 2021). We consider the cross-entropy loss between the features extracted from a student and a teacher network. Both features are coming from the class token of a ViT, obtained from different crops of the same image. We learn the parameters of the student and build the teacher with an exponential moving average of past iterates (He et al., 2020).\n- Patch-level objective (Zhou et al., 2021). We randomly mask some of the input patches given to the student, but not to the teacher. We then add a cross-entropy loss between the patch features of both networks on each masked patch. This loss is combined with the image-level loss.\n- Untying head weights between both objectives. We observe that tying the weights associated with both objectives makes the model underfit at the patch-level while overfitting at the image-level. Untying these weights resolves this issue and improve the performances at both scales.\n- Sinkhorn-Knopp centering (Caron et al., 2020). Ruan et al. (2022) recommend to replace the teacher softmax-centering step of DINO and iBot by the Sinkhorn-Knopp (SK) batch normalization of SwAV (Caron et al., 2020). We run the Sinkhorn-Knopp algorithm steps for 3 iterations. For the student, we apply the softmax normalization.\n̸"
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.07823154712891969,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nGiven a batch of N (image, text) pairs, CLIP is trained to predict which of the N × N possible (image, text) pairings across a batch actually occurred. To do this, CLIP learns a multi-modal embedding space by jointly training an image encoder and text encoder to maximize the cosine similarity of the image and text embeddings of the N real pairs in the batch while minimizing the cosine similarity of the embeddings of the N 2 -N incorrect pairings. We optimize a symmetric cross entropy loss over these similarity scores. In Figure 3 we include pseudocode of the core of an implementation of CLIP. To our knowledge this batch construction technique and objective was first introduced in the area of deep metric learning as the multi-class N-pair loss Sohn (2016), was popularized for contrastive representation learning by Oord et al. (2018) as the InfoNCE loss, and was recently adapted for contrastive (text, image) representation learning in the domain of medical imaging by Zhang et al. (2020).\nwith high pointwise mutual information as well as the names of all Wikipedia articles above a certain search volume. Finally all WordNet synsets not already in the query list are added."
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 30,
+            "section": "B.1 Unsupervised pre-training",
+            "score": 0.03125,
+            "text": "B.1 Unsupervised pre-training\nEMA update for the teacher. The teacher is initialized with the same state as the student, and is an exponential moving average of the student network, with a momentum value in [0.994, 1.0] following a cosine schedule. It is updated at the end of every training step."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.03278688524590164,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nBoth these approaches share a key similarity. They try to predict the exact words of the text accompanying each image. This is a difficult task due to the wide variety of descriptions, comments, and related text that co-occur with images. Recent work in contrastive representation learning for images has found that contrastive objectives can learn better representations than their equivalent predictive objective (Tian et al., 2019). Other work has found that although generative models of images can learn high quality image representations, they require over an order of magnitude more compute than contrastive models with the same performance (Chen et al., 2020a). Noting these findings, we explored training a system to solve the potentially easier proxy task of predicting only which text as a whole is paired with which image and not the exact words of that text. Starting with the same bag-of-words encoding baseline, we swapped the predictive objective for a contrastive objective in Figure 2 and observed a further 4x efficiency improvement in the rate of zero-shot transfer to ImageNet."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "expected_language": "en",
+          "detected_document_ids": [
+            "clip-2021",
+            "dinov2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What supervision signals are used to pre-train CLIP?",
+              "query_variants": [
+                "What supervision signals are used to pre-train CLIP?",
+                "What supervision signals are used to pre-train CLIP? Exact pre-training supervision and objective: paired or unpaired data, labels or text, contrastive or predictive loss, teacher-student targets, global and local views, masked patches, image-level and patch-level loss."
+              ],
+              "retrieval_intents": [
+                "training_objective"
+              ],
+              "retrieved_chunks": 30
+            },
+            {
+              "document_id": "dinov2-2023",
+              "query": "What is the approach of DINOv2 in learning visual features without supervision?",
+              "query_variants": [
+                "What is the approach of DINOv2 in learning visual features without supervision?",
+                "What is the approach of DINOv2 in learning visual features without supervision? Exact pre-training supervision and objective: paired or unpaired data, labels or text, contrastive or predictive loss, teacher-student targets, global and local views, masked patches, image-level and patch-level loss."
+              ],
+              "retrieval_intents": [
+                "training_objective"
+              ],
+              "retrieved_chunks": 30
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "clip-2021: The supervision uses image-text pairs.",
+              "anchor": "image-text pairs",
+              "alternatives": [
+                "image and text pairs",
+                "paired images and text"
+              ],
+              "references": [
+                "S1",
+                "S3"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "clip-2021: Training uses a contrastive objective.",
+              "anchor": "contrastive objective",
+              "alternatives": [
+                "contrastive loss",
+                "contrastive learning"
+              ],
+              "references": [
+                "S3",
+                "S5"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "dinov2-2023: Training is self-supervised.",
+              "anchor": "self-supervised",
+              "alternatives": [
+                "without supervision",
+                "no supervision"
+              ],
+              "references": [
+                "S2"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "dinov2-2023: The objective uses teacher and student networks.",
+              "anchor": "teacher and student",
+              "alternatives": [
+                "teacher-student",
+                "student and teacher"
+              ],
+              "references": [
+                "S2",
+                "S4"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 4,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'dinov2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; facets=4; intents=['training_objective']; planner=llm",
+              "duration_ms": 38463
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; facets=2; intents=['training_objective']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 186
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=dinov2-2023; facets=2; intents=['training_objective']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 160
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=4; references=['S1', 'S2', 'S3', 'S4', 'S5']; intents=['training_objective']; fallback=False",
+              "duration_ms": 2
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=512",
+              "duration_ms": 86419
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=en; issues=['missing_planned_fact_anchors:F2']",
+              "duration_ms": 1
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['missing_planned_fact_anchors:F2']; corrected_characters=738",
+              "duration_ms": 50032
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=4; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP uses paired web image-text data and a contrastive image-text matching loss. DINOv2 uses no labels or text: a teacher-student self-supervised objective aligns global crop features and masked patch features.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": true
+    }
+  ]
+}

@@ -162,6 +162,49 @@ def list_indexed_documents(collection_name: str) -> list[IndexedDocument]:
     return sorted(documents.values(), key=lambda document: document.title)
 
 
+def list_document_chunks(
+    collection_name: str, document_id: str
+) -> list[SearchResult]:
+    """Load every chunk of one article for local lexical retrieval."""
+
+    client = _new_client()
+
+    try:
+        if not client.collection_exists(collection_name):
+            return []
+
+        results: list[SearchResult] = []
+        next_page_offset = None
+        while True:
+            points, next_page_offset = client.scroll(
+                collection_name=collection_name,
+                scroll_filter=_document_filter([document_id]),
+                offset=next_page_offset,
+                limit=256,
+                with_payload=True,
+                with_vectors=False,
+            )
+            results.extend(
+                SearchResult(
+                    chunk_id=int(point.id),
+                    score=0.0,
+                    document_id=str(point.payload["document_id"]),
+                    title=str(point.payload["title"]),
+                    page=int(point.payload["page"]),
+                    section=str(point.payload["section"]),
+                    language=str(point.payload["language"]),
+                    text=str(point.payload["text"]),
+                )
+                for point in points
+            )
+            if next_page_offset is None:
+                break
+    finally:
+        client.close()
+
+    return sorted(results, key=lambda result: result.chunk_id)
+
+
 def _document_filter(document_ids: Sequence[str] | None) -> models.Filter | None:
     """Build one Qdrant keyword filter only when a scope was explicitly chosen."""
 

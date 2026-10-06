@@ -1,0 +1,204 @@
+{
+  "created_at": "2026-08-14T18:33:23.252344+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_hybrid_rrf_response_contract_v3",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 0,
+    "per_source": 1
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 1,
+    "answerable_cases": 1,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.6,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 158.17962484298914,
+    "response_contract_valid_rate": 1.0,
+    "correction_rate": 0.0
+  },
+  "cases": [
+    {
+      "id": "compare-clip-dinov2-supervision-en",
+      "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 158.17962484298914,
+      "response": {
+        "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+        "answer": "The supervision signals used to pre-train CLIP and DINOv2 are different in terms of the type of data and the scale of training. CLIP, as described in [S1] and [S5], uses natural language supervision for learning visual models, specifically focusing on text-image retrieval tasks. It involves training models on large-scale datasets of image-text pairs, with the goal of learning robust cross-modal representations. The training is done at a much larger scale compared to previous works, where models like VirTex, ICMLM, and ConVIRT were trained on fewer images. CLIP is trained to optimize for text-image retrieval, and it learns a wide set of tasks during pre-training, including OCR, geo-localization, and action recognition [S1].\n\nOn the other hand, DINOv2, as described in [S2] and [S4], is trained without any supervision, focusing on self-supervised learning (SSL) techniques. DINOv2 is designed to learn robust visual features from large curated datasets without the need for labeled data. The training process does not involve any natural language supervision but rather relies on contrastive learning and self-supervised objectives to learn discriminative visual representations [S4].\n\nIn summary, while CLIP leverages natural language supervision for learning visual representations, DINOv2 focuses on unsupervised learning through self-supervised objectives. The primary difference lies in the absence of natural language supervision in DINOv2, contrasting with the extensive use of natural language in CLIP for learning visual models.",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 2,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.031099324975891997
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 26,
+            "section": "8. Related Work",
+            "score": 0.029418126757516764
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 1,
+            "section": "DINOv2: Learning Robust Visual Features without Supervision",
+            "score": 0.03252247488101534
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 20,
+            "section": "10 Future work and Discussion",
+            "score": 0.032266458495966696
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 2,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.031099324975891997,
+            "text": "1. Introduction and Motivating Work\nA crucial difference between these weakly supervised models and recent explorations of learning image representations directly from natural language is scale. While Mahajan et al. (2018) and Kolesnikov et al. (2019) trained their models for accelerator years on millions to billions of images, VirTex, ICMLM, and ConVIRT trained for accelerator days on one to two hundred thousand images. In this work, we close this gap and study the behaviors of image classifiers trained with natural language supervision at large scale. Enabled by the large amounts of publicly available data of this form on the internet, we create a new dataset of 400 million (image, text) pairs and demonstrate that a simplified version of ConVIRT trained from scratch, which we call CLIP, for Contrastive Language-Image Pre-training, is an efficient method of learning from natural language supervision. We study the scalability of CLIP by training a series of eight models spanning almost 2 orders of magnitude of compute and observe that transfer performance is a smoothly predictable function of compute (Hestness et al., 2017; Kaplan et al., 2020). We find that CLIP, similar to the GPT family, learns to perform a wide set of tasks during pre-training including OCR, geo-localization, action recognition, and many others. We measure this by benchmarking the zero-shot transfer performance of CLIP on over 30 existing datasets and find it can be competitive with prior task-specific supervised models."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 1,
+            "section": "DINOv2: Learning Robust Visual Features without Supervision",
+            "score": 0.03252247488101534,
+            "text": "DINOv2: Learning Robust Visual Features without Supervision\nMaxime Oquab ∗∗ , Timothée Darcet ∗∗ , Théo Moutakanni ∗∗ ,\nHuy Vo ∗ , Marc Szafraniec ∗ , Vasil Khalidov ∗ , Pierre Fernandez, Daniel Haziza, Francisco Massa, Alaaeldin El-Nouby, Mahmoud Assran, Nicolas Ballas, Wojciech Galuba, Russell Howes, Po-Yao Huang, Shang-Wen Li, Ishan Misra, Michael Rabbat, Vasu Sharma, Gabriel Synnaeve, Hu Xu, Hervé Jegou, Julien Mairal 1 , Patrick Labatut ∗ , Armand Joulin ∗ , Piotr Bojanowski ∗\n1\nequal contribution\nMeta AI Research Inria ∗ ∗∗"
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 26,
+            "section": "8. Related Work",
+            "score": 0.030776515151515152,
+            "text": "8. Related Work\nCLIP's pre-training task optimizes for text-image retrieval. This areas of research dates back to the mid-90s with the previously mentioned Mori et al. (1999) as representative of early work. While initial efforts focused primarily on predictive objectives over time research shifted towards learning joint multi-modal embedding spaces with techniques like kernel Canonical Correlation Analysis and various ranking objectives (Weston et al., 2010; Socher & Fei-Fei, 2010; Hodosh et al., 2013). Over time work explored many combinations of training objective, transfer, and more expressive models and steadily improved performance (Frome et al., 2013; Socher et al., 2014; Karpathy et al., 2014; Kiros et al., 2014; Faghri et al., 2017).\nOther work has leveraged natural language supervision for domains other than images. Stroud et al. (2020) explores large scale representation learning by training a system to pair descriptive text with videos instead of images. Several works have explored using dense spoken natural language supervision for videos (Miech et al., 2019; 2020b). When considered together with CLIP, these works suggest that large scale natural language supervision is a promising way to learn high quality perceptual systems for many domains. Alayrac et al. (2020) extended this line of work to an additional modality by adding raw audio as an additional supervision source and demonstrated benefits from combining all three sources of supervision."
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 20,
+            "section": "10 Future work and Discussion",
+            "score": 0.032266458495966696,
+            "text": "10 Future work and Discussion\nIn this work, we present DINOv2, a new series of image encoders pretrained on large curated data with no supervision. This is the first SSL work on image data that leads to visual features that close the performance gap with (weakly) supervised alternatives across a wide range of benchmarks and without the need for finetuning. A few properties emerge from these models, such as an understanding of object parts and scene geometry regardless of the image domains. We expect that more of these properties will emerge at larger scales of models and data, akin to instruction emergence in large language models, and plan to continue scaling along these axes. This paper also demonstrates that these visual features are compatible with classifiers as simple as linear layers - meaning the underlying information is readily available . In future work, we plan to leverage this ability to train a a language-enabled AI system that can process visual features as if they were word tokens, and extract the required information to ground the system."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 26,
+            "section": "8. Related Work",
+            "score": 0.029418126757516764,
+            "text": "8. Related Work\nCLIP is an example of using natural language as a training signal for learning about a domain other than language. In this context, the earliest use of the term natural language supervision that we are aware of is the work of Ramanathan et al. (2013) which showed that natural language descriptions could be used along side other sources of supervision to improve performance on the task of video event understanding. However, as mentioned in the introduction and approach section, methods of leveraging natural language descriptions in computer vision well predate the use of this specific term, especially for image retrieval (Mori et al., 1999) and object classification (Wang et al., 2009). Other early work leveraged tags (but not natural language) associated with images for the task of semantic segmentation (Barnard et al., 2003). More recently, He & Peng (2017) and Liang et al. (2020) demonstrated using natural language descriptions and explanations to improve fine-grained visual classification of birds. Others have investigated how grounded language can be used to improve visual representations and classifiers on the ShapeWorld dataset (Kuhnle &Copestake, 2017; Andreas et al., 2017; Mu et al., 2019). Finally, techniques which combine natural language with reinforcement learning environments (Narasimhan et al., 2015) have demonstrated exciting emergent behaviors such as systematically accomplishing zero-shot tasks (Hill et al., 2019)."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "expected_language": "en",
+          "detected_document_ids": [
+            "clip-2021",
+            "dinov2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What supervision signals are used to pre-train CLIP?",
+              "retrieved_chunks": 30
+            },
+            {
+              "document_id": "dinov2-2023",
+              "query": "What is the approach of DINOv2 in learning visual features without supervision?",
+              "retrieved_chunks": 30
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'dinov2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 34343
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; dense=20; bm25=20; rrf=30",
+              "duration_ms": 134
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=dinov2-2023; dense=20; bm25=20; rrf=30",
+              "duration_ms": 86
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=1546",
+              "duration_ms": 123681
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=4; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP uses paired web image-text data and a contrastive image-text matching loss. DINOv2 uses no labels or text: a teacher-student self-supervised objective aligns global crop features and masked patch features.",
+      "fact_coverage": 0.6,
+      "matched_fact_groups": [
+        0,
+        1,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": true
+    }
+  ]
+}

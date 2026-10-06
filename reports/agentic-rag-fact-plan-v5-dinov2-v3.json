@@ -1,0 +1,197 @@
+{
+  "created_at": "2026-08-14T22:12:41.806040+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_fact_plan_intent_multifacet_response_contract_v5",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 1,
+    "per_source": 0
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 1,
+    "answerable_cases": 1,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 0.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.25,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 158.42522401799215,
+    "response_contract_valid_rate": 1.0,
+    "correction_rate": 0.0,
+    "planned_fact_cases": 1,
+    "fact_planning_fallback_rate": 0.0,
+    "mean_planned_fact_coverage": 1.0
+  },
+  "cases": [
+    {
+      "id": "dinov2-frozen-features-fr",
+      "question": "Que montre DINOv2 sur l'utilisation de caractéristiques visuelles gelées sans fine-tuning ?",
+      "category": "factoid",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 158.42522401799215,
+      "response": {
+        "question": "Que montre DINOv2 sur l'utilisation de caractéristiques visuelles gelées sans fine-tuning ?",
+        "answer": "DINOv2 montre que ces caractéristiques visuelles peuvent être utilisées directement sans fine-tuning pour des performances comparables à celles des méthodes supervisées [S1]. Ces résultats indiquent que l'utilisation de caractéristiques visuelles non finetuned est possible et peut conduire à des résultats similaires [S1].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 20,
+            "section": "10 Future work and Discussion",
+            "score": 0.09683140174943455
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 20,
+            "section": "10 Future work and Discussion",
+            "score": 0.09683140174943455,
+            "text": "10 Future work and Discussion\nIn this work, we present DINOv2, a new series of image encoders pretrained on large curated data with no supervision. This is the first SSL work on image data that leads to visual features that close the performance gap with (weakly) supervised alternatives across a wide range of benchmarks and without the need for finetuning. A few properties emerge from these models, such as an understanding of object parts and scene geometry regardless of the image domains. We expect that more of these properties will emerge at larger scales of models and data, akin to instruction emergence in large language models, and plan to continue scaling along these axes. This paper also demonstrates that these visual features are compatible with classifiers as simple as linear layers - meaning the underlying information is readily available . In future work, we plan to leverage this ability to train a a language-enabled AI system that can process visual features as if they were word tokens, and extract the required information to ground the system."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 1,
+            "section": "DINOv2: Learning Robust Visual Features without Supervision",
+            "score": 0.09627894873796514,
+            "text": "DINOv2: Learning Robust Visual Features without Supervision\nMaxime Oquab ∗∗ , Timothée Darcet ∗∗ , Théo Moutakanni ∗∗ ,\nHuy Vo ∗ , Marc Szafraniec ∗ , Vasil Khalidov ∗ , Pierre Fernandez, Daniel Haziza, Francisco Massa, Alaaeldin El-Nouby, Mahmoud Assran, Nicolas Ballas, Wojciech Galuba, Russell Howes, Po-Yao Huang, Shang-Wen Li, Ishan Misra, Michael Rabbat, Vasu Sharma, Gabriel Synnaeve, Hu Xu, Hervé Jegou, Julien Mairal 1 , Patrick Labatut ∗ , Armand Joulin ∗ , Piotr Bojanowski ∗\n1\nequal contribution\nMeta AI Research Inria ∗ ∗∗"
+          },
+          {
+            "reference": "S3",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 1,
+            "section": "1 Introduction",
+            "score": 0.06863463005339436,
+            "text": "1 Introduction\nFollowing this paradigm shift in NLP, we expect similar 'foundation' models to appear in computer vision (Bommasani et al., 2021). These models should generate visual features that work out of the box on any task, both at the image level, e.g., image classification, and pixel level, e.g., segmentation. Most promising efforts towards these foundation models focus on text-guided pretraining, i.e., using a form of textual supervision to guide the training of the features (Joulin et al., 2016; Mahajan et al., 2018; Radford et al., 2021). This form of text-guided pretraining limits the information that can be retained about the image since captions only approximate the rich information in images, and complex pixel-level information may\nAll the authors are affiliated to Meta, except Julien Mairal who is affiliated to Inria. Timothée Darcet and Pierre Fernandez have a co-affiliation with Inria. Théo Moutakanni has a co-affiliation with Université Paris Saclay. Alaaeldin El-Nouby has a co-affiliation with Inria and ENS-PSL. Correspondence: {qas, timdarcet, theomoutakanni, ajoulin, bojanowski}@meta.com"
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.05634920634920634,
+            "text": "Abstract\nThe recent breakthroughs in natural language processing for model pretraining on large quantities of data have opened the way for similar foundation models in computer vision. These models could greatly simplify the use of images in any system by producing allpurpose visual features, i.e., features that work across image distributions and tasks without finetuning. This work shows that existing pretraining methods, especially self-supervised methods, can produce such features if trained on enough curated data from diverse sources. We revisit existing approaches and combine different techniques to scale our pretraining in terms of data and model size. Most of the technical contributions aim at accelerating and stabilizing the training at scale. In terms of data, we propose an automatic pipeline to build a dedicated, diverse, and curated image dataset instead of uncurated data, as typically done in the self-supervised literature. In terms of models, we train a ViT model (Dosovitskiy et al., 2020) with 1B parameters and distill it into a series of smaller models that surpass the best available all-purpose features, OpenCLIP (Ilharco et al., 2021) on most of the benchmarks at image and pixel levels."
+          },
+          {
+            "reference": "S5",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 23,
+            "section": "References",
+            "score": 0.05207152002926651,
+            "text": "References\n- Li Fei-Fei, Rob Fergus, and Pietro Perona. Learning generative visual models from few training examples: An incremental bayesian approach tested on 101 object categories. In 2004 conference on computer vision and pattern recognition workshop , pp. 178-178. IEEE, 2004.\n- Andreas Geiger, Philip Lenz, Christoph Stiller, and Raquel Urtasun. Vision meets robotics: The kitti dataset. The International Journal of Robotics Research , 32(11):1231-1237, 2013.\n- Spyros Gidaris, Praveer Singh, and Nikos Komodakis. Unsupervised representation learning by predicting image rotations, 2018.\n- Rohit Girdhar, Alaaeldin El-Nouby, Mannat Singh, Kalyan Vasudev Alwala, Armand Joulin, and Ishan Misra. Omnimae: Single model masked pretraining on images and videos. arXiv preprint arXiv:2206.08356 , 2022.\n- Priya Goyal, Dhruv Mahajan, Abhinav Gupta, and Ishan Misra. Scaling and benchmarking self-supervised visual representation learning. In ICCV , 2019.\n- Priya Goyal, Mathilde Caron, Benjamin Lefaudeux, Min Xu, Pengchao Wang, Vivek Pai, Mannat Singh, Vitaliy Liptchinsky, Ishan Misra, Armand Joulin, et al. Self-supervised pretraining of visual features in the wild. preprint arXiv:2103.01988 , 2021."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "global",
+          "expected_language": "fr",
+          "detected_document_ids": [
+            "dinov2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "dinov2-2023",
+              "query": "DINOv2: Learning Robust Visual Features without Supervision. Que montre DINOv2 sur l'utilisation de caractéristiques visuelles gelées sans fine-tuning ?",
+              "query_variants": [
+                "DINOv2: Learning Robust Visual Features without Supervision. Que montre DINOv2 sur l'utilisation de caractéristiques visuelles gelées sans fine-tuning ?",
+                "DINOv2: Learning Robust Visual Features without Supervision. Que montre DINOv2 sur l'utilisation de caractéristiques visuelles gelées sans fine-tuning ? Exact architecture of the trainable bridge: learnable queries, information bottleneck, relevant visual features, frozen image encoder, frozen language model, projection."
+              ],
+              "retrieval_intents": [
+                "architecture_bridge"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "DINOv2 permet d'utiliser des caractéristiques visuelles non finetuned pour des tâches sans nécessiter de finetuning.",
+              "anchor": "caractéristiques visuelles non finetuned",
+              "references": [
+                "S1"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "DINOv2 montre que ces caractéristiques visuelles peuvent être utilisées directement sans finetuning pour des performances comparables à celles des méthodes supervisées.",
+              "anchor": "performances comparables",
+              "references": [
+                "S1"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 2,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['dinov2-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=dinov2-2023; facets=2; intents=['architecture_bridge']; rrf=30; selected=5",
+              "duration_ms": 4843
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=2; references=['S1']; fallback=False",
+              "duration_ms": 88374
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=323",
+              "duration_ms": 65172
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=1; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Les caractéristiques gelées apprises par DINOv2 se transfèrent à de nombreuses tâches et deviennent compétitives avec les meilleures représentations faiblement supervisées, sans fine-tuning; des classifieurs linéaires simples peuvent les exploiter.",
+      "fact_coverage": 0.25,
+      "matched_fact_groups": [
+        1
+      ],
+      "total_fact_groups": 4,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    }
+  ]
+}

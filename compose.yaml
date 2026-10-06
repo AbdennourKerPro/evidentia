@@ -10,18 +10,27 @@ services:
     environment:
       QDRANT_URL: http://qdrant:6333
       HF_HOME: /models/huggingface
-      LLM_MODEL_PATH: /models/huggingface/qwen2.5-7b-instruct-int4-ov
-      OPENVINO_DEVICE: CPU
+      RERANKER_MODEL_PATH: /models/huggingface/mmarco-minilmv2-l12-h384-v1
+      # Deploy the coverage recovery; other profiles remain explicit ablations.
+      RAG_RETRIEVAL_PROFILE: ${RAG_RETRIEVAL_PROFILE:-candidate_recovery}
+      # Compose reads .env locally. Never put a real key in this YAML or the image.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      OPENAI_REASONING_EFFORT: ${OPENAI_REASONING_EFFORT:-low}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-60}
+      OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-1}
+      OPENAI_MAX_OUTPUT_TOKENS: ${OPENAI_MAX_OUTPUT_TOKENS:-4096}
     ports:
-      - "8000:8000"
+      # The benchmark review API can write files, so keep it local to this PC.
+      - "127.0.0.1:8000:8000"
     volumes:
       - model_cache:/models/huggingface
       - ./data/raw:/data/raw:ro
       - ./data/processed:/data/processed
-      # The benchmark is read-only; reports are deliberately persisted on Windows.
-      - ./data/evaluation:/data/evaluation:ro
+      # The review UI updates the versioned benchmark; writes are atomic and backed up.
+      - ./data/evaluation:/data/evaluation
       - ./reports:/reports
-    # The API will later connect to Qdrant by using http://qdrant:6333.
+    # The current retrieval pipeline still uses the existing Qdrant collection.
     depends_on:
       - qdrant
 

@@ -1,0 +1,2075 @@
+{
+  "created_at": "2026-09-29T23:19:56.368774+00:00",
+  "pipeline": "retrieval_ablation_v1",
+  "profile": "question_rerank",
+  "llm_configuration": {
+    "provider": "openai",
+    "endpoint": "responses",
+    "model_id": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "timeout_seconds": 60.0,
+    "max_retries": 1,
+    "max_output_tokens": 4096
+  },
+  "benchmark_sha256": "31917579b4753cf27d3eca756dbf7b8ef23917f6bfcb1bdb6a7b2414a4aab74b",
+  "corpus_sha256": "0c3533ab315edd7049a3123cbd4c51762f31285941e551d2ad4139023d8e0b34",
+  "source_sha256": {
+    "app/agentic_rag.py": "ae4c9f74db2728b7d557919f0e7534ffffa27be8382aca9a20ed8165349a3582",
+    "app/hybrid_retrieval.py": "750ff812ef2efa2cfd59c496a614df8b8c70dcf682bc1b2a453cfd647eecdf13",
+    "app/retrieval_policy.py": "fa4e8ae77592a896909d0d134056c02219706470838a1f6421af8c904b0c458d",
+    "app/query_expansion.py": "f02369675c35a17d7983c129a76e4f77c0c5cd3cd8472c56bc548abc3277df6e"
+  },
+  "top_k": 5,
+  "repeats": 3,
+  "requested_runs": 6,
+  "complete": true,
+  "limitations": "Small diagnostic panel, not a full benchmark. Repeated generations are nondeterministic; retrieval ranks identify the direct selection effect.",
+  "cases": [
+    {
+      "id": "sam-ambiguity-en",
+      "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 14.142213227000184,
+      "response": {
+        "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+        "answer": "SAM addresses single-point ambiguity with an “oracle” evaluation: among its three predicted masks, evaluators choose the one that best matches the ground-truth mask, rather than SAM’s top-ranked prediction. This measures performance when the ambiguity is resolved externally; the standard evaluation instead uses SAM’s top-ranked mask. [S1, S2]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574,
+            "text": "D.1. Zero-Shot Single Point Valid Mask Evaluation\nSingle point ambiguity and oracle evaluation. In addition to IoU after N points prompts, we report SAM's 'oracle' performance at 1 point by evaluating the predicted mask that best matches ground truth from amongst SAM's three predictions (rather than using the one that SAM itself ranks first, as we do by default). This protocol addresses possible single point prompt ambiguity by relaxing the requirement to guess the one right mask among several valid objects."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nResults. First, we look at automatic evaluation on the full suite of 23 datasets using mIoU. We compare per-dataset results in Fig. 9a against RITM. SAM yields higher results on 16 of the 23 datasets, by as much as ∼ 47 IoU. We also present an 'oracle' result, in which the most relevant of SAM's 3 masks is selected by comparing them to the ground truth, rather than selecting the most confident mask. This reveals the impact of ambiguity on automatic evaluation. In particular, with the oracle to perform ambiguity resolution, SAM outperforms RITM on all datasets."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 5.917809009552002,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nDatasets. We use a newly compiled suite of 23 datasets with diverse image distributions. Fig. 8 lists the datasets and shows a sample from each one (see appendix Table 7 for more details). We use all 23 datasets for mIoU evaluation. For the human study, we use the subset listed in Fig. 9b (due to the resource requirements of such studies). This subset includes both datasets for which SAM outperforms and underperforms RITM according to automatic metrics.\nFigure 8: Samples from the 23 diverse segmentation datasets used to evaluate SAM's zero-shot transfer capabilities.\nFigure 9: Point to mask evaluation on 23 datasets. (a) Mean IoU of SAM and the strongest single point segmenter, RITM [92]. Due to ambiguity, a single mask may not match ground truth; circles show 'oracle' results of the most relevant of SAM's 3 predictions. (b) Per-dataset comparison of mask quality ratings by annotators from 1 (worst) to 10 (best). All methods use the ground truth mask center as the prompt. (c, d) mIoU with varying number of points. SAM significantly outperforms prior interactive segmenters with 1 point and is on par with more points. Low absolute mIoU at 1 point is the result of ambiguity."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 4.807366371154785,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.6. Ablations",
+            "score": 4.804503917694092,
+            "text": "7.6. Ablations\nWeperform several ablations on our 23 dataset suite with the single center point prompt protocol. Recall that a single point may be ambiguous and that ambiguity may not be represented in the ground truth, which contains only a single mask per point. Since SAM is operating in a zeroshot transfer setting there can be systematic biases between SAM's top-ranked mask vs . the masks resulting from data annotation guidelines. We therefore additionally report the best mask with respect to the ground truth ('oracle').\nFig. 13 (left) plots SAM's performance when trained on cumulative data from the data engine stages. We observe that each stage increases mIoU. When training with all three stages, the automatic masks vastly outnumber the manual and semi-automatic masks. To address this, we found that oversampling the manual and semi-automatic masks during training by 10 × gave best results. This setup complicates training. We therefore tested a fourth setup that uses only the automatically generated masks. With this data, SAM performs only marginally lower than using all data ( ∼ 0.5 mIoU). Therefore, by default we use only the automatically generated masks to simplify the training setup."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1527,
+          "output_tokens": 72,
+          "total_tokens": 1599,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_03c66f72237e619b016abc47a8a49c87d29e81f19b0f696df2",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1989,
+              "max_output_tokens": 3072,
+              "input_tokens": 1527,
+              "output_tokens": 72,
+              "total_tokens": 1599,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "primary_query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "primary_dense_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                64063547055625930,
+                39248417022111133,
+                29772822379358413,
+                5031803758043813,
+                62299977793421688,
+                11680030495004050,
+                3129537362477194,
+                9270632284231241,
+                30500259798254997,
+                41368826029461733,
+                57187572455034380,
+                40586964579323231,
+                18776440388243429,
+                44456723104906992,
+                13543244272649863,
+                49331893036460661,
+                10092672566980454
+              ],
+              "primary_lexical_ids": [
+                15406296017028952,
+                866951765437580,
+                10092672566980454,
+                11680030495004050,
+                57187572455034380,
+                40094430259897497,
+                29772822379358413,
+                46616021607256000,
+                40586964579323231,
+                14123834515729259,
+                7759663039700360,
+                64293858422799898,
+                5031803758043813,
+                18776440388243429,
+                60764218559430538,
+                9270632284231241,
+                35756872828065735,
+                64063547055625930,
+                7774996338046535,
+                62299977793421688
+              ],
+              "candidate_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                29772822379358413,
+                11680030495004050,
+                57187572455034380,
+                64063547055625930,
+                5031803758043813,
+                10092672566980454,
+                18776440388243429,
+                9270632284231241,
+                758117459887501,
+                40586964579323231,
+                62299977793421688,
+                39248417022111133,
+                14123834515729259,
+                3129537362477194,
+                41368826029461733,
+                40094430259897497,
+                30500259798254997,
+                48584351103358280,
+                34772798277966698,
+                38261879643221979,
+                50516194133628686,
+                64293858422799898,
+                7759663039700360,
+                35756872828065735,
+                46616021607256000,
+                13543244272649863,
+                44456723104906992
+              ],
+              "ranked_ids": [
+                866951765437580,
+                57187572455034380,
+                10092672566980454,
+                5031803758043813,
+                29772822379358413,
+                40094430259897497,
+                15406296017028952,
+                62299977793421688,
+                40586964579323231,
+                11680030495004050,
+                7759663039700360,
+                18776440388243429,
+                35756872828065735,
+                30500259798254997,
+                64063547055625930,
+                64293858422799898,
+                41368826029461733,
+                50516194133628686,
+                34772798277966698,
+                46616021607256000,
+                60764218559430538,
+                9270632284231241,
+                3129537362477194,
+                39248417022111133,
+                14123834515729259,
+                758117459887501,
+                44456723104906992,
+                48584351103358280,
+                13543244272649863,
+                38261879643221979
+              ]
+            }
+          ],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "query_variants": [
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "capabilities"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=3; intents=['prompt_mechanism', 'capabilities']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 12117
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism', 'capabilities']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=344",
+              "duration_ms": 1994
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "A point may refer to several valid objects, so SAM produces three candidate masks. Oracle evaluation selects the candidate with the best match to ground truth to separate mask quality from ambiguity resolution.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "target",
+      "relevant_chunk_ids": [
+        866951765437580
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "primary_dense_ids": 1,
+          "primary_lexical_ids": 2,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    },
+    {
+      "id": "sam-ambiguity-en",
+      "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 6.078318278000097,
+      "response": {
+        "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+        "answer": "SAM’s default evaluation uses the mask SAM ranks most confidently, but single-point prompts can be ambiguous because one point may correspond to several valid objects. To measure performance without requiring SAM to guess which valid mask matches the single ground-truth mask, the evaluation also reports an “oracle” score: among SAM’s three predicted masks, it selects the one that best matches the ground truth [S1, S2]. The evaluation uses the ground-truth mask center as the point prompt [S3].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 5.917809009552002
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574,
+            "text": "D.1. Zero-Shot Single Point Valid Mask Evaluation\nSingle point ambiguity and oracle evaluation. In addition to IoU after N points prompts, we report SAM's 'oracle' performance at 1 point by evaluating the predicted mask that best matches ground truth from amongst SAM's three predictions (rather than using the one that SAM itself ranks first, as we do by default). This protocol addresses possible single point prompt ambiguity by relaxing the requirement to guess the one right mask among several valid objects."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nResults. First, we look at automatic evaluation on the full suite of 23 datasets using mIoU. We compare per-dataset results in Fig. 9a against RITM. SAM yields higher results on 16 of the 23 datasets, by as much as ∼ 47 IoU. We also present an 'oracle' result, in which the most relevant of SAM's 3 masks is selected by comparing them to the ground truth, rather than selecting the most confident mask. This reveals the impact of ambiguity on automatic evaluation. In particular, with the oracle to perform ambiguity resolution, SAM outperforms RITM on all datasets."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 5.917809009552002,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nDatasets. We use a newly compiled suite of 23 datasets with diverse image distributions. Fig. 8 lists the datasets and shows a sample from each one (see appendix Table 7 for more details). We use all 23 datasets for mIoU evaluation. For the human study, we use the subset listed in Fig. 9b (due to the resource requirements of such studies). This subset includes both datasets for which SAM outperforms and underperforms RITM according to automatic metrics.\nFigure 8: Samples from the 23 diverse segmentation datasets used to evaluate SAM's zero-shot transfer capabilities.\nFigure 9: Point to mask evaluation on 23 datasets. (a) Mean IoU of SAM and the strongest single point segmenter, RITM [92]. Due to ambiguity, a single mask may not match ground truth; circles show 'oracle' results of the most relevant of SAM's 3 predictions. (b) Per-dataset comparison of mask quality ratings by annotators from 1 (worst) to 10 (best). All methods use the ground truth mask center as the prompt. (c, d) mIoU with varying number of points. SAM significantly outperforms prior interactive segmenters with 1 point and is on par with more points. Low absolute mIoU at 1 point is the result of ambiguity."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 4.807366371154785,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.6. Ablations",
+            "score": 4.804503917694092,
+            "text": "7.6. Ablations\nWeperform several ablations on our 23 dataset suite with the single center point prompt protocol. Recall that a single point may be ambiguous and that ambiguity may not be represented in the ground truth, which contains only a single mask per point. Since SAM is operating in a zeroshot transfer setting there can be systematic biases between SAM's top-ranked mask vs . the masks resulting from data annotation guidelines. We therefore additionally report the best mask with respect to the ground truth ('oracle').\nFig. 13 (left) plots SAM's performance when trained on cumulative data from the data engine stages. We observe that each stage increases mIoU. When training with all three stages, the automatic masks vastly outnumber the manual and semi-automatic masks. To address this, we found that oversampling the manual and semi-automatic masks during training by 10 × gave best results. This setup complicates training. We therefore tested a fourth setup that uses only the automatically generated masks. With this data, SAM performs only marginally lower than using all data ( ∼ 0.5 mIoU). Therefore, by default we use only the automatically generated masks to simplify the training setup."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1527,
+          "output_tokens": 103,
+          "total_tokens": 1630,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 1524,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0093731f6e1c45a2016abc47aeb44887d28385259d5d9332b4",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1797,
+              "max_output_tokens": 3072,
+              "input_tokens": 1527,
+              "output_tokens": 103,
+              "total_tokens": 1630,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 1524
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "primary_query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "primary_dense_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                64063547055625930,
+                39248417022111133,
+                29772822379358413,
+                5031803758043813,
+                62299977793421688,
+                11680030495004050,
+                3129537362477194,
+                9270632284231241,
+                30500259798254997,
+                41368826029461733,
+                57187572455034380,
+                40586964579323231,
+                18776440388243429,
+                44456723104906992,
+                13543244272649863,
+                49331893036460661,
+                10092672566980454
+              ],
+              "primary_lexical_ids": [
+                15406296017028952,
+                866951765437580,
+                10092672566980454,
+                11680030495004050,
+                57187572455034380,
+                40094430259897497,
+                29772822379358413,
+                46616021607256000,
+                40586964579323231,
+                14123834515729259,
+                7759663039700360,
+                64293858422799898,
+                5031803758043813,
+                18776440388243429,
+                60764218559430538,
+                9270632284231241,
+                35756872828065735,
+                64063547055625930,
+                7774996338046535,
+                62299977793421688
+              ],
+              "candidate_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                29772822379358413,
+                11680030495004050,
+                57187572455034380,
+                64063547055625930,
+                5031803758043813,
+                10092672566980454,
+                18776440388243429,
+                9270632284231241,
+                758117459887501,
+                40586964579323231,
+                62299977793421688,
+                39248417022111133,
+                14123834515729259,
+                3129537362477194,
+                41368826029461733,
+                40094430259897497,
+                30500259798254997,
+                48584351103358280,
+                34772798277966698,
+                38261879643221979,
+                50516194133628686,
+                64293858422799898,
+                7759663039700360,
+                35756872828065735,
+                46616021607256000,
+                13543244272649863,
+                44456723104906992
+              ],
+              "ranked_ids": [
+                866951765437580,
+                57187572455034380,
+                10092672566980454,
+                5031803758043813,
+                29772822379358413,
+                40094430259897497,
+                15406296017028952,
+                62299977793421688,
+                40586964579323231,
+                11680030495004050,
+                7759663039700360,
+                18776440388243429,
+                35756872828065735,
+                30500259798254997,
+                64063547055625930,
+                64293858422799898,
+                41368826029461733,
+                50516194133628686,
+                34772798277966698,
+                46616021607256000,
+                60764218559430538,
+                9270632284231241,
+                3129537362477194,
+                39248417022111133,
+                14123834515729259,
+                758117459887501,
+                44456723104906992,
+                48584351103358280,
+                13543244272649863,
+                38261879643221979
+              ]
+            }
+          ],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "query_variants": [
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "capabilities"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=3; intents=['prompt_mechanism', 'capabilities']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 4274
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism', 'capabilities']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=497",
+              "duration_ms": 1798
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=3; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "A point may refer to several valid objects, so SAM produces three candidate masks. Oracle evaluation selects the candidate with the best match to ground truth to separate mask quality from ambiguity resolution.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 2,
+      "role": "target",
+      "relevant_chunk_ids": [
+        866951765437580
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "primary_dense_ids": 1,
+          "primary_lexical_ids": 2,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    },
+    {
+      "id": "sam-ambiguity-en",
+      "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 4.098057950000111,
+      "response": {
+        "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+        "answer": "SAM’s single-point evaluation reports both its default result, using the model’s highest-confidence mask, and an “oracle” result, selecting whichever of its three predicted masks best matches the ground truth. The oracle comparison measures performance when ambiguity is resolved, rather than requiring SAM to choose the correct valid mask itself [S1, S2].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574,
+            "text": "D.1. Zero-Shot Single Point Valid Mask Evaluation\nSingle point ambiguity and oracle evaluation. In addition to IoU after N points prompts, we report SAM's 'oracle' performance at 1 point by evaluating the predicted mask that best matches ground truth from amongst SAM's three predictions (rather than using the one that SAM itself ranks first, as we do by default). This protocol addresses possible single point prompt ambiguity by relaxing the requirement to guess the one right mask among several valid objects."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nResults. First, we look at automatic evaluation on the full suite of 23 datasets using mIoU. We compare per-dataset results in Fig. 9a against RITM. SAM yields higher results on 16 of the 23 datasets, by as much as ∼ 47 IoU. We also present an 'oracle' result, in which the most relevant of SAM's 3 masks is selected by comparing them to the ground truth, rather than selecting the most confident mask. This reveals the impact of ambiguity on automatic evaluation. In particular, with the oracle to perform ambiguity resolution, SAM outperforms RITM on all datasets."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 5.917809009552002,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nDatasets. We use a newly compiled suite of 23 datasets with diverse image distributions. Fig. 8 lists the datasets and shows a sample from each one (see appendix Table 7 for more details). We use all 23 datasets for mIoU evaluation. For the human study, we use the subset listed in Fig. 9b (due to the resource requirements of such studies). This subset includes both datasets for which SAM outperforms and underperforms RITM according to automatic metrics.\nFigure 8: Samples from the 23 diverse segmentation datasets used to evaluate SAM's zero-shot transfer capabilities.\nFigure 9: Point to mask evaluation on 23 datasets. (a) Mean IoU of SAM and the strongest single point segmenter, RITM [92]. Due to ambiguity, a single mask may not match ground truth; circles show 'oracle' results of the most relevant of SAM's 3 predictions. (b) Per-dataset comparison of mask quality ratings by annotators from 1 (worst) to 10 (best). All methods use the ground truth mask center as the prompt. (c, d) mIoU with varying number of points. SAM significantly outperforms prior interactive segmenters with 1 point and is on par with more points. Low absolute mIoU at 1 point is the result of ambiguity."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 4.807366371154785,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.6. Ablations",
+            "score": 4.804503917694092,
+            "text": "7.6. Ablations\nWeperform several ablations on our 23 dataset suite with the single center point prompt protocol. Recall that a single point may be ambiguous and that ambiguity may not be represented in the ground truth, which contains only a single mask per point. Since SAM is operating in a zeroshot transfer setting there can be systematic biases between SAM's top-ranked mask vs . the masks resulting from data annotation guidelines. We therefore additionally report the best mask with respect to the ground truth ('oracle').\nFig. 13 (left) plots SAM's performance when trained on cumulative data from the data engine stages. We observe that each stage increases mIoU. When training with all three stages, the automatic masks vastly outnumber the manual and semi-automatic masks. To address this, we found that oversampling the manual and semi-automatic masks during training by 10 × gave best results. This setup complicates training. We therefore tested a fourth setup that uses only the automatically generated masks. With this data, SAM performs only marginally lower than using all data ( ∼ 0.5 mIoU). Therefore, by default we use only the automatically generated masks to simplify the training setup."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1527,
+          "output_tokens": 71,
+          "total_tokens": 1598,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 1524,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_03c3c7084bcd8403016abc47b2f95487d28fb5716bd0ef8ea6",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1629,
+              "max_output_tokens": 3072,
+              "input_tokens": 1527,
+              "output_tokens": 71,
+              "total_tokens": 1598,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 1524
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "primary_query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "primary_dense_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                64063547055625930,
+                39248417022111133,
+                29772822379358413,
+                5031803758043813,
+                62299977793421688,
+                11680030495004050,
+                3129537362477194,
+                9270632284231241,
+                30500259798254997,
+                41368826029461733,
+                57187572455034380,
+                40586964579323231,
+                18776440388243429,
+                44456723104906992,
+                13543244272649863,
+                49331893036460661,
+                10092672566980454
+              ],
+              "primary_lexical_ids": [
+                15406296017028952,
+                866951765437580,
+                10092672566980454,
+                11680030495004050,
+                57187572455034380,
+                40094430259897497,
+                29772822379358413,
+                46616021607256000,
+                40586964579323231,
+                14123834515729259,
+                7759663039700360,
+                64293858422799898,
+                5031803758043813,
+                18776440388243429,
+                60764218559430538,
+                9270632284231241,
+                35756872828065735,
+                64063547055625930,
+                7774996338046535,
+                62299977793421688
+              ],
+              "candidate_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                29772822379358413,
+                11680030495004050,
+                57187572455034380,
+                64063547055625930,
+                5031803758043813,
+                10092672566980454,
+                18776440388243429,
+                9270632284231241,
+                758117459887501,
+                40586964579323231,
+                62299977793421688,
+                39248417022111133,
+                14123834515729259,
+                3129537362477194,
+                41368826029461733,
+                40094430259897497,
+                30500259798254997,
+                48584351103358280,
+                34772798277966698,
+                38261879643221979,
+                50516194133628686,
+                64293858422799898,
+                7759663039700360,
+                35756872828065735,
+                46616021607256000,
+                13543244272649863,
+                44456723104906992
+              ],
+              "ranked_ids": [
+                866951765437580,
+                57187572455034380,
+                10092672566980454,
+                5031803758043813,
+                29772822379358413,
+                40094430259897497,
+                15406296017028952,
+                62299977793421688,
+                40586964579323231,
+                11680030495004050,
+                7759663039700360,
+                18776440388243429,
+                35756872828065735,
+                30500259798254997,
+                64063547055625930,
+                64293858422799898,
+                41368826029461733,
+                50516194133628686,
+                34772798277966698,
+                46616021607256000,
+                60764218559430538,
+                9270632284231241,
+                3129537362477194,
+                39248417022111133,
+                14123834515729259,
+                758117459887501,
+                44456723104906992,
+                48584351103358280,
+                13543244272649863,
+                38261879643221979
+              ]
+            }
+          ],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "query_variants": [
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "capabilities"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=3; intents=['prompt_mechanism', 'capabilities']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 2463
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism', 'capabilities']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=356",
+              "duration_ms": 1629
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "A point may refer to several valid objects, so SAM produces three candidate masks. Oracle evaluation selects the candidate with the best match to ground truth to separate mask quality from ambiguity resolution.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 3,
+      "role": "target",
+      "relevant_chunk_ids": [
+        866951765437580
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "primary_dense_ids": 1,
+          "primary_lexical_ids": 2,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    },
+    {
+      "id": "sam-architecture-en",
+      "question": "What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 3.838448187999802,
+      "response": {
+        "question": "What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts?",
+        "answer": "The Segment Anything Model has three main components: an image encoder, a prompt encoder, and a mask decoder. [S1, S4] The image encoder computes an image embedding once, before prompting; that embedding can be reused for different prompts, while the prompt encoder and lightweight mask decoder produce a mask from each prompt in about 50 ms in a web browser. [S1, S4]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 5,
+            "section": "3. Segment Anything Model",
+            "score": 5.737852573394775
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 3.042064666748047
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 5,
+            "section": "3. Segment Anything Model",
+            "score": 5.737852573394775,
+            "text": "3. Segment Anything Model\nWe next describe the Segment Anything Model (SAM) for promptable segmentation. SAM has three components, illustrated in Fig. 4: an image encoder, a flexible prompt encoder, and a fast mask decoder. We build on Transformer vision models [14, 33, 20, 62] with specific tradeoffs for (amortized) real-time performance. We describe these components at a high-level here, with details in §A.\nImage encoder. Motivated by scalability and powerful pretraining methods, we use an MAE [47] pre-trained Vision Transformer (ViT) [33] minimally adapted to process high resolution inputs [62]. The image encoder runs once per image and can be applied prior to prompting the model.\nPrompt encoder. We consider two sets of prompts: sparse (points, boxes, text) and dense (masks). We represent points and boxes by positional encodings [95] summed with learned embeddings for each prompt type and free-form text with an off-the-shelf text encoder from CLIP [82]. Dense prompts ( i.e ., masks) are embedded using convolutions and summed element-wise with the image embedding."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 1,
+            "section": "Segment Anything",
+            "score": 4.313931465148926,
+            "text": "Segment Anything\nFigure 1: We aim to build a foundation model for segmentation by introducing three interconnected components: a promptable segmentation task , a segmentation model (SAM) that powers data annotation and enables zero-shot transfer to a range of tasks via prompt engineering, and a data engine for collecting SA-1B, our dataset of over 1 billion masks."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 3.7200214862823486,
+            "text": "1. Introduction\nFoundation models have also been explored in computer vision, albeit to a lesser extent. Perhaps the most prominent illustration aligns paired text and images from the web. For example, CLIP [82] and ALIGN [55] use contrastive learning to train text and image encoders that align the two modalities. Once trained, engineered text prompts enable zero-shot generalization to novel visual concepts and data distributions. Such encoders also compose effectively with other modules to enable downstream tasks, such as image generation ( e.g ., DALL·E [83]). While much progress has been made on vision and language encoders, computer vision includes a wide range of problems beyond this scope, and for many of these, abundant training data does not exist.\nIn this work, our goal is to build a foundation model for image segmentation . That is, we seek to develop a promptable model and pre-train it on a broad dataset using a task that enables powerful generalization. With this model, we aim to solve a range of downstream segmentation problems on new data distributions using prompt engineering.\nThe success of this plan hinges on three components: task , model , and data . To develop them, we address the following questions about image segmentation:\n1. What task will enable zero-shot generalization?\n2. What is the corresponding model architecture?\n3. What data can power this task and model?"
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 3.042064666748047,
+            "text": "1. Introduction\nModel (§3). The promptable segmentation task and the goal of real-world use impose constraints on the model architecture. In particular, the model must support fl exible prompts , needs to compute masks in amortized real-time to allow interactive use, and must be ambiguity-aware . Surprisingly, we find that a simple design satisfies all three constraints: a powerful image encoder computes an image embedding, a prompt encoder embeds prompts, and then the two information sources are combined in a lightweight mask decoder that predicts segmentation masks. We refer to this model as the Segment Anything Model, or SAM (see Fig. 1b). By separating SAM into an image encoder and a fast prompt encoder / mask decoder, the same image embedding can be reused (and its cost amortized) with different prompts. Given an image embedding, the prompt encoder and mask decoder predict a mask from a prompt in ∼ 50ms in a web browser. We focus on point, box, and mask prompts, and also present initial results with free-form text prompts. To make SAM ambiguity-aware, we design it to predict multiple masks for a single prompt allowing SAM to naturally handle ambiguity, such as the shirt vs . person example."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 4,
+            "section": "2. Segment Anything Task",
+            "score": 1.8868117332458496,
+            "text": "2. Segment Anything Task\nPre-training. The promptable segmentation task suggests a natural pre-training algorithm that simulates a sequence of prompts ( e.g ., points, boxes, masks) for each training sample and compares the model's mask predictions against the ground truth. We adapt this method from interactive segmentation [109, 70], although unlike interactive segmentation whose aim is to eventually predict a valid mask after enough user input, our aim is to always predict a valid mask for any prompt even when the prompt is ambiguous . This ensures that a pre-trained model is effective in use cases that involve ambiguity, including automatic annotation as required by our data engine §4. We note that performing well at this task is challenging and requires specialized modeling and training loss choices, which we discuss in §3.\nZero-shot transfer. Intuitively, our pre-training task endows the model with the ability to respond appropriately to any prompt at inference time, and thus downstream tasks can be solved by engineering appropriate prompts. For example, if one has a bounding box detector for cats, cat instance segmentation can be solved by providing the detector's box output as a prompt to our model. In general, a wide array of practical segmentation tasks can be cast as prompting. In addition to automatic dataset labeling, we explore five diverse example tasks in our experiments in §7."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1511,
+          "output_tokens": 85,
+          "total_tokens": 1596,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_08598912c21a5d62016abc47b7216c87d29a6068cb373a2bfc",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1346,
+              "max_output_tokens": 3072,
+              "input_tokens": 1511,
+              "output_tokens": 85,
+              "total_tokens": 1596,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "primary_query": "Segment Anything. What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts?",
+              "primary_dense_ids": [
+                64063547055625930,
+                13543244272649863,
+                9270632284231241,
+                41368826029461733,
+                48584351103358280,
+                46692682891537369,
+                70192568415500008,
+                52086369988377665,
+                15406296017028952,
+                34772798277966698,
+                5031803758043813,
+                40857553491244572,
+                51705373565064246,
+                52036168470989369,
+                15426201083494468,
+                19304937778869167,
+                6173138087398190,
+                14214218663783385,
+                11680030495004050,
+                14123834515729259
+              ],
+              "primary_lexical_ids": [
+                49331893036460661,
+                9270632284231241,
+                13543244272649863,
+                64063547055625930,
+                41368826029461733,
+                46692682891537369,
+                34772798277966698,
+                6173138087398190,
+                45667794239376691,
+                15406296017028952,
+                50516194133628686,
+                70192568415500008,
+                11680030495004050,
+                3575859441842272,
+                3129537362477194,
+                60764218559430538,
+                52086369988377665,
+                65564706370977303,
+                15534468283849225,
+                18776440388243429
+              ],
+              "candidate_ids": [
+                9270632284231241,
+                64063547055625930,
+                13543244272649863,
+                15406296017028952,
+                34772798277966698,
+                41368826029461733,
+                70192568415500008,
+                46692682891537369,
+                11680030495004050,
+                3575859441842272,
+                48817601139058781,
+                6173138087398190,
+                52086369988377665,
+                3129001146993130,
+                38261879643221979,
+                48584351103358280,
+                60764218559430538,
+                49331893036460661,
+                50516194133628686,
+                51705373565064246,
+                3129537362477194,
+                5031803758043813,
+                19304937778869167,
+                52036168470989369,
+                51309584681976605,
+                46616021607256000,
+                12735487142746401,
+                45667794239376691,
+                40857553491244572,
+                15426201083494468
+              ],
+              "ranked_ids": [
+                9270632284231241,
+                13543244272649863,
+                6173138087398190,
+                15406296017028952,
+                34772798277966698,
+                64063547055625930,
+                46692682891537369,
+                49331893036460661,
+                48584351103358280,
+                41368826029461733,
+                46616021607256000,
+                70192568415500008,
+                45667794239376691,
+                40857553491244572,
+                52086369988377665,
+                50516194133628686,
+                3129537362477194,
+                5031803758043813,
+                11680030495004050,
+                38261879643221979,
+                3575859441842272,
+                51309584681976605,
+                51705373565064246,
+                12735487142746401,
+                48817601139058781,
+                19304937778869167,
+                60764218559430538,
+                3129001146993130,
+                15426201083494468,
+                52036168470989369
+              ]
+            }
+          ],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts?",
+              "query_variants": [
+                "Segment Anything. What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts?",
+                "Segment Anything. What are the three main components of the Segment Anything Model, and why can it respond quickly to new prompts? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=2; intents=['prompt_mechanism']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 2485
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=368",
+              "duration_ms": 1346
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "SAM contains an image encoder, a flexible prompt encoder, and a fast mask decoder. The costly image embedding is computed once and reused, so only the prompt encoder and lightweight decoder run for each new prompt.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "total_fact_groups": 4,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "control",
+      "relevant_chunk_ids": [
+        9270632284231241
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "primary_dense_ids": 3,
+          "primary_lexical_ids": 2,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    },
+    {
+      "id": "compare-clip-sam-prompts-en",
+      "question": "How do prompts play different roles in CLIP zero-shot classification and SAM segmentation?",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 10.181441808000045,
+      "response": {
+        "question": "How do prompts play different roles in CLIP zero-shot classification and SAM segmentation?",
+        "answer": "- **clip-2021:** Prompts supply the candidate visual concepts for zero-shot classification: **class names** are encoded as text and compared with the image embedding using **cosine similarity** [S5].\n- **clip-2021:** The similarity scores are scaled by a **temperature** and normalized by **softmax** into a probability distribution; CLIP predicts the most probable image–text pairing [S5].\n- **clip-2021:** Prompt wording can also provide context, with templates such as “A photo of a big {label}” and “A photo of a small {label}”; the article reports ensembling classifiers built from different context prompts [S1]. CLIP’s natural-language classifier directly specifies visual concepts, unlike learning concepts indirectly from labeled examples [S3].\n- **sam-2023:** Prompts guide segmentation rather than select among class texts: SAM is prompted to produce masks, with experiments using a foreground point and prompts for tasks including edge detection, object proposals, instance segmentation, and free-form text [S2].\n- **sam-2023:** For text-to-mask inference, text is passed through CLIP’s text encoder and the resulting embedding is given to SAM as a prompt; the described training uses CLIP image embeddings as SAM’s first interaction [S4]. Thus, CLIP uses text prompts to classify an image, while SAM uses prompts to condition mask generation [S5] [S4].",
+        "citations": [
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 6,
+            "section": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER",
+            "score": -0.8916519284248352
+          },
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 8,
+            "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+            "score": 2.6209216117858887
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 9,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": -0.8168056607246399
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 5.451274394989014
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.5. Zero-Shot Text-to-Mask",
+            "score": 4.931173801422119
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 8,
+            "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+            "score": 2.6209216117858887,
+            "text": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING\nWe also experimented with ensembling over multiple zeroshot classifiers as another way of improving performance. These classifiers are computed by using different context prompts such as ' A photo of a big { label } ' and ' A photo of a small { label } '. We construct the ensemble over the embedding space instead of probability space. This allows us to cache a single set of averaged text embeddings so that the compute cost of the ensemble is the same as using a single classifier when amortized over many predictions. We've observed ensembling across many generated zero-shot classifiers to reliably improve performance and use it for the majority of datasets. On ImageNet, we ensemble 80 different context prompts and this improves performance by an additional 3.5% over the single default prompt discussed above. When considered together, prompt engineering and ensembling improve ImageNet accuracy by almost 5%. In Figure 4 we visualize how prompt engineering and ensembling change the performance of a set of CLIP models compared to the contextless baseline approach of directly embedding the class name as done in Li et al. (2017)."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 5.451274394989014,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 9,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": -0.8168056607246399,
+            "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nWhile comparing zero-shot performance to fully supervised models contextualizes the task-learning capabilities of CLIP, comparing to few-shot methods is a more direct comparison, since zero-shot is its limit. In Figure 6, we visualize how zero-shot CLIP compares to few-shot logistic regression on the features of many image models including the best publicly available ImageNet models, self-supervised learning methods, and CLIP itself. While it is intuitive to expect zero-shot to underperform one-shot, we instead find that zero-shot CLIP matches the performance of 4-shot logistic regression on the same feature space. This is likely due to an important difference between the zero-shot and few-shot approach. First, CLIP's zero-shot classifier is generated via natural language which allows for visual concepts to be directly specified ('communicated'). By contrast, 'normal' supervised learning must infer concepts indirectly from training examples. Context-less example-based learning has the drawback that many different hypotheses can be consistent with the data, especially in the one-shot case. A single image often contains many different visual concepts. Although a capable learner is able to exploit visual cues and heuristics, such as assuming that the concept being demonstrated is the primary object in an image, there is no guarantee."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.5. Zero-Shot Text-to-Mask",
+            "score": 4.931173801422119,
+            "text": "7.5. Zero-Shot Text-to-Mask\nApproach. Finally, we consider an even higher-level task: segmenting objects from free-form text. This experiment is a proof-of-concept of SAM's ability to process text prompts. While we used the exact same SAM in all prior experiments, for this one SAM's training procedure is modified to make it text-aware, but in a way that does not require new text annotations. Specifically, for each manually collected mask with area larger than 100 2 we extract the CLIP image embedding. Then, during training, we prompt SAM with the extracted CLIP image embeddings as its first interaction. The key observation here is that because CLIP's image embeddings are trained to align with its text embeddings, we can train with image embeddings, but use text embeddings for inference. That is, at inference time we run text through CLIP's text encoder and then give the resulting text embedding as a prompt to SAM (see §D.5 for details).\nFigure 12: Zero-shot text-to-mask. SAM can work with simple and nuanced text prompts. When SAM fails to make a correct prediction, an additional point prompt can help."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 6,
+            "section": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER",
+            "score": -0.8916519284248352,
+            "text": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER\nCLIP is pre-trained to predict if an image and a text snippet are paired together in its dataset. To perform zero-shot classification, we reuse this capability. For each dataset, we use the names of all the classes in the dataset as the set of potential text pairings and predict the most probable (image, text) pair according to CLIP. In a bit more detail, we first compute the feature embedding of the image and the feature embedding of the set of possible texts by their respective encoders. The cosine similarity of these embeddings is then calculated, scaled by a temperature parameter τ , and normalized into a probability distribution via a softmax. Note that this prediction layer is a multinomial logistic regression classifier with L2-normalized inputs, L2-normalized weights, no bias, and temperature scaling. When interpreted this way, the image encoder is the computer vision backbone which computes a feature representation for the image and the text encoder is a hypernetwork (Ha et al., 2016) which generates the weights of a linear classifier based on the text specifying the visual concepts that the classes represent. Lei Ba et al. (2015) first introduced a zero-shot image classifier of this form while the idea of generating a classifier from natural language dates back to at least Elhoseiny et al. (2013)."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 2,
+          "input_tokens": 2332,
+          "output_tokens": 591,
+          "total_tokens": 2923,
+          "reasoning_tokens": 210,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0c8330128581d60e016abc47b883e487d2a3cee9d2142c1e00",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 2276,
+              "max_output_tokens": 2048,
+              "input_tokens": 173,
+              "output_tokens": 136,
+              "total_tokens": 309,
+              "reasoning_tokens": 55,
+              "cached_input_tokens": 0
+            },
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0a37e78eacc0a2d4016abc47be8ef087d28ea93002eb4e74bb",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 4134,
+              "max_output_tokens": 4096,
+              "input_tokens": 2159,
+              "output_tokens": 455,
+              "total_tokens": 2614,
+              "reasoning_tokens": 155,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "per_source",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "clip-2021",
+              "primary_query": "CLIP zero-shot classification uses natural-language class prompts encoded by the text transformer and matched to image embeddings via contrastive similarity; effect of prompt wording and templates",
+              "primary_dense_ids": [
+                38393159029767875,
+                19194209537437375,
+                18785709153300454,
+                53537369397748879,
+                8873386777568087,
+                43843096538733098,
+                28198502122038517,
+                47561741295104297,
+                47644358656301835,
+                63873837063803767,
+                27128256141883533,
+                36800535981103499,
+                63218382382193275,
+                21530353429756467,
+                5084227470214277,
+                67703112856272733,
+                45642683302170789,
+                36976085578495916,
+                54822760714963935,
+                45775977702326854
+              ],
+              "primary_lexical_ids": [
+                38393159029767875,
+                53537369397748879,
+                4631486791388511,
+                67703112856272733,
+                28198502122038517,
+                63873837063803767,
+                47644358656301835,
+                19575680600745273,
+                18785709153300454,
+                36800535981103499,
+                58574647930536231,
+                20905279902377721,
+                54822760714963935,
+                45642683302170789,
+                63218382382193275,
+                65998422699173316,
+                3824179271162806,
+                40902055353686787,
+                8873386777568087,
+                55318876040460034
+              ],
+              "candidate_ids": [
+                38393159029767875,
+                53537369397748879,
+                18785709153300454,
+                67703112856272733,
+                47644358656301835,
+                36800535981103499,
+                28198502122038517,
+                63873837063803767,
+                54822760714963935,
+                19194209537437375,
+                47561741295104297,
+                8873386777568087,
+                63218382382193275,
+                4631486791388511,
+                45642683302170789,
+                43843096538733098,
+                58574647930536231,
+                20905279902377721,
+                65998422699173316,
+                27128256141883533,
+                40902055353686787,
+                19575680600745273,
+                21530353429756467,
+                5084227470214277,
+                46264721871645849,
+                15662300440149272,
+                3824179271162806,
+                23579876655368717,
+                2910813521984577,
+                8977460675129664
+              ],
+              "ranked_ids": [
+                18785709153300454,
+                19194209537437375,
+                38393159029767875,
+                47644358656301835,
+                43843096538733098,
+                8873386777568087,
+                47561741295104297,
+                21530353429756467,
+                28198502122038517,
+                46264721871645849,
+                5084227470214277,
+                54822760714963935,
+                15662300440149272,
+                63218382382193275,
+                45642683302170789,
+                27128256141883533,
+                63873837063803767,
+                36800535981103499,
+                67703112856272733,
+                40902055353686787,
+                23579876655368717,
+                65998422699173316,
+                53537369397748879,
+                20905279902377721,
+                19575680600745273,
+                4631486791388511,
+                8977460675129664,
+                3824179271162806,
+                2910813521984577,
+                58574647930536231
+              ]
+            },
+            {
+              "document_id": "sam-2023",
+              "primary_query": "Segment Anything promptable segmentation uses points, boxes, or masks as spatial prompts encoded by a prompt encoder to condition the mask decoder; prompt roles and segmentation performance",
+              "primary_dense_ids": [
+                9270632284231241,
+                15406296017028952,
+                38261879643221979,
+                64063547055625930,
+                34772798277966698,
+                70192568415500008,
+                46616021607256000,
+                48584351103358280,
+                3129001146993130,
+                48817601139058781,
+                30500259798254997,
+                52086369988377665,
+                67468895680467514,
+                40586964579323231,
+                11680030495004050,
+                46002146721821347,
+                3575859441842272,
+                13543244272649863,
+                51705373565064246,
+                41368826029461733
+              ],
+              "primary_lexical_ids": [
+                9270632284231241,
+                15406296017028952,
+                48817601139058781,
+                48584351103358280,
+                38261879643221979,
+                70192568415500008,
+                64063547055625930,
+                34772798277966698,
+                5031803758043813,
+                46616021607256000,
+                46692682891537369,
+                3129001146993130,
+                52086369988377665,
+                41368826029461733,
+                15668179595141796,
+                67468895680467514,
+                3575859441842272,
+                13543244272649863,
+                50516194133628686,
+                14214218663783385
+              ],
+              "candidate_ids": [
+                9270632284231241,
+                15406296017028952,
+                38261879643221979,
+                34772798277966698,
+                70192568415500008,
+                48584351103358280,
+                64063547055625930,
+                48817601139058781,
+                3129001146993130,
+                46616021607256000,
+                52086369988377665,
+                41368826029461733,
+                51705373565064246,
+                60764218559430538,
+                13543244272649863,
+                67468895680467514,
+                3575859441842272,
+                5031803758043813,
+                11680030495004050,
+                46692682891537369,
+                14214218663783385,
+                16447580141356422,
+                15668179595141796,
+                50516194133628686,
+                30500259798254997,
+                40586964579323231,
+                44456723104906992,
+                758117459887501,
+                39248417022111133,
+                45346557218159840
+              ],
+              "ranked_ids": [
+                5031803758043813,
+                60764218559430538,
+                50516194133628686,
+                15668179595141796,
+                39248417022111133,
+                758117459887501,
+                64063547055625930,
+                9270632284231241,
+                40586964579323231,
+                13543244272649863,
+                15406296017028952,
+                34772798277966698,
+                46692682891537369,
+                30500259798254997,
+                70192568415500008,
+                41368826029461733,
+                52086369988377665,
+                48584351103358280,
+                48817601139058781,
+                44456723104906992,
+                51705373565064246,
+                11680030495004050,
+                38261879643221979,
+                45346557218159840,
+                14214218663783385,
+                46616021607256000,
+                3575859441842272,
+                16447580141356422,
+                67468895680467514,
+                3129001146993130
+              ]
+            }
+          ],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "clip-2021",
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "CLIP zero-shot classification uses natural-language class prompts encoded by the text transformer and matched to image embeddings via contrastive similarity; effect of prompt wording and templates",
+              "query_variants": [
+                "CLIP zero-shot classification uses natural-language class prompts encoded by the text transformer and matched to image embeddings via contrastive similarity; effect of prompt wording and templates",
+                "CLIP zero-shot classification uses natural-language class prompts encoded by the text transformer and matched to image embeddings via contrastive similarity; effect of prompt wording and templates Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "CLIP zero-shot classification uses natural-language class prompts encoded by the text transformer and matched to image embeddings via contrastive similarity; effect of prompt wording and templates Exact inference and decision mechanism: candidate labels or text descriptions, image and text representations, similarity or scoring, normalization or temperature, probabilities, and final predicted class."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "inference_mechanism"
+              ],
+              "retrieved_chunks": 30
+            },
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything promptable segmentation uses points, boxes, or masks as spatial prompts encoded by a prompt encoder to condition the mask decoder; prompt roles and segmentation performance",
+              "query_variants": [
+                "Segment Anything promptable segmentation uses points, boxes, or masks as spatial prompts encoded by a prompt encoder to condition the mask decoder; prompt roles and segmentation performance",
+                "Segment Anything promptable segmentation uses points, boxes, or masks as spatial prompts encoded by a prompt encoder to condition the mask decoder; prompt roles and segmentation performance Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "Segment Anything promptable segmentation uses points, boxes, or masks as spatial prompts encoded by a prompt encoder to condition the mask decoder; prompt roles and segmentation performance Exact inference and decision mechanism: candidate labels or text descriptions, image and text representations, similarity or scoring, normalization or temperature, probabilities, and final predicted class."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "inference_mechanism"
+              ],
+              "retrieved_chunks": 30
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "clip-2021: Candidate class names are encoded as text.",
+              "anchor": "class names",
+              "alternatives": [
+                "candidate classes",
+                "possible texts",
+                "class descriptions"
+              ],
+              "references": [
+                "S5"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "clip-2021: Image and text embeddings are compared with cosine similarity.",
+              "anchor": "cosine similarity",
+              "alternatives": [
+                "cosine-similarity"
+              ],
+              "references": [
+                "S5"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "clip-2021: A temperature parameter scales the similarity scores.",
+              "anchor": "temperature",
+              "alternatives": [
+                "temperature parameter",
+                "temperature scaling"
+              ],
+              "references": [
+                "S5"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "clip-2021: Softmax converts the scores into a probability distribution.",
+              "anchor": "softmax",
+              "alternatives": [
+                "probability distribution"
+              ],
+              "references": [
+                "S5"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 4,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; facets=6; intents=['prompt_mechanism', 'inference_mechanism']; planner=llm",
+              "duration_ms": 2687
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; facets=3; intents=['prompt_mechanism', 'inference_mechanism']; ranking=question_rerank; dense_lists=3; bm25_lists=3; rrf=30",
+              "duration_ms": 3349
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=sam-2023; facets=3; intents=['prompt_mechanism', 'inference_mechanism']; ranking=question_rerank; dense_lists=3; bm25_lists=3; rrf=30",
+              "duration_ms": 3205
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=4; references=['S5']; intents=['prompt_mechanism', 'inference_mechanism']; fallback=False",
+              "duration_ms": 2
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=1365",
+              "duration_ms": 4134
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=5; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP turns textual class descriptions and templates into classifier weights, often ensembling prompt templates. SAM uses spatial or semantic prompts such as points, boxes, text, or masks to specify which region should be segmented.",
+      "fact_coverage": 0.6,
+      "matched_fact_groups": [
+        0,
+        1,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 0.5,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "control",
+      "relevant_chunk_ids": [
+        9270632284231241,
+        18785709153300454
+      ],
+      "target_ranks": [
+        {
+          "document_id": "clip-2021",
+          "primary_dense_ids": 3,
+          "primary_lexical_ids": 9,
+          "candidate_ids": 3,
+          "ranked_ids": 1
+        },
+        {
+          "document_id": "sam-2023",
+          "primary_dense_ids": 1,
+          "primary_lexical_ids": 1,
+          "candidate_ids": 1,
+          "ranked_ids": 8
+        }
+      ]
+    },
+    {
+      "id": "abstain-sam-mars-en",
+      "question": "What segmentation accuracy did SAM achieve on photographs taken by the Perseverance rover on Mars?",
+      "category": "abstention",
+      "language": "en",
+      "expected_abstention": true,
+      "abstention_correct": true,
+      "latency_seconds": 1.3802410640000744,
+      "response": {
+        "question": "What segmentation accuracy did SAM achieve on photographs taken by the Perseverance rover on Mars?",
+        "answer": "I cannot answer from the retrieved evidence alone.",
+        "citations": [],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 28,
+            "section": "Metrics",
+            "score": 0.8294849,
+            "text": "Metrics\n- mIoU : We used the mean intersection-over-union after a given number of prompts to evaluate the segmentation quality of a mask when prompted with points.\n- Human evaluation : We performed a human study (detailed in §E) to evaluate the real world performance of SAM. We compared the masks generated by SAM to a baseline state-of-the-art interactive segmentation model, RITM [92], using a perceptual quality scale from 1 to 10.\n- AP : We used average precision to evaluate instance segmentation for a given box and edge detection.\n- AR@1000 : We used average recall to evaluate object proposal generation.\n- ODS, OIS, AP, R50 : We used the standard edge detection evaluation metrics from BSDS500 [72, 3]."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 10,
+            "section": "7.4. Zero-Shot Instance Segmentation",
+            "score": 0.82894254,
+            "text": "7.4. Zero-Shot Instance Segmentation\nApproach. Moving to higher-level vision, we use SAM as the segmentation module of an instance segmenter. The implementation is simple: we run a object detector (the ViTDet used before) and prompt SAM with its output boxes. This illustrates composing SAM in a larger system.\nResults. We compare the masks predicted by SAM and ViTDet on COCO and LVIS in Table 5. Looking at the mask AP metric we observe gaps on both datasets, where SAM is reasonably close, though certainly behind ViTDet. By visualizing outputs, we observed that SAM masks are often qualitatively better than those of ViTDet, with crisper boundaries (see §D.4 and Fig. 16). To investigate this observation, we conducted an additional human study asking annotators to rate the ViTDet masks and SAM masks on the 1 to 10 quality scale used before. In Fig. 11 we observe that SAM consistently outperforms ViTDet in the human study."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 28,
+            "section": "Metrics",
+            "score": 0.8276862,
+            "text": "Metrics\nModel performance measures\nName\nSAM or Segment Anything Model\nVersion\n1.0\nDate\n2023\nOrganization\nThe FAIR team of Meta AI\nMode type\nPromptable segmentation model\nArchitecture\nSee §3\nRepository\nhttps://github.com/facebookresearch/segment-anything\nCitation\nhttps://research.facebook.com/publications/segment-anything\nLicense\nApache 2.0\nSAM was designed to segment any object. This includes stuff and things . Webenchmarked SAM on a diverse set of datasets and found that SAM can handle a variety of visual data including simulations, paintings, underwater images, microscopy images, driving data, stereo images, fish-eye images . See §D.1 and Table 7 for information on the benchmarks used.\nWe evaluated SAM on a variety of metrics based on the downstream task in our experiments."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8271477,
+            "text": "Abstract\nWe introduce the Segment Anything (SA) project: a new task, model, and dataset for image segmentation. Using our efficient model in a data collection loop, we built the largest segmentation dataset to date (by far), with over 1 billion masks on 11M licensed and privacy respecting images. The model is designed and trained to be promptable, so it can transfer zero-shot to new image distributions and tasks. We evaluate its capabilities on numerous tasks and find that its zero-shot performance is impressive - often competitive with or even superior to prior fully supervised results. We are releasing the Segment Anything Model (SAM) and corresponding dataset (SA-1B) of 1B masks and 11M images at https://segment-anything.com to foster research into foundation models for computer vision."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 22,
+            "section": "D.4. Zero-Shot Instance Segmentation",
+            "score": 0.82605267,
+            "text": "D.4. Zero-Shot Instance Segmentation\nMethod. For zero-shot instance segmentation, we prompt SAMwith the boxes output by a fully-supervised ViTDet-H on COCO and LVIS v1 validation splits. We apply an additional mask refinement iteration by feeding the most confident predicted mask, together with the box prompt, back to the mask decoder to produce the final prediction. We show zero-shot instance segmentations predicted on LVIS in Fig. 16. Compared to ViTDet, SAM tends to produce higher quality masks with cleaner boundaries. We confirm this observation with human studies in §7.4. Note that as a zero-shot model, SAM is not able to learn annotation biases in a dataset. For instance, we see that SAM makes a valid modal prediction for the plate, whereas LVIS masks cannot contain holes by design so the plate is annotated amodally."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": true,
+        "reason": "The language model judged the retrieved evidence insufficient.",
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1251,
+          "output_tokens": 35,
+          "total_tokens": 1286,
+          "reasoning_tokens": 22,
+          "cached_input_tokens": 1248,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0dec30ab957894aa016abc47c2c78487d2bb9beb4442c77541",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1345,
+              "max_output_tokens": 3072,
+              "input_tokens": 1251,
+              "output_tokens": 35,
+              "total_tokens": 1286,
+              "reasoning_tokens": 22,
+              "cached_input_tokens": 1248
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [],
+          "expected_language": "en",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": null,
+              "query": "What segmentation accuracy did SAM achieve on photographs taken by the Perseverance rover on Mars?",
+              "query_variants": [
+                "What segmentation accuracy did SAM achieve on photographs taken by the Perseverance rover on Mars?"
+              ],
+              "retrieval_intents": [],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "retrieved=5 chunks with one vector search",
+              "duration_ms": 32
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=none; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=21",
+              "duration_ms": 1345
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=True; citations=0; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "fact_coverage": null,
+      "citation_document_precision": null,
+      "citation_document_recall": null,
+      "retrieved_document_recall": null,
+      "passed": true,
+      "trial": 1,
+      "role": "control",
+      "relevant_chunk_ids": [],
+      "target_ranks": []
+    }
+  ],
+  "completed_runs": 6,
+  "aggregate": {
+    "evaluated_cases": 6,
+    "answerable_cases": 5,
+    "abstention_cases": 1,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.9199999999999999,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_selected_evidence_recall": 0.9,
+    "mean_latency_seconds": 6.619786752500052
+  },
+  "target_aggregate": {
+    "evaluated_cases": 3,
+    "answerable_cases": 3,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 1.0,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_selected_evidence_recall": 1.0,
+    "mean_latency_seconds": 8.106196485000131
+  }
+}

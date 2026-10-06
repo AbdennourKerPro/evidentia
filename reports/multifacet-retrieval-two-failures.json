@@ -1,0 +1,706 @@
+{
+  "created_at": "2026-08-14T21:12:23.510917+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "plans_report": "/reports/agentic-rag-response-contract-v3-final.json",
+  "top_k": 5,
+  "dense_limit": 20,
+  "lexical_limit": 20,
+  "fusion_limit": 30,
+  "fusion": "reciprocal_rank_fusion",
+  "cross_encoder_model": null,
+  "aggregate": {
+    "agentic_v1": {
+      "document_recall_at_k": 1.0,
+      "evidence_recall_at_k": 0.41666666666666663,
+      "evidence_hit_at_k": 1.0,
+      "mrr": 0.625,
+      "ndcg_at_k": 0.407627269633003
+    },
+    "dense_balanced": {
+      "document_recall_at_k": 1.0,
+      "evidence_recall_at_k": 0.0,
+      "evidence_hit_at_k": 0.0,
+      "mrr": 0.0,
+      "ndcg_at_k": 0.0
+    },
+    "hybrid_rrf": {
+      "document_recall_at_k": 1.0,
+      "evidence_recall_at_k": 0.41666666666666663,
+      "evidence_hit_at_k": 1.0,
+      "mrr": 0.625,
+      "ndcg_at_k": 0.407627269633003
+    },
+    "multifacet_rrf": {
+      "document_recall_at_k": 1.0,
+      "evidence_recall_at_k": 0.41666666666666663,
+      "evidence_hit_at_k": 1.0,
+      "mrr": 1.0,
+      "ndcg_at_k": 0.5412129593941074
+    }
+  },
+  "cases": [
+    {
+      "id": "compare-clip-sam-prompts-en",
+      "question": "How do prompts play different roles in CLIP zero-shot classification and SAM segmentation?",
+      "document_order": [
+        "clip-2021",
+        "sam-2023"
+      ],
+      "planned_queries": [
+        "What roles do prompts play in CLIP's zero-shot classification?",
+        "How do prompts influence SAM's segmentation tasks?"
+      ],
+      "query_variant_groups": [
+        [
+          "What roles do prompts play in CLIP's zero-shot classification?",
+          "What roles do prompts play in CLIP's zero-shot classification? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+          "What roles do prompts play in CLIP's zero-shot classification? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+        ],
+        [
+          "How do prompts influence SAM's segmentation tasks?",
+          "How do prompts influence SAM's segmentation tasks? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+          "How do prompts influence SAM's segmentation tasks? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+        ]
+      ],
+      "hybrid_retrieval_seconds": 0.2325273149908753,
+      "multifacet_retrieval_seconds": 0.16288063499087002,
+      "cross_encoder_seconds": null,
+      "candidate_counts": {
+        "clip-2021": {
+          "dense": 20,
+          "lexical": 20,
+          "fused": 30
+        },
+        "sam-2023": {
+          "dense": 20,
+          "lexical": 20,
+          "fused": 26
+        }
+      },
+      "multifacet_candidate_counts": {
+        "clip-2021": {
+          "facets": 3,
+          "dense_rankings": 3,
+          "lexical_rankings": 3,
+          "fused": 30
+        },
+        "sam-2023": {
+          "facets": 3,
+          "dense_rankings": 3,
+          "lexical_rankings": 3,
+          "fused": 30
+        }
+      },
+      "strategies": {
+        "agentic_v1": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.5,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": -1,
+              "score": 0.031754032258064516,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+              "language": "unknown",
+              "text": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING\nWe also experimented with ensembling over multiple zeroshot classifiers as another way of improving performance. These classifiers are computed by using different context prompts such as ' A photo of a big { label } ' and ' A photo of a small { label } '. We construct the ensemble over the embedding space instead of probability space. This allows us to cache a single set of averaged text embeddings so that the compute cost of the ensemble is the same as using a single classifier when amortized over many predictions. We've observed ensembling across many generated zero-shot classifiers to reliably improve performance and use it for the majority of datasets. On ImageNet, we ensemble 80 different context prompts and this improves performance by an additional 3.5% over the single default prompt discussed above. When considered together, prompt engineering and ensembling improve ImageNet accuracy by almost 5%. In Figure 4 we visualize how prompt engineering and ensembling change the performance of a set of CLIP models compared to the contextless baseline approach of directly embedding the class name as done in Li et al. (2017)."
+            },
+            {
+              "chunk_id": -2,
+              "score": 0.032018442622950824,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 8,
+              "section": "7. Zero-Shot Transfer Experiments",
+              "language": "unknown",
+              "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+            },
+            {
+              "chunk_id": -3,
+              "score": 0.03057889822595705,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 19,
+              "section": "6. Limitations",
+              "language": "unknown",
+              "text": "6. Limitations\nAnalysis in Section 3.1 found that CLIP's zero-shot performance is still quite weak on several kinds of tasks. When compared to task-specific models, the performance of CLIP is poor on several types of fine-grained classification such as differentiating models of cars, species of flowers, and variants of aircraft. CLIP also struggles with more abstract and systematic tasks such as counting the number of objects in an image. Finally for novel tasks which are unlikely to be included in CLIP's pre-training dataset, such as classifying the distance to the nearest car in a photo, CLIP's performance can be near random. We are confident that there are still many, many, tasks where CLIP's zero-shot performance is near chance level.\nWhile zero-shot CLIP generalizes well to many natural image distributions as investigated in Section 3.3, we've observed that zero-shot CLIP still generalizes poorly to data that is truly out-of-distribution for it. An illustrative example occurs for the task of OCR as reported in Appendix E."
+            },
+            {
+              "chunk_id": -4,
+              "score": 0.03177805800756621,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 4,
+              "section": "2. Segment Anything Task",
+              "language": "unknown",
+              "text": "2. Segment Anything Task\nDiscussion. Prompting and composition are powerful tools that enable a single model to be used in extensible ways, potentially to accomplish tasks unknown at the time of model design. This approach is analogous to how other foundation models are used, e.g ., how CLIP [82] is the text-image alignment component of the DALL · E[83] image generation system. We anticipate that composable system design, powered by techniques such as prompt engineering, will enable a wider variety of applications than systems trained specifically for a fixed set of tasks. It's also interesting to compare promptable and interactive segmentation through the lens of composition: while interactive segmentation models are designed with human users in mind, a model trained for promptable segmentation can also be composed into a larger algorithmic system as we will demonstrate.\nFigure 4: Segment Anything Model (SAM) overview. A heavyweight image encoder outputs an image embedding that can then be efficiently queried by a variety of input prompts to produce object masks at amortized real-time speed. For ambiguous prompts corresponding to more than one object, SAM can output multiple valid masks and associated confidence scores."
+            },
+            {
+              "chunk_id": -5,
+              "score": 0.030303030303030304,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+              "language": "unknown",
+              "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nten than not and wins on 16 of the 27 datasets. Looking at individual datasets reveals some interesting behavior. On fine-grained classification tasks, we observe a wide spread in performance. On two of these datasets, Stanford Cars and Food101, zero-shot CLIP outperforms logistic regression on ResNet-50 features by over 20% while on two others, Flowers102 and FGVCAircraft, zero-shot CLIP underperforms by over 10%. On OxfordPets and Birdsnap, performance is much closer. We suspect these difference are primarily due to varying amounts of per-task supervision between WIT and ImageNet. On 'general' object classification datasets such as ImageNet, CIFAR10/100, STL10, and PascalVOC2007 performance is relatively similar with a slight advantage for zero-shot CLIP in all cases. On STL10, CLIP achieves 99.3% overall which appears to be a new state of the art despite not using any training examples. Zeroshot CLIP significantly outperforms a ResNet-50 on two datasets measuring action recognition in videos. On Kinetics700, CLIP outperforms a ResNet-50 by 14.5%. Zeroshot CLIP also outperforms a ResNet-50's features by 7.7% on UCF101."
+            }
+          ]
+        },
+        "dense_balanced": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.0,
+            "evidence_hit_at_k": 0.0,
+            "reciprocal_rank": 0.0,
+            "ndcg_at_k": 0.0,
+            "matched_evidence_targets": [],
+            "missing_evidence_targets": [
+              0,
+              1
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 5084227470214277,
+              "score": 0.8784101,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 9,
+              "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+              "language": "en",
+              "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nFigure 6. Zero-shot CLIP outperforms few-shot linear probes. Zero-shot CLIP matches the average performance of a 4-shot linear classifier trained on the same feature space and nearly matches the best results of a 16-shot linear classifier across publicly available models. For both BiT-M and SimCLRv2, the best performing model is highlighted. Light gray lines are other models in the eval suite. The 20 datasets with at least 16 examples per class were used in this analysis."
+            },
+            {
+              "chunk_id": 64063547055625930,
+              "score": 0.8823219,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 4,
+              "section": "2. Segment Anything Task",
+              "language": "en",
+              "text": "2. Segment Anything Task\nDiscussion. Prompting and composition are powerful tools that enable a single model to be used in extensible ways, potentially to accomplish tasks unknown at the time of model design. This approach is analogous to how other foundation models are used, e.g ., how CLIP [82] is the text-image alignment component of the DALL · E[83] image generation system. We anticipate that composable system design, powered by techniques such as prompt engineering, will enable a wider variety of applications than systems trained specifically for a fixed set of tasks. It's also interesting to compare promptable and interactive segmentation through the lens of composition: while interactive segmentation models are designed with human users in mind, a model trained for promptable segmentation can also be composed into a larger algorithmic system as we will demonstrate.\nFigure 4: Segment Anything Model (SAM) overview. A heavyweight image encoder outputs an image embedding that can then be efficiently queried by a variety of input prompts to produce object masks at amortized real-time speed. For ambiguous prompts corresponding to more than one object, SAM can output multiple valid masks and associated confidence scores."
+            },
+            {
+              "chunk_id": 21433612239748207,
+              "score": 0.8664874,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+              "language": "en",
+              "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nSince task-agnostic zero-shot classifiers for computer vision have been understudied, CLIP provides a promising opportunity to gain a better understanding of this type of model. In this section, we conduct a study of various properties of CLIP's zero-shot classifiers. As a first question, we look simply at how well zero-shot classifiers perform. To contextualize this, we compare to the performance of a simple off-the-shelf baseline: fitting a fully supervised, regularized, logistic regression classifier on the features of the canonical ResNet-50. In Figure 5 we show this comparison across 27 datasets. Please see Appendix A for details of datasets and setup.\nZero-shot CLIP outperforms this baseline slightly more of- Zero-Shot CLIP vs. Linear Probe on ResNet50\nFigure 5. Zero-shot CLIP is competitive with a fully supervised baseline. Across a 27 dataset eval suite, a zero-shot CLIP classifier outperforms a fully supervised linear classifier fitted on ResNet-50 features on 16 datasets, including ImageNet."
+            },
+            {
+              "chunk_id": 3129537362477194,
+              "score": 0.8768722,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 12,
+              "section": "8. Discussion",
+              "language": "en",
+              "text": "8. Discussion\nLimitations. While SAM performs well in general, it is not perfect. It can miss fine structures, hallucinates small disconnected components at times, and does not produce boundaries as crisply as more computationally intensive methods that 'zoom-in', e.g . [18]. In general, we expect dedicated interactive segmentation methods to outperform SAM when many points are provided, e.g . [67]. Unlike these methods, SAM is designed for generality and breadth of use rather than high IoU interactive segmentation. Moreover, SAM can process prompts in real-time, but nevertheless SAM's overall performance is not real-time when using a heavy image encoder. Our foray into the text-to-mask task is exploratory and not entirely robust, although we believe it can be improved with more effort. While SAM can perform many tasks, it is unclear how to design simple prompts that implement semantic and panoptic segmentation. Finally, there are domain-specific tools, such as [7], that we expect to outperform SAM in their respective domains."
+            },
+            {
+              "chunk_id": 71922115776922608,
+              "score": 0.8631535,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 19,
+              "section": "6. Limitations",
+              "language": "en",
+              "text": "6. Limitations\nAnalysis in Section 3.1 found that CLIP's zero-shot performance is still quite weak on several kinds of tasks. When compared to task-specific models, the performance of CLIP is poor on several types of fine-grained classification such as differentiating models of cars, species of flowers, and variants of aircraft. CLIP also struggles with more abstract and systematic tasks such as counting the number of objects in an image. Finally for novel tasks which are unlikely to be included in CLIP's pre-training dataset, such as classifying the distance to the nearest car in a photo, CLIP's performance can be near random. We are confident that there are still many, many, tasks where CLIP's zero-shot performance is near chance level.\nWhile zero-shot CLIP generalizes well to many natural image distributions as investigated in Section 3.3, we've observed that zero-shot CLIP still generalizes poorly to data that is truly out-of-distribution for it. An illustrative example occurs for the task of OCR as reported in Appendix E."
+            }
+          ]
+        },
+        "hybrid_rrf": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.5,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 18785709153300454,
+              "score": 0.031754032258064516,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+              "language": "en",
+              "text": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING\nWe also experimented with ensembling over multiple zeroshot classifiers as another way of improving performance. These classifiers are computed by using different context prompts such as ' A photo of a big { label } ' and ' A photo of a small { label } '. We construct the ensemble over the embedding space instead of probability space. This allows us to cache a single set of averaged text embeddings so that the compute cost of the ensemble is the same as using a single classifier when amortized over many predictions. We've observed ensembling across many generated zero-shot classifiers to reliably improve performance and use it for the majority of datasets. On ImageNet, we ensemble 80 different context prompts and this improves performance by an additional 3.5% over the single default prompt discussed above. When considered together, prompt engineering and ensembling improve ImageNet accuracy by almost 5%. In Figure 4 we visualize how prompt engineering and ensembling change the performance of a set of CLIP models compared to the contextless baseline approach of directly embedding the class name as done in Li et al. (2017)."
+            },
+            {
+              "chunk_id": 5031803758043813,
+              "score": 0.032018442622950824,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 8,
+              "section": "7. Zero-Shot Transfer Experiments",
+              "language": "en",
+              "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+            },
+            {
+              "chunk_id": 71922115776922608,
+              "score": 0.03057889822595705,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 19,
+              "section": "6. Limitations",
+              "language": "en",
+              "text": "6. Limitations\nAnalysis in Section 3.1 found that CLIP's zero-shot performance is still quite weak on several kinds of tasks. When compared to task-specific models, the performance of CLIP is poor on several types of fine-grained classification such as differentiating models of cars, species of flowers, and variants of aircraft. CLIP also struggles with more abstract and systematic tasks such as counting the number of objects in an image. Finally for novel tasks which are unlikely to be included in CLIP's pre-training dataset, such as classifying the distance to the nearest car in a photo, CLIP's performance can be near random. We are confident that there are still many, many, tasks where CLIP's zero-shot performance is near chance level.\nWhile zero-shot CLIP generalizes well to many natural image distributions as investigated in Section 3.3, we've observed that zero-shot CLIP still generalizes poorly to data that is truly out-of-distribution for it. An illustrative example occurs for the task of OCR as reported in Appendix E."
+            },
+            {
+              "chunk_id": 64063547055625930,
+              "score": 0.03177805800756621,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 4,
+              "section": "2. Segment Anything Task",
+              "language": "en",
+              "text": "2. Segment Anything Task\nDiscussion. Prompting and composition are powerful tools that enable a single model to be used in extensible ways, potentially to accomplish tasks unknown at the time of model design. This approach is analogous to how other foundation models are used, e.g ., how CLIP [82] is the text-image alignment component of the DALL · E[83] image generation system. We anticipate that composable system design, powered by techniques such as prompt engineering, will enable a wider variety of applications than systems trained specifically for a fixed set of tasks. It's also interesting to compare promptable and interactive segmentation through the lens of composition: while interactive segmentation models are designed with human users in mind, a model trained for promptable segmentation can also be composed into a larger algorithmic system as we will demonstrate.\nFigure 4: Segment Anything Model (SAM) overview. A heavyweight image encoder outputs an image embedding that can then be efficiently queried by a variety of input prompts to produce object masks at amortized real-time speed. For ambiguous prompts corresponding to more than one object, SAM can output multiple valid masks and associated confidence scores."
+            },
+            {
+              "chunk_id": 43843096538733098,
+              "score": 0.030303030303030304,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+              "language": "en",
+              "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nten than not and wins on 16 of the 27 datasets. Looking at individual datasets reveals some interesting behavior. On fine-grained classification tasks, we observe a wide spread in performance. On two of these datasets, Stanford Cars and Food101, zero-shot CLIP outperforms logistic regression on ResNet-50 features by over 20% while on two others, Flowers102 and FGVCAircraft, zero-shot CLIP underperforms by over 10%. On OxfordPets and Birdsnap, performance is much closer. We suspect these difference are primarily due to varying amounts of per-task supervision between WIT and ImageNet. On 'general' object classification datasets such as ImageNet, CIFAR10/100, STL10, and PascalVOC2007 performance is relatively similar with a slight advantage for zero-shot CLIP in all cases. On STL10, CLIP achieves 99.3% overall which appears to be a new state of the art despite not using any training examples. Zeroshot CLIP significantly outperforms a ResNet-50 on two datasets measuring action recognition in videos. On Kinetics700, CLIP outperforms a ResNet-50 by 14.5%. Zeroshot CLIP also outperforms a ResNet-50's features by 7.7% on UCF101."
+            }
+          ]
+        },
+        "multifacet_rrf": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.5,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 1.0,
+            "ndcg_at_k": 0.6131471927654584,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 18785709153300454,
+              "score": 0.15280436218532129,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+              "language": "en",
+              "text": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING\nWe also experimented with ensembling over multiple zeroshot classifiers as another way of improving performance. These classifiers are computed by using different context prompts such as ' A photo of a big { label } ' and ' A photo of a small { label } '. We construct the ensemble over the embedding space instead of probability space. This allows us to cache a single set of averaged text embeddings so that the compute cost of the ensemble is the same as using a single classifier when amortized over many predictions. We've observed ensembling across many generated zero-shot classifiers to reliably improve performance and use it for the majority of datasets. On ImageNet, we ensemble 80 different context prompts and this improves performance by an additional 3.5% over the single default prompt discussed above. When considered together, prompt engineering and ensembling improve ImageNet accuracy by almost 5%. In Figure 4 we visualize how prompt engineering and ensembling change the performance of a set of CLIP models compared to the contextless baseline approach of directly embedding the class name as done in Li et al. (2017)."
+            },
+            {
+              "chunk_id": 5031803758043813,
+              "score": 0.15485879240014513,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 8,
+              "section": "7. Zero-Shot Transfer Experiments",
+              "language": "en",
+              "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+            },
+            {
+              "chunk_id": 71922115776922608,
+              "score": 0.14737802554401844,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 19,
+              "section": "6. Limitations",
+              "language": "en",
+              "text": "6. Limitations\nAnalysis in Section 3.1 found that CLIP's zero-shot performance is still quite weak on several kinds of tasks. When compared to task-specific models, the performance of CLIP is poor on several types of fine-grained classification such as differentiating models of cars, species of flowers, and variants of aircraft. CLIP also struggles with more abstract and systematic tasks such as counting the number of objects in an image. Finally for novel tasks which are unlikely to be included in CLIP's pre-training dataset, such as classifying the distance to the nearest car in a photo, CLIP's performance can be near random. We are confident that there are still many, many, tasks where CLIP's zero-shot performance is near chance level.\nWhile zero-shot CLIP generalizes well to many natural image distributions as investigated in Section 3.3, we've observed that zero-shot CLIP still generalizes poorly to data that is truly out-of-distribution for it. An illustrative example occurs for the task of OCR as reported in Appendix E."
+            },
+            {
+              "chunk_id": 60764218559430538,
+              "score": 0.15428601408511525,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 11,
+              "section": "7.5. Zero-Shot Text-to-Mask",
+              "language": "en",
+              "text": "7.5. Zero-Shot Text-to-Mask\nApproach. Finally, we consider an even higher-level task: segmenting objects from free-form text. This experiment is a proof-of-concept of SAM's ability to process text prompts. While we used the exact same SAM in all prior experiments, for this one SAM's training procedure is modified to make it text-aware, but in a way that does not require new text annotations. Specifically, for each manually collected mask with area larger than 100 2 we extract the CLIP image embedding. Then, during training, we prompt SAM with the extracted CLIP image embeddings as its first interaction. The key observation here is that because CLIP's image embeddings are trained to align with its text embeddings, we can train with image embeddings, but use text embeddings for inference. That is, at inference time we run text through CLIP's text encoder and then give the resulting text embedding as a prompt to SAM (see §D.5 for details).\nFigure 12: Zero-shot text-to-mask. SAM can work with simple and nuanced text prompts. When SAM fails to make a correct prediction, an additional point prompt can help."
+            },
+            {
+              "chunk_id": 54822760714963935,
+              "score": 0.1402178097607202,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 8,
+              "section": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING",
+              "language": "en",
+              "text": "3.1.4. PROMPT ENGINEERING AND ENSEMBLING\nSimilar to the 'prompt engineering' discussion around GPT3 (Brown et al., 2020; Gao et al., 2020), we have also observed that zero-shot performance can be significantly improved by customizing the prompt text to each task. A few, non exhaustive, examples follow. We found on several fine-grained image classification datasets that it helped to specify the category. For example on Oxford-IIIT Pets, using ' A photo of a { label } , a type of pet. ' to help provide context worked well. Likewise, on Food101 specifying a type of food and on FGVC Aircraft a type of aircraft helped too. For OCR datasets, we found that putting quotes around the text or number to be recognized improved performance. Finally, we found that on satellite image classification datasets it helped to specify that the images were of this form and we use variants of ' a satellite photo of a { label } . '."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "compare-training-data-scale-en",
+      "question": "Compare the reported training-data scale of CLIP, DINOv2, and SAM.",
+      "document_order": [
+        "clip-2021",
+        "dinov2-2023",
+        "sam-2023"
+      ],
+      "planned_queries": [
+        "What is the reported training data scale for CLIP?",
+        "What is the reported training data scale for DINOv2?",
+        "What is the reported training data scale for SAM?"
+      ],
+      "query_variant_groups": [
+        [
+          "What is the reported training data scale for CLIP?",
+          "What is the reported training data scale for CLIP? Exact reported dataset scale and quantitative details: dataset name, number of images, image-text pairs, masks, annotations, samples, million, billion."
+        ],
+        [
+          "What is the reported training data scale for DINOv2?",
+          "What is the reported training data scale for DINOv2? Exact reported dataset scale and quantitative details: dataset name, number of images, image-text pairs, masks, annotations, samples, million, billion."
+        ],
+        [
+          "What is the reported training data scale for SAM?",
+          "What is the reported training data scale for SAM? Exact reported dataset scale and quantitative details: dataset name, number of images, image-text pairs, masks, annotations, samples, million, billion."
+        ]
+      ],
+      "hybrid_retrieval_seconds": 0.1406068070064066,
+      "multifacet_retrieval_seconds": 0.15671266200661194,
+      "cross_encoder_seconds": null,
+      "candidate_counts": {
+        "clip-2021": {
+          "dense": 20,
+          "lexical": 20,
+          "fused": 30
+        },
+        "dinov2-2023": {
+          "dense": 20,
+          "lexical": 20,
+          "fused": 30
+        },
+        "sam-2023": {
+          "dense": 20,
+          "lexical": 20,
+          "fused": 30
+        }
+      },
+      "multifacet_candidate_counts": {
+        "clip-2021": {
+          "facets": 2,
+          "dense_rankings": 2,
+          "lexical_rankings": 2,
+          "fused": 30
+        },
+        "dinov2-2023": {
+          "facets": 2,
+          "dense_rankings": 2,
+          "lexical_rankings": 2,
+          "fused": 30
+        },
+        "sam-2023": {
+          "facets": 2,
+          "dense_rankings": 2,
+          "lexical_rankings": 2,
+          "fused": 30
+        }
+      },
+      "strategies": {
+        "agentic_v1": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.3333333333333333,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 0.25,
+            "ndcg_at_k": 0.20210734650054757,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1,
+              2
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": -1,
+              "score": 0.031746031746031744,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 17,
+              "section": "4. Comparison to Human Performance",
+              "language": "unknown",
+              "text": "4. Comparison to Human Performance\nFigure 15. Few-shot CLIP also increases effective robustness compared to existing ImageNet models but is less robust than zero-shot CLIP. Minimizing the amount of ImageNet training data used for adaption increases effective robustness at the cost of decreasing relative robustness. 16-shot logistic regression CLIP matches zero-shot CLIP on ImageNet, as previously reported in Figure 7, but is less robust.\nand 97-100% accuracy on the subset of attention check images increased our trust in the human workers.\nInterestingly, humans went from a performance average of 54% to 76% with just one training example per class, and the marginal gain from an additional training example is minimal. The gain in accuracy going from zero to one shot is almost entirely on images that humans were uncertain about. This suggests that humans 'know what they don't know' and are able to update their priors on the images they are most uncertain in based on a single example. Given this, it seems that while CLIP is a promising training strategy for zero-shot performance (Figure 5) and does well on tests of natural distribution shift (Figure 13), there is a large difference between how humans learn from a few examples and the few-shot methods in this paper."
+            },
+            {
+              "chunk_id": -2,
+              "score": 0.03252247488101534,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 2,
+              "section": "1 Introduction",
+              "language": "unknown",
+              "text": "1 Introduction\nFinally, we provide a variety of pretrained visual models, called DINOv2, trained with different Vision Transformers (ViT) (Dosovitskiy et al., 2016) architectures on our data. We release all the models and the code to retrain DINOv2 on any data. We validate the quality of DINOv2 on various computer vision benchmarks at both image and pixel levels as we scale them, as summarized in Fig. 2. We conclude that self- supervised pretraining alone is a good candidate for learning transferable frozen features that are competitive with the best openly available weakly-supervised models.\nFigure 2: Evolution of performance when scaling in parameters. We show performance on eight types of vision tasks, as presented in Sec. 7, and average metrics with each type. Features are extracted from our self-supervised encoders, DINOv2 (dark blue), and we compare them with self-supervised methods (pale orange), as well as weakly-supervised methods (dark pink). We report the best-performing weaklysupervised model's performance as a dashed horizontal line. Our family of models drastically improves over the previous state of the art in self-supervised learning and reaches performance comparable with weaklysupervised features. See Sec. 7 for a detailed analysis."
+            },
+            {
+              "chunk_id": -3,
+              "score": 0.03225806451612903,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 28,
+              "section": "Data",
+              "language": "unknown",
+              "text": "Data\nCost and impact of compute\nRisks and harms\nUse cases We trained SAM on licensed images. The images were filtered for objectionable content by the provider, but we acknowledge the possibility of false negatives. We performed a geographic analysis of the SA-1B dataset in §6. While SA-1B is more geographically diverse than many of its predecessors, we acknowledge that some geographic regions and economic groups are underrepresented.\nSAMwastrained on 256 A100 GPUS for 68 hours. We acknowledge the environmental impact and cost of training large scale models. The environmental impact of training the released SAM model is approximately 6963 kWh resulting in an estimated 2.8 metric tons of carbon dioxide given the specific data center used, using the calculation described in [77] and the ML CO 2 Impact calculator [61]. This is equivalent to ∼ 7k miles driven by the average gasoline-powered passenger vehicle in the US [101]. We released the SAM models to both reduce the need for retraining and lower the barrier to entry for large scale vision research.\nWe evaluated SAM for fairness in §6. Downstream use cases of SAM will create their own potential for biases and fairness concerns. As such we recommend users run their own fairness evaluation when using SAM for their specific use case.\nWe implore users to use their best judgement for downstream use of the model.\nTable 9: Model Card for SAM, following the procedure detailed in [75]."
+            },
+            {
+              "chunk_id": -4,
+              "score": 0.03128054740957967,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 2,
+              "section": "1. Introduction and Motivating Work",
+              "language": "unknown",
+              "text": "1. Introduction and Motivating Work\nA crucial difference between these weakly supervised models and recent explorations of learning image representations directly from natural language is scale. While Mahajan et al. (2018) and Kolesnikov et al. (2019) trained their models for accelerator years on millions to billions of images, VirTex, ICMLM, and ConVIRT trained for accelerator days on one to two hundred thousand images. In this work, we close this gap and study the behaviors of image classifiers trained with natural language supervision at large scale. Enabled by the large amounts of publicly available data of this form on the internet, we create a new dataset of 400 million (image, text) pairs and demonstrate that a simplified version of ConVIRT trained from scratch, which we call CLIP, for Contrastive Language-Image Pre-training, is an efficient method of learning from natural language supervision. We study the scalability of CLIP by training a series of eight models spanning almost 2 orders of magnitude of compute and observe that transfer performance is a smoothly predictable function of compute (Hestness et al., 2017; Kaplan et al., 2020). We find that CLIP, similar to the GPT family, learns to perform a wide set of tasks during pre-training including OCR, geo-localization, action recognition, and many others. We measure this by benchmarking the zero-shot transfer performance of CLIP on over 30 existing datasets and find it can be competitive with prior task-specific supervised models."
+            },
+            {
+              "chunk_id": -5,
+              "score": 0.03125763125763126,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 20,
+              "section": "10 Future work and Discussion",
+              "language": "unknown",
+              "text": "10 Future work and Discussion\nIn this work, we present DINOv2, a new series of image encoders pretrained on large curated data with no supervision. This is the first SSL work on image data that leads to visual features that close the performance gap with (weakly) supervised alternatives across a wide range of benchmarks and without the need for finetuning. A few properties emerge from these models, such as an understanding of object parts and scene geometry regardless of the image domains. We expect that more of these properties will emerge at larger scales of models and data, akin to instruction emergence in large language models, and plan to continue scaling along these axes. This paper also demonstrates that these visual features are compatible with classifiers as simple as linear layers - meaning the underlying information is readily available . In future work, we plan to leverage this ability to train a a language-enabled AI system that can process visual features as if they were word tokens, and extract the required information to ground the system."
+            }
+          ]
+        },
+        "dense_balanced": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.0,
+            "evidence_hit_at_k": 0.0,
+            "reciprocal_rank": 0.0,
+            "ndcg_at_k": 0.0,
+            "matched_evidence_targets": [],
+            "missing_evidence_targets": [
+              0,
+              1,
+              2
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 23725907283849592,
+              "score": 0.8848861,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 47,
+              "section": "E.3. Action Recognition in Videos",
+              "language": "en",
+              "text": "E.3. Action Recognition in Videos\nDespite this handicap, CLIP features transfer surprisingly well to this task. CLIP matches the best prior result on UCF101 in a linear probe evaluation setting and also outperforms all other models in our evaluation suite. On Kinetics-700, CLIP also outperforms the fine-tuned I3D baseline from the original paper. Since it does not require a training stage, we report CLIP's zero-shot performance when averaging predictions across all frames. CLIP also performs well in this setting and on Kinetics-700 its performance is within 1% of the fully supervised I3D baseline which is trained on 545000 labeled videos. Encouraged by these results, we also measure CLIP's performance on the recently introduced RareAct dataset (Miech et al., 2020a) which was designed to measure zero-shot recognition of unusual actions like 'hammering a phone' and 'drilling an egg'. CLIP improves over the prior state of the art, a S3D model trained on automatically extracted captions from 100 million instructional videos, by 10 points.\nWhile CLIP has encouragingly strong performance on the task of action recognition, we note that there are many differences between the models being compared beyond just their form of supervision such as model architecture, training data distribution, dataset size, and compute used. Further work is needed to more precisely determine what specific design decisions contribute to achieving high performance on this task."
+            },
+            {
+              "chunk_id": 645487143640963,
+              "score": 0.87324667,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 29,
+              "section": "B.1 Unsupervised pre-training",
+              "language": "en",
+              "text": "B.1 Unsupervised pre-training\n142,109,386\nTable 15: Composition of our LVD-142M dataset. We report the list of datasets and associated splits used to build the dataset, how they were included (as is without retrieval or via sample-based or cluster-based retrieval). For retrievals, we indicate the actual number of retrieved images and the final number included in the dataset.\n\nTable 16: Training hyperparameters for DINOv2-S, DINOv2-B, DINOv2-L and DINOv2-g. All models run for 625k iterations with optimizer AdamW, an initial LayerScale value of 1e-5, a weight decay cosine schedule from 0.04 to 0.2, a learning rate warmup of 100k iterations, a teacher momentum cosine schedule from 0.994 to 1, and we train in float16 precision in all cases (except for the DINO heads where we reduce the gradients in float32)."
+            },
+            {
+              "chunk_id": 21620845307781124,
+              "score": 0.8628223,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 11,
+              "section": "7.6. Ablations",
+              "language": "en",
+              "text": "7.6. Ablations\nIn Fig. 13 (middle) we look at the impact of data volume. The full SA-1B contains 11M images, which we uniformly subsample to 1M and 0.1M for this ablation. At 0.1M images, we observe a large mIoU decline under all settings. However, with 1M images, about 10% of the full dataset, we observe results comparable to using the full dataset. This data regime, which still includes approximately 100M masks, may be a practical setting for many use cases.\nFigure 13: Ablation studies of our data engine stages, image encoder scaling, and training data scaling. (Left) Each data engine stage leads to improvements on our 23 dataset suite, and training with only the automatic data (our default) yields similar results to using data from all three stages. (Middle) SAM trained with ∼ 10% of SA-1B and full SA-1B is comparable. We train with all 11M images by default, but using 1M images is a reasonable practical setting. (Right) Scaling SAM's image encoder shows meaningful, yet saturating gains. Nevertheless, smaller image encoders may be preferred in certain settings."
+            },
+            {
+              "chunk_id": 25477946240047955,
+              "score": 0.88262546,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 18,
+              "section": "6. Limitations",
+              "language": "en",
+              "text": "6. Limitations\nThere are still many limitations to CLIP. While several of these are discussed as part of analysis in various sections, we summarize and collect them here.\nOn datasets with training splits, the performance of zeroshot CLIP is on average competitive with the simple su- pervised baseline of a linear classifier on top of ResNet-50 features. On most of these datasets, the performance of this baseline is now well below the overall state of the art. Significant work is still needed to improve the task learning and transfer capabilities of CLIP. While scaling has so far steadily improved performance and suggests a route for continued improvement, we estimate around a 1000x increase in compute is required for zero-shot CLIP to reach overall state-of-the-art performance. This is infeasible to train with current hardware. Further research into improving upon the computational and data efficiency of CLIP will be necessary."
+            },
+            {
+              "chunk_id": 49906767333703700,
+              "score": 0.8720525,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 2,
+              "section": "1 Introduction",
+              "language": "en",
+              "text": "1 Introduction\nFinally, we provide a variety of pretrained visual models, called DINOv2, trained with different Vision Transformers (ViT) (Dosovitskiy et al., 2016) architectures on our data. We release all the models and the code to retrain DINOv2 on any data. We validate the quality of DINOv2 on various computer vision benchmarks at both image and pixel levels as we scale them, as summarized in Fig. 2. We conclude that self- supervised pretraining alone is a good candidate for learning transferable frozen features that are competitive with the best openly available weakly-supervised models.\nFigure 2: Evolution of performance when scaling in parameters. We show performance on eight types of vision tasks, as presented in Sec. 7, and average metrics with each type. Features are extracted from our self-supervised encoders, DINOv2 (dark blue), and we compare them with self-supervised methods (pale orange), as well as weakly-supervised methods (dark pink). We report the best-performing weaklysupervised model's performance as a dashed horizontal line. Our family of models drastically improves over the previous state of the art in self-supervised learning and reaches performance comparable with weaklysupervised features. See Sec. 7 for a detailed analysis."
+            }
+          ]
+        },
+        "hybrid_rrf": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.3333333333333333,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 0.25,
+            "ndcg_at_k": 0.20210734650054757,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1,
+              2
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 52144086012541768,
+              "score": 0.031746031746031744,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 17,
+              "section": "4. Comparison to Human Performance",
+              "language": "en",
+              "text": "4. Comparison to Human Performance\nFigure 15. Few-shot CLIP also increases effective robustness compared to existing ImageNet models but is less robust than zero-shot CLIP. Minimizing the amount of ImageNet training data used for adaption increases effective robustness at the cost of decreasing relative robustness. 16-shot logistic regression CLIP matches zero-shot CLIP on ImageNet, as previously reported in Figure 7, but is less robust.\nand 97-100% accuracy on the subset of attention check images increased our trust in the human workers.\nInterestingly, humans went from a performance average of 54% to 76% with just one training example per class, and the marginal gain from an additional training example is minimal. The gain in accuracy going from zero to one shot is almost entirely on images that humans were uncertain about. This suggests that humans 'know what they don't know' and are able to update their priors on the images they are most uncertain in based on a single example. Given this, it seems that while CLIP is a promising training strategy for zero-shot performance (Figure 5) and does well on tests of natural distribution shift (Figure 13), there is a large difference between how humans learn from a few examples and the few-shot methods in this paper."
+            },
+            {
+              "chunk_id": 49906767333703700,
+              "score": 0.03252247488101534,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 2,
+              "section": "1 Introduction",
+              "language": "en",
+              "text": "1 Introduction\nFinally, we provide a variety of pretrained visual models, called DINOv2, trained with different Vision Transformers (ViT) (Dosovitskiy et al., 2016) architectures on our data. We release all the models and the code to retrain DINOv2 on any data. We validate the quality of DINOv2 on various computer vision benchmarks at both image and pixel levels as we scale them, as summarized in Fig. 2. We conclude that self- supervised pretraining alone is a good candidate for learning transferable frozen features that are competitive with the best openly available weakly-supervised models.\nFigure 2: Evolution of performance when scaling in parameters. We show performance on eight types of vision tasks, as presented in Sec. 7, and average metrics with each type. Features are extracted from our self-supervised encoders, DINOv2 (dark blue), and we compare them with self-supervised methods (pale orange), as well as weakly-supervised methods (dark pink). We report the best-performing weaklysupervised model's performance as a dashed horizontal line. Our family of models drastically improves over the previous state of the art in self-supervised learning and reaches performance comparable with weaklysupervised features. See Sec. 7 for a detailed analysis."
+            },
+            {
+              "chunk_id": 43058247790529672,
+              "score": 0.03225806451612903,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 28,
+              "section": "Data",
+              "language": "en",
+              "text": "Data\nCost and impact of compute\nRisks and harms\nUse cases We trained SAM on licensed images. The images were filtered for objectionable content by the provider, but we acknowledge the possibility of false negatives. We performed a geographic analysis of the SA-1B dataset in §6. While SA-1B is more geographically diverse than many of its predecessors, we acknowledge that some geographic regions and economic groups are underrepresented.\nSAMwastrained on 256 A100 GPUS for 68 hours. We acknowledge the environmental impact and cost of training large scale models. The environmental impact of training the released SAM model is approximately 6963 kWh resulting in an estimated 2.8 metric tons of carbon dioxide given the specific data center used, using the calculation described in [77] and the ML CO 2 Impact calculator [61]. This is equivalent to ∼ 7k miles driven by the average gasoline-powered passenger vehicle in the US [101]. We released the SAM models to both reduce the need for retraining and lower the barrier to entry for large scale vision research.\nWe evaluated SAM for fairness in §6. Downstream use cases of SAM will create their own potential for biases and fairness concerns. As such we recommend users run their own fairness evaluation when using SAM for their specific use case.\nWe implore users to use their best judgement for downstream use of the model.\nTable 9: Model Card for SAM, following the procedure detailed in [75]."
+            },
+            {
+              "chunk_id": 45642683302170789,
+              "score": 0.03128054740957967,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 2,
+              "section": "1. Introduction and Motivating Work",
+              "language": "en",
+              "text": "1. Introduction and Motivating Work\nA crucial difference between these weakly supervised models and recent explorations of learning image representations directly from natural language is scale. While Mahajan et al. (2018) and Kolesnikov et al. (2019) trained their models for accelerator years on millions to billions of images, VirTex, ICMLM, and ConVIRT trained for accelerator days on one to two hundred thousand images. In this work, we close this gap and study the behaviors of image classifiers trained with natural language supervision at large scale. Enabled by the large amounts of publicly available data of this form on the internet, we create a new dataset of 400 million (image, text) pairs and demonstrate that a simplified version of ConVIRT trained from scratch, which we call CLIP, for Contrastive Language-Image Pre-training, is an efficient method of learning from natural language supervision. We study the scalability of CLIP by training a series of eight models spanning almost 2 orders of magnitude of compute and observe that transfer performance is a smoothly predictable function of compute (Hestness et al., 2017; Kaplan et al., 2020). We find that CLIP, similar to the GPT family, learns to perform a wide set of tasks during pre-training including OCR, geo-localization, action recognition, and many others. We measure this by benchmarking the zero-shot transfer performance of CLIP on over 30 existing datasets and find it can be competitive with prior task-specific supervised models."
+            },
+            {
+              "chunk_id": 9109538875028604,
+              "score": 0.03125763125763126,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 20,
+              "section": "10 Future work and Discussion",
+              "language": "en",
+              "text": "10 Future work and Discussion\nIn this work, we present DINOv2, a new series of image encoders pretrained on large curated data with no supervision. This is the first SSL work on image data that leads to visual features that close the performance gap with (weakly) supervised alternatives across a wide range of benchmarks and without the need for finetuning. A few properties emerge from these models, such as an understanding of object parts and scene geometry regardless of the image domains. We expect that more of these properties will emerge at larger scales of models and data, akin to instruction emergence in large language models, and plan to continue scaling along these axes. This paper also demonstrates that these visual features are compatible with classifiers as simple as linear layers - meaning the underlying information is readily available . In future work, we plan to leverage this ability to train a a language-enabled AI system that can process visual features as if they were word tokens, and extract the required information to ground the system."
+            }
+          ]
+        },
+        "multifacet_rrf": {
+          "metrics": {
+            "document_recall_at_k": 1.0,
+            "evidence_recall_at_k": 0.3333333333333333,
+            "evidence_hit_at_k": 1.0,
+            "reciprocal_rank": 1.0,
+            "ndcg_at_k": 0.46927872602275644,
+            "matched_evidence_targets": [
+              0
+            ],
+            "missing_evidence_targets": [
+              1,
+              2
+            ]
+          },
+          "selected": [
+            {
+              "chunk_id": 45642683302170789,
+              "score": 0.09531743265548132,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 2,
+              "section": "1. Introduction and Motivating Work",
+              "language": "en",
+              "text": "1. Introduction and Motivating Work\nA crucial difference between these weakly supervised models and recent explorations of learning image representations directly from natural language is scale. While Mahajan et al. (2018) and Kolesnikov et al. (2019) trained their models for accelerator years on millions to billions of images, VirTex, ICMLM, and ConVIRT trained for accelerator days on one to two hundred thousand images. In this work, we close this gap and study the behaviors of image classifiers trained with natural language supervision at large scale. Enabled by the large amounts of publicly available data of this form on the internet, we create a new dataset of 400 million (image, text) pairs and demonstrate that a simplified version of ConVIRT trained from scratch, which we call CLIP, for Contrastive Language-Image Pre-training, is an efficient method of learning from natural language supervision. We study the scalability of CLIP by training a series of eight models spanning almost 2 orders of magnitude of compute and observe that transfer performance is a smoothly predictable function of compute (Hestness et al., 2017; Kaplan et al., 2020). We find that CLIP, similar to the GPT family, learns to perform a wide set of tasks during pre-training including OCR, geo-localization, action recognition, and many others. We measure this by benchmarking the zero-shot transfer performance of CLIP on over 30 existing datasets and find it can be competitive with prior task-specific supervised models."
+            },
+            {
+              "chunk_id": 645487143640963,
+              "score": 0.09614427473792267,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 29,
+              "section": "B.1 Unsupervised pre-training",
+              "language": "en",
+              "text": "B.1 Unsupervised pre-training\n142,109,386\nTable 15: Composition of our LVD-142M dataset. We report the list of datasets and associated splits used to build the dataset, how they were included (as is without retrieval or via sample-based or cluster-based retrieval). For retrievals, we indicate the actual number of retrieved images and the final number included in the dataset.\n\nTable 16: Training hyperparameters for DINOv2-S, DINOv2-B, DINOv2-L and DINOv2-g. All models run for 625k iterations with optimizer AdamW, an initial LayerScale value of 1e-5, a weight decay cosine schedule from 0.04 to 0.2, a learning rate warmup of 100k iterations, a teacher momentum cosine schedule from 0.994 to 1, and we train in float16 precision in all cases (except for the DINO heads where we reduce the gradients in float32)."
+            },
+            {
+              "chunk_id": 29772822379358413,
+              "score": 0.08729640488036011,
+              "document_id": "sam-2023",
+              "title": "Segment Anything",
+              "page": 11,
+              "section": "7.6. Ablations",
+              "language": "en",
+              "text": "7.6. Ablations\nWeperform several ablations on our 23 dataset suite with the single center point prompt protocol. Recall that a single point may be ambiguous and that ambiguity may not be represented in the ground truth, which contains only a single mask per point. Since SAM is operating in a zeroshot transfer setting there can be systematic biases between SAM's top-ranked mask vs . the masks resulting from data annotation guidelines. We therefore additionally report the best mask with respect to the ground truth ('oracle').\nFig. 13 (left) plots SAM's performance when trained on cumulative data from the data engine stages. We observe that each stage increases mIoU. When training with all three stages, the automatic masks vastly outnumber the manual and semi-automatic masks. To address this, we found that oversampling the manual and semi-automatic masks during training by 10 × gave best results. This setup complicates training. We therefore tested a fourth setup that uses only the automatically generated masks. With this data, SAM performs only marginally lower than using all data ( ∼ 0.5 mIoU). Therefore, by default we use only the automatically generated masks to simplify the training setup."
+            },
+            {
+              "chunk_id": 38726486940564974,
+              "score": 0.08210947305202423,
+              "document_id": "clip-2021",
+              "title": "Learning Transferable Visual Models From Natural Language Supervision",
+              "page": 19,
+              "section": "6. Limitations",
+              "language": "en",
+              "text": "6. Limitations\nAlthough CLIP can flexibly generate zero-shot classifiers for a wide variety of tasks and datasets, CLIP is still limited to choosing from only those concepts in a given zero-shot classifier. This is a significant restriction compared to a truly flexible approach like image captioning which could generate novel outputs. Unfortunately, as described in Section 2.3 we found the computational efficiency of the image caption baseline we tried to be much lower than CLIP. A simple idea worth trying is joint training of a contrastive and generative objective with the hope of combining the efficiency of CLIP with the flexibility of a caption model. As another alternative, search could be performed at inference time over many natural language explanations of a given image, similar to approach proposed in Learning with Latent Language Andreas et al. (2017).\nCLIP also does not address the poor data efficiency of deep learning. Instead CLIP compensates by using a source of supervision that can be scaled to hundreds of millions of training examples. If every image seen during training of a CLIP model was presented at a rate of one per second, it would take 405 years to iterate through the 12.8 billion images seen over 32 training epochs. Combining CLIP with self-supervision (Henaff, 2020; Chen et al., 2020c) and self-training (Lee; Xie et al., 2020) methods is a promising direction given their demonstrated ability to improve data efficiency over standard supervised learning."
+            },
+            {
+              "chunk_id": 49906767333703700,
+              "score": 0.09267625145270236,
+              "document_id": "dinov2-2023",
+              "title": "DINOv2: Learning Robust Visual Features without Supervision",
+              "page": 2,
+              "section": "1 Introduction",
+              "language": "en",
+              "text": "1 Introduction\nFinally, we provide a variety of pretrained visual models, called DINOv2, trained with different Vision Transformers (ViT) (Dosovitskiy et al., 2016) architectures on our data. We release all the models and the code to retrain DINOv2 on any data. We validate the quality of DINOv2 on various computer vision benchmarks at both image and pixel levels as we scale them, as summarized in Fig. 2. We conclude that self- supervised pretraining alone is a good candidate for learning transferable frozen features that are competitive with the best openly available weakly-supervised models.\nFigure 2: Evolution of performance when scaling in parameters. We show performance on eight types of vision tasks, as presented in Sec. 7, and average metrics with each type. Features are extracted from our self-supervised encoders, DINOv2 (dark blue), and we compare them with self-supervised methods (pale orange), as well as weakly-supervised methods (dark pink). We report the best-performing weaklysupervised model's performance as a dashed horizontal line. Our family of models drastically improves over the previous state of the art in self-supervised learning and reaches performance comparable with weaklysupervised features. See Sec. 7 for a detailed analysis."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

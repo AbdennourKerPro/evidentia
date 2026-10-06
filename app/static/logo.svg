@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#eeeeee">
+  <title>Pages scientifiques et questionnement</title>
+  <!-- Left page: a solid, folded editorial shape, without fine strokes. -->
+  <path d="M6 12 32 21C43 25 47 34 47 47 41 41 37 39 31 37L16 32V74L33 80V90L6 80Z"/>
+  <!-- Right page and curved question tail form one continuous shape; no dot. -->
+  <path d="M94 12 69 21C56 26 51 36 51 48V54C51 62 41 65 41 75V82H53C49 73 55 70 60 64 67 54 62 48 56 46 63 39 70 36 84 32V74L67 80V90L94 80Z"/>
+</svg>

@@ -1,0 +1,1365 @@
+{
+  "created_at": "2026-09-30T18:22:00.268510+00:00",
+  "pipeline": "retrieval_ablation_v1",
+  "profile": "question_rerank",
+  "llm_configuration": {
+    "provider": "openai",
+    "endpoint": "responses",
+    "model_id": "gpt-6-luna",
+    "reasoning_effort": "low",
+    "timeout_seconds": 60.0,
+    "max_retries": 1,
+    "max_output_tokens": 4096
+  },
+  "benchmark_sha256": "31917579b4753cf27d3eca756dbf7b8ef23917f6bfcb1bdb6a7b2414a4aab74b",
+  "corpus_sha256": "99ac1323550fbbe6cdfd0be7d90a880c0cc80fdb9675eac2058cfc1d19f109a9",
+  "source_sha256": {
+    "app/__init__.py": "71d4c5fffc40b187d0a970d1b44562887079184d1b2db9cefdb8d6ea797dc51c",
+    "app/agentic_rag.py": "063f625f85f93304da9667b54585e3dcf8f87e708bc4d30a0debf263b6b9e312",
+    "app/benchmark_review.py": "de98d89eadeb5e74ae1eb2a5926c4a7c409ece67baf2cb4af55c97ebec2a874d",
+    "app/demo_corpus.py": "8fc02337bc8fd9f5f7ce5446f677920a51a90d9d3c92e25657a2b4e2d14be8df",
+    "app/document_ingestion.py": "3d9beb093412536fe9294489494ee3a5058735376f28d8d883b45eea90050190",
+    "app/embeddings.py": "fd60aedfff56197866435e9947b578924cb0e6122abf7f1df30e50daa95bb1dd",
+    "app/evaluation.py": "db660e03f19028b8a03b08ee8ebeaf81ed3eb569e353a87547ec80a14fa4d2d7",
+    "app/evidence_coverage.py": "4cf89a9ca3a0a05aefbb457dfd39b6f0e440e84bca5c6f9e64664be63eb00f83",
+    "app/fact_planning.py": "0dae346cad31ca1ae9d1c4657d7cdb665cca56cba90b207a76f77fc311316a69",
+    "app/hybrid_retrieval.py": "b357aacc5303ea64414e4a7e8098fb3d714b1019cded1d46fd1b6565183cb00e",
+    "app/language_verification.py": "bf154d53a5f67ceb64c6d55cd7af4e6c92f660d3957f6e7f645070bc660e8331",
+    "app/llm_gateway.py": "25d4f20f53d21c722d32218c0b5fbf3d6657871328f7c339aab8291c37703ea4",
+    "app/main.py": "909f5255a9a6558efc2013abf1b38bc349dc7c059e81908313124b2f5a682698",
+    "app/qdrant_gateway.py": "c36f562f2c32eeae59339365d2bca46b486994653a2a7e798236c1bd7c39385c",
+    "app/query_expansion.py": "3f1329b3bf1eb14ff7874bf8706952854c108d1af375ff05bdbf83725f3f1833",
+    "app/rag_service.py": "3f61ac473d3a4789d44fb4132f265769cb2402ecba1c33e03f530795b613aa65",
+    "app/response_contract.py": "9cf0db37a8545709c6e2fdc565bfca1659c11bc1fc3a377be2ac742ada679bd1",
+    "app/retrieval_policy.py": "cbcc8d72401c0aace652fb3a813ed87faa876c2d0073ee1fecbf4883db8eb7dc",
+    "app/schemas.py": "080f4110e8a5c63d6cd991960ff07014d0fe739740f51c3dab215da180360669",
+    "app/settings.py": "40c2feec46019da1f7e77a65f2fa6e8a9ce4a85a6abc05a91c410aeebbfaa946"
+  },
+  "top_k": 5,
+  "repeats": 3,
+  "requested_runs": 5,
+  "complete": true,
+  "limitations": "Small diagnostic panel, not a full benchmark. Repeated generations are nondeterministic; retrieval ranks identify the direct selection effect. First-trial latency includes loading local models.",
+  "cases": [
+    {
+      "id": "llava-scienceqa-fr",
+      "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+      "category": "factoid",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 17.936584850991494,
+      "response": {
+        "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+        "answer": "Après fine-tuning sur ScienceQA, LLaVA combiné à GPT-4 atteint une précision de 92,53 % [S3, S4].",
+        "citations": [
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 6,
+            "section": "5.1 Multimodal Chatbot",
+            "score": 0.8671121,
+            "text": "5.1 Multimodal Chatbot\nQuantitative Evaluation. To have a systematic understanding of the performance of LLaVA, we aim to leverage a quantitative metric in measuring the model's instruction-following capability. Motivated by [45], we leverage GPT-4 to measure the quality of our model's generated responses. Specifically, we randomly select 30 images from the COCO validation split, and generate three types of question (conversation, detailed description, complex reasoning) using the proposed data generation pipeline. LLaVA predicts the answers based on the question and the visual input image. GPT-4 makes a reference prediction based on the question, and the ground-truth bounding boxes and captions, marking an upper bound of the teacher model. After obtaining the response from both models, we feed the question, visual information (in the format of captions and bounding boxes), and the generated responses from both assistants, to the GPT-4. GPT-4 evaluates the helpfulness, relevance, accuracy, and level of details of the responses from the assistants, and give an overall score on a scale of 1 to 10, where a higher score indicates better overall performance. GPT-4 is also asked to provide a comprehensive explanation the evaluation, for us to better understand the models."
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 7,
+            "section": "5.2 ScienceQA",
+            "score": 0.8670671,
+            "text": "5.2 ScienceQA\nScienceQA [30] contains 21k multimodal multiple choice questions with rich domain diversity across 3 subjects, 26 topics, 127 categories, and 379 skills. The benchmark dataset is split into training, validation, and test splits with 12726, 4241, and 4241 examples, respectively. We consider two representative methods, including GPT-3.5 model ( text-davinci-002 ) with and without chain-ofthoughts (CoT), LLaMA-Adapter [55], as well as multimodal chain-of-thoughts (MM-CoT) [57], which is the current SoTA method on this dataset. For more baseline numbers, please see [30].\nThe results are reported in Table 6. For LLaVA, we use the visual features before the last layer, ask the model to first predict reasons then the answer, and train it for 12 epochs. It yields 90.92% accuracy, which is quite close to the SoTA 91.68%. To explore the limit of LLMs, we also prompt GPT-4 using 2-shot in-context-learning and achieve 82.69% accuracy, which is a 7.52% absolute gain compared with 75.17% from GPT-3.5. For a substantial number of questions, we note that GPT-4 fails simply because it reports that there is insufficient context such as images or plots. We consider two schemes to combine the outcomes from our model and GPT-4. ( i ) A GPT-4 complement ."
+          },
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884,
+            "text": "Abstract\nInstruction tuning large language models (LLMs) using machine-generated instruction-following data has improved zero-shot capabilities on new tasks, but the idea is less explored in the multimodal field. In this paper, we present the first attempt to use language-only GPT-4 to generate multimodal language-image instruction-following data. By instruction tuning on such generated data, we introduce LLaVA: L arge L anguage a nd V ision A ssistant, an end-to-end trained large multimodal model that connects a vision encoder and LLM for generalpurpose visual and language understanding. Our early experiments show that LLaVA demonstrates impressive multimodel chat abilities, sometimes exhibiting the behaviors of multimodal GPT-4 on unseen images/instructions, and yields a 85.1% relative score compared with GPT-4 on a synthetic multimodal instructionfollowing dataset. When fine-tuned on Science QA, the synergy of LLaVA and GPT-4 achieves a new state-of-the-art accuracy of 92.53%. We make GPT-4 generated visual instruction tuning data, our model and code base publicly available."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313,
+            "text": "Visual input example, Chicken Nugget Map:\nWhenever GPT-4 fails to provide answers, we use the prediction from our method. This schemes yields 90.97% accuracy, which is almost the same as applying our method alone. ( ii ) GPT-4 as the judge . Whenever GPT-4 and LLaVA produce different answers, we prompt GPT-4 again, asking it to provide its own final answer based on the question and two outcomes. The spirit is similar with CoT, but with the external knowledge from the other model. Surprisingly, GPT-4 is able to provide consistent improvement over all question classes, and achieves a new SoTA accuracy of 92.53%. To the best of our knowledge, this is the first time that GPT-4 is used for model ensembling. We hope this finding can encourage future research to explore more effective methods to leverage LLMs for model ensembling.\nAblations. We ablate several design choices on ScienceQA in Table 7. ( i ) Visual features . We tried using the last layer feature from CLIP vision encoder, which yields 89.96% and is 0.96% lower than the feature before the last year. We hypothesize that this is because CLIP's last year features may focus more on global image properties compared to the layer before it, which can focus more on localized properties that can be more useful for understanding specific image"
+          },
+          {
+            "reference": "S5",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 9,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.85564965,
+            "text": "Visual input example, Chicken Nugget Map:\n\n Modality.IMG = Results with our own experiment runs. Results with our own experiment runs, Context Modality.NO = Results with our own experiment runs. Results with our own experiment runs, Grade.G1-6 = Results with our own experiment runs. Results with our own experiment runs, Grade.G7-12 = Results with our own experiment runs. Results with our own experiment runs, Average. = Results with our own experiment runs. GPT-4, NAT = 84.06. GPT-4, Subject.SOC = 73.45. GPT-4, LAN = 87.36. GPT-4, Context Modality.TXT = 81.87. GPT-4, Context Modality.IMG = 70.75. GPT-4, Context Modality.NO = 90.73. GPT-4, Grade.G1-6 = 84.69. GPT-4, Grade.G7-12 = 79.10. GPT-4, Average. = 82.69. LLaVA, NAT = 90.36. LLaVA, Subject.SOC = 95.95. LLaVA, LAN = 88.00. LLaVA, Context Modality.TXT = 89.49. LLaVA, Context Modality.IMG = 88.00. LLaVA, Context Modality.NO = 90.66. LLaVA, Grade.G1-6 = 90.93. LLaVA, Grade.G7-12 = 90.90. LLaVA, Average. = 90.92. LLaVA+GPT-4 (complement), NAT = 90.36."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 2,
+          "input_tokens": 2100,
+          "output_tokens": 60,
+          "total_tokens": 2160,
+          "reasoning_tokens": 12,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_04ea202800436202016abd5355b2ec87d2aea389bc63918d04",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 3936,
+              "max_output_tokens": 3072,
+              "input_tokens": 1845,
+              "output_tokens": 37,
+              "total_tokens": 1882,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            },
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0ca89a53867e8560016abd53592e7087d29cd8ddd008913a6d",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1171,
+              "max_output_tokens": 1024,
+              "input_tokens": 255,
+              "output_tokens": 23,
+              "total_tokens": 278,
+              "reasoning_tokens": 12,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [],
+          "coverage_checks": [],
+          "supplementary_search_attempted": false,
+          "expected_language": "fr",
+          "language_status": "match",
+          "language_check_method": "llm_verification",
+          "detected_document_ids": [
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": null,
+              "query": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+              "query_variants": [
+                "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?"
+              ],
+              "retrieval_intents": [],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['llava-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "retrieved=5 chunks with one vector search",
+              "duration_ms": 12771
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=none; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=97",
+              "duration_ms": 3941
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; language_status=match; language_check=llm_verification; issues=none",
+              "duration_ms": 1172
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Après fine-tuning sur ScienceQA, la combinaison de LLaVA et GPT-4 atteint une précision de 92,53 %, annoncée comme un nouvel état de l'art.",
+      "fact_coverage": 0.6666666666666666,
+      "matched_fact_groups": [
+        0,
+        1
+      ],
+      "total_fact_groups": 3,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "target",
+      "relevant_chunk_ids": [
+        17016624324479331
+      ],
+      "target_ranks": []
+    },
+    {
+      "id": "llava-scienceqa-fr",
+      "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+      "category": "factoid",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 4.637077519000741,
+      "response": {
+        "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+        "answer": "LLaVA combiné à GPT-4 atteint une précision de 92,53 % sur ScienceQA après fine-tuning [S3, S4].",
+        "citations": [
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 6,
+            "section": "5.1 Multimodal Chatbot",
+            "score": 0.8671121,
+            "text": "5.1 Multimodal Chatbot\nQuantitative Evaluation. To have a systematic understanding of the performance of LLaVA, we aim to leverage a quantitative metric in measuring the model's instruction-following capability. Motivated by [45], we leverage GPT-4 to measure the quality of our model's generated responses. Specifically, we randomly select 30 images from the COCO validation split, and generate three types of question (conversation, detailed description, complex reasoning) using the proposed data generation pipeline. LLaVA predicts the answers based on the question and the visual input image. GPT-4 makes a reference prediction based on the question, and the ground-truth bounding boxes and captions, marking an upper bound of the teacher model. After obtaining the response from both models, we feed the question, visual information (in the format of captions and bounding boxes), and the generated responses from both assistants, to the GPT-4. GPT-4 evaluates the helpfulness, relevance, accuracy, and level of details of the responses from the assistants, and give an overall score on a scale of 1 to 10, where a higher score indicates better overall performance. GPT-4 is also asked to provide a comprehensive explanation the evaluation, for us to better understand the models."
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 7,
+            "section": "5.2 ScienceQA",
+            "score": 0.8670671,
+            "text": "5.2 ScienceQA\nScienceQA [30] contains 21k multimodal multiple choice questions with rich domain diversity across 3 subjects, 26 topics, 127 categories, and 379 skills. The benchmark dataset is split into training, validation, and test splits with 12726, 4241, and 4241 examples, respectively. We consider two representative methods, including GPT-3.5 model ( text-davinci-002 ) with and without chain-ofthoughts (CoT), LLaMA-Adapter [55], as well as multimodal chain-of-thoughts (MM-CoT) [57], which is the current SoTA method on this dataset. For more baseline numbers, please see [30].\nThe results are reported in Table 6. For LLaVA, we use the visual features before the last layer, ask the model to first predict reasons then the answer, and train it for 12 epochs. It yields 90.92% accuracy, which is quite close to the SoTA 91.68%. To explore the limit of LLMs, we also prompt GPT-4 using 2-shot in-context-learning and achieve 82.69% accuracy, which is a 7.52% absolute gain compared with 75.17% from GPT-3.5. For a substantial number of questions, we note that GPT-4 fails simply because it reports that there is insufficient context such as images or plots. We consider two schemes to combine the outcomes from our model and GPT-4. ( i ) A GPT-4 complement ."
+          },
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884,
+            "text": "Abstract\nInstruction tuning large language models (LLMs) using machine-generated instruction-following data has improved zero-shot capabilities on new tasks, but the idea is less explored in the multimodal field. In this paper, we present the first attempt to use language-only GPT-4 to generate multimodal language-image instruction-following data. By instruction tuning on such generated data, we introduce LLaVA: L arge L anguage a nd V ision A ssistant, an end-to-end trained large multimodal model that connects a vision encoder and LLM for generalpurpose visual and language understanding. Our early experiments show that LLaVA demonstrates impressive multimodel chat abilities, sometimes exhibiting the behaviors of multimodal GPT-4 on unseen images/instructions, and yields a 85.1% relative score compared with GPT-4 on a synthetic multimodal instructionfollowing dataset. When fine-tuned on Science QA, the synergy of LLaVA and GPT-4 achieves a new state-of-the-art accuracy of 92.53%. We make GPT-4 generated visual instruction tuning data, our model and code base publicly available."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313,
+            "text": "Visual input example, Chicken Nugget Map:\nWhenever GPT-4 fails to provide answers, we use the prediction from our method. This schemes yields 90.97% accuracy, which is almost the same as applying our method alone. ( ii ) GPT-4 as the judge . Whenever GPT-4 and LLaVA produce different answers, we prompt GPT-4 again, asking it to provide its own final answer based on the question and two outcomes. The spirit is similar with CoT, but with the external knowledge from the other model. Surprisingly, GPT-4 is able to provide consistent improvement over all question classes, and achieves a new SoTA accuracy of 92.53%. To the best of our knowledge, this is the first time that GPT-4 is used for model ensembling. We hope this finding can encourage future research to explore more effective methods to leverage LLMs for model ensembling.\nAblations. We ablate several design choices on ScienceQA in Table 7. ( i ) Visual features . We tried using the last layer feature from CLIP vision encoder, which yields 89.96% and is 0.96% lower than the feature before the last year. We hypothesize that this is because CLIP's last year features may focus more on global image properties compared to the layer before it, which can focus more on localized properties that can be more useful for understanding specific image"
+          },
+          {
+            "reference": "S5",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 9,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.85564965,
+            "text": "Visual input example, Chicken Nugget Map:\n\n Modality.IMG = Results with our own experiment runs. Results with our own experiment runs, Context Modality.NO = Results with our own experiment runs. Results with our own experiment runs, Grade.G1-6 = Results with our own experiment runs. Results with our own experiment runs, Grade.G7-12 = Results with our own experiment runs. Results with our own experiment runs, Average. = Results with our own experiment runs. GPT-4, NAT = 84.06. GPT-4, Subject.SOC = 73.45. GPT-4, LAN = 87.36. GPT-4, Context Modality.TXT = 81.87. GPT-4, Context Modality.IMG = 70.75. GPT-4, Context Modality.NO = 90.73. GPT-4, Grade.G1-6 = 84.69. GPT-4, Grade.G7-12 = 79.10. GPT-4, Average. = 82.69. LLaVA, NAT = 90.36. LLaVA, Subject.SOC = 95.95. LLaVA, LAN = 88.00. LLaVA, Context Modality.TXT = 89.49. LLaVA, Context Modality.IMG = 88.00. LLaVA, Context Modality.NO = 90.66. LLaVA, Grade.G1-6 = 90.93. LLaVA, Grade.G7-12 = 90.90. LLaVA, Average. = 90.92. LLaVA+GPT-4 (complement), NAT = 90.36."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 2,
+          "input_tokens": 2099,
+          "output_tokens": 45,
+          "total_tokens": 2144,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 1842,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_06e03e1fc695c03d016abd535b7efc87d2bf63fdf0f6447efd",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 2012,
+              "max_output_tokens": 3072,
+              "input_tokens": 1845,
+              "output_tokens": 36,
+              "total_tokens": 1881,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 1842
+            },
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0b2fc86579e11cb0016abd535dc27887d2bfd6696d2f819864",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1502,
+              "max_output_tokens": 1024,
+              "input_tokens": 254,
+              "output_tokens": 9,
+              "total_tokens": 263,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [],
+          "coverage_checks": [],
+          "supplementary_search_attempted": false,
+          "expected_language": "fr",
+          "language_status": "match",
+          "language_check_method": "llm_verification",
+          "detected_document_ids": [
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": null,
+              "query": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+              "query_variants": [
+                "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?"
+              ],
+              "retrieval_intents": [],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['llava-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "retrieved=5 chunks with one vector search",
+              "duration_ms": 1117
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=none; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=96",
+              "duration_ms": 2012
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; language_status=match; language_check=llm_verification; issues=none",
+              "duration_ms": 1502
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Après fine-tuning sur ScienceQA, la combinaison de LLaVA et GPT-4 atteint une précision de 92,53 %, annoncée comme un nouvel état de l'art.",
+      "fact_coverage": 0.6666666666666666,
+      "matched_fact_groups": [
+        0,
+        1
+      ],
+      "total_fact_groups": 3,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 2,
+      "role": "target",
+      "relevant_chunk_ids": [
+        17016624324479331
+      ],
+      "target_ranks": []
+    },
+    {
+      "id": "llava-scienceqa-fr",
+      "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+      "category": "factoid",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 3.4237459040014073,
+      "response": {
+        "question": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+        "answer": "Après fine-tuning sur ScienceQA, LLaVA combiné à GPT-4 atteint une précision de **92,53 %** [S3, S4].",
+        "citations": [
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 6,
+            "section": "5.1 Multimodal Chatbot",
+            "score": 0.8671121,
+            "text": "5.1 Multimodal Chatbot\nQuantitative Evaluation. To have a systematic understanding of the performance of LLaVA, we aim to leverage a quantitative metric in measuring the model's instruction-following capability. Motivated by [45], we leverage GPT-4 to measure the quality of our model's generated responses. Specifically, we randomly select 30 images from the COCO validation split, and generate three types of question (conversation, detailed description, complex reasoning) using the proposed data generation pipeline. LLaVA predicts the answers based on the question and the visual input image. GPT-4 makes a reference prediction based on the question, and the ground-truth bounding boxes and captions, marking an upper bound of the teacher model. After obtaining the response from both models, we feed the question, visual information (in the format of captions and bounding boxes), and the generated responses from both assistants, to the GPT-4. GPT-4 evaluates the helpfulness, relevance, accuracy, and level of details of the responses from the assistants, and give an overall score on a scale of 1 to 10, where a higher score indicates better overall performance. GPT-4 is also asked to provide a comprehensive explanation the evaluation, for us to better understand the models."
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 7,
+            "section": "5.2 ScienceQA",
+            "score": 0.8670671,
+            "text": "5.2 ScienceQA\nScienceQA [30] contains 21k multimodal multiple choice questions with rich domain diversity across 3 subjects, 26 topics, 127 categories, and 379 skills. The benchmark dataset is split into training, validation, and test splits with 12726, 4241, and 4241 examples, respectively. We consider two representative methods, including GPT-3.5 model ( text-davinci-002 ) with and without chain-ofthoughts (CoT), LLaMA-Adapter [55], as well as multimodal chain-of-thoughts (MM-CoT) [57], which is the current SoTA method on this dataset. For more baseline numbers, please see [30].\nThe results are reported in Table 6. For LLaVA, we use the visual features before the last layer, ask the model to first predict reasons then the answer, and train it for 12 epochs. It yields 90.92% accuracy, which is quite close to the SoTA 91.68%. To explore the limit of LLMs, we also prompt GPT-4 using 2-shot in-context-learning and achieve 82.69% accuracy, which is a 7.52% absolute gain compared with 75.17% from GPT-3.5. For a substantial number of questions, we note that GPT-4 fails simply because it reports that there is insufficient context such as images or plots. We consider two schemes to combine the outcomes from our model and GPT-4. ( i ) A GPT-4 complement ."
+          },
+          {
+            "reference": "S3",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8662884,
+            "text": "Abstract\nInstruction tuning large language models (LLMs) using machine-generated instruction-following data has improved zero-shot capabilities on new tasks, but the idea is less explored in the multimodal field. In this paper, we present the first attempt to use language-only GPT-4 to generate multimodal language-image instruction-following data. By instruction tuning on such generated data, we introduce LLaVA: L arge L anguage a nd V ision A ssistant, an end-to-end trained large multimodal model that connects a vision encoder and LLM for generalpurpose visual and language understanding. Our early experiments show that LLaVA demonstrates impressive multimodel chat abilities, sometimes exhibiting the behaviors of multimodal GPT-4 on unseen images/instructions, and yields a 85.1% relative score compared with GPT-4 on a synthetic multimodal instructionfollowing dataset. When fine-tuned on Science QA, the synergy of LLaVA and GPT-4 achieves a new state-of-the-art accuracy of 92.53%. We make GPT-4 generated visual instruction tuning data, our model and code base publicly available."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 8,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.8591313,
+            "text": "Visual input example, Chicken Nugget Map:\nWhenever GPT-4 fails to provide answers, we use the prediction from our method. This schemes yields 90.97% accuracy, which is almost the same as applying our method alone. ( ii ) GPT-4 as the judge . Whenever GPT-4 and LLaVA produce different answers, we prompt GPT-4 again, asking it to provide its own final answer based on the question and two outcomes. The spirit is similar with CoT, but with the external knowledge from the other model. Surprisingly, GPT-4 is able to provide consistent improvement over all question classes, and achieves a new SoTA accuracy of 92.53%. To the best of our knowledge, this is the first time that GPT-4 is used for model ensembling. We hope this finding can encourage future research to explore more effective methods to leverage LLMs for model ensembling.\nAblations. We ablate several design choices on ScienceQA in Table 7. ( i ) Visual features . We tried using the last layer feature from CLIP vision encoder, which yields 89.96% and is 0.96% lower than the feature before the last year. We hypothesize that this is because CLIP's last year features may focus more on global image properties compared to the layer before it, which can focus more on localized properties that can be more useful for understanding specific image"
+          },
+          {
+            "reference": "S5",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 9,
+            "section": "Visual input example, Chicken Nugget Map:",
+            "score": 0.85564965,
+            "text": "Visual input example, Chicken Nugget Map:\n\n Modality.IMG = Results with our own experiment runs. Results with our own experiment runs, Context Modality.NO = Results with our own experiment runs. Results with our own experiment runs, Grade.G1-6 = Results with our own experiment runs. Results with our own experiment runs, Grade.G7-12 = Results with our own experiment runs. Results with our own experiment runs, Average. = Results with our own experiment runs. GPT-4, NAT = 84.06. GPT-4, Subject.SOC = 73.45. GPT-4, LAN = 87.36. GPT-4, Context Modality.TXT = 81.87. GPT-4, Context Modality.IMG = 70.75. GPT-4, Context Modality.NO = 90.73. GPT-4, Grade.G1-6 = 84.69. GPT-4, Grade.G7-12 = 79.10. GPT-4, Average. = 82.69. LLaVA, NAT = 90.36. LLaVA, Subject.SOC = 95.95. LLaVA, LAN = 88.00. LLaVA, Context Modality.TXT = 89.49. LLaVA, Context Modality.IMG = 88.00. LLaVA, Context Modality.NO = 90.66. LLaVA, Grade.G1-6 = 90.93. LLaVA, Grade.G7-12 = 90.90. LLaVA, Average. = 90.92. LLaVA+GPT-4 (complement), NAT = 90.36."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 2,
+          "input_tokens": 2101,
+          "output_tokens": 47,
+          "total_tokens": 2148,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 1842,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0deebda4280176da016abd53602ec487d293d7c3c578e73ca0",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1404,
+              "max_output_tokens": 3072,
+              "input_tokens": 1845,
+              "output_tokens": 38,
+              "total_tokens": 1883,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 1842
+            },
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_0208c12dc4df4905016abd53618e2087d2a4f14ff869938eae",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 867,
+              "max_output_tokens": 1024,
+              "input_tokens": 256,
+              "output_tokens": 9,
+              "total_tokens": 265,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [],
+          "coverage_checks": [],
+          "supplementary_search_attempted": false,
+          "expected_language": "fr",
+          "language_status": "match",
+          "language_check_method": "llm_verification",
+          "detected_document_ids": [
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": null,
+              "query": "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?",
+              "query_variants": [
+                "Quelle précision LLaVA combiné à GPT-4 atteint-il sur ScienceQA après fine-tuning ?"
+              ],
+              "retrieval_intents": [],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['llava-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "retrieved=5 chunks with one vector search",
+              "duration_ms": 1148
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=none; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=101",
+              "duration_ms": 1405
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; language_status=match; language_check=llm_verification; issues=none",
+              "duration_ms": 867
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Après fine-tuning sur ScienceQA, la combinaison de LLaVA et GPT-4 atteint une précision de 92,53 %, annoncée comme un nouvel état de l'art.",
+      "fact_coverage": 0.6666666666666666,
+      "matched_fact_groups": [
+        0,
+        1
+      ],
+      "total_fact_groups": 3,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 3,
+      "role": "target",
+      "relevant_chunk_ids": [
+        17016624324479331
+      ],
+      "target_ranks": []
+    },
+    {
+      "id": "sam-prompt-types-fr",
+      "question": "Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ?",
+      "category": "factoid",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 9.103877154004294,
+      "response": {
+        "question": "Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ?",
+        "answer": "SAM accepte des prompts clairsemés — points, boîtes et texte libre — ainsi que des prompts denses sous forme de masques. [S1, S5]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 5,
+            "section": "3. Segment Anything Model",
+            "score": 7.303228378295898
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 5.0770463943481445
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 5,
+            "section": "3. Segment Anything Model",
+            "score": 7.303228378295898,
+            "text": "3. Segment Anything Model\nWe next describe the Segment Anything Model (SAM) for promptable segmentation. SAM has three components, illustrated in Fig. 4: an image encoder, a flexible prompt encoder, and a fast mask decoder. We build on Transformer vision models [14, 33, 20, 62] with specific tradeoffs for (amortized) real-time performance. We describe these components at a high-level here, with details in §A.\nImage encoder. Motivated by scalability and powerful pretraining methods, we use an MAE [47] pre-trained Vision Transformer (ViT) [33] minimally adapted to process high resolution inputs [62]. The image encoder runs once per image and can be applied prior to prompting the model.\nPrompt encoder. We consider two sets of prompts: sparse (points, boxes, text) and dense (masks). We represent points and boxes by positional encodings [95] summed with learned embeddings for each prompt type and free-form text with an off-the-shelf text encoder from CLIP [82]. Dense prompts ( i.e ., masks) are embedded using convolutions and summed element-wise with the image embedding."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.5. Zero-Shot Text-to-Mask",
+            "score": 6.484879016876221,
+            "text": "7.5. Zero-Shot Text-to-Mask\nResults. We show qualitative results in Fig. 12. SAM can segment objects based on simple text prompts like 'a wheel' as well as phrases like 'beaver tooth grille'. When SAM fails to pick the right object from a text prompt only, an additional point often fixes the prediction, similar to [31]."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 12,
+            "section": "8. Discussion",
+            "score": 5.712483882904053,
+            "text": "8. Discussion\nCompositionality. Pre-trained models can power new capabilities even beyond ones imagined at the moment of training. One prominent example is how CLIP [82] is used as a component in larger systems, such as DALL · E [83]. Our goal is to make this kind of composition straightforward with SAM. We aim to achieve this by requiring SAM to predict a valid mask for a wide range of segmentation prompts. The effect is to create a reliable interface between SAM and other components. For example, MCC [106] can easily use SAM to segment an object of interest and achieve strong generalization to unseen objects for 3D reconstruction from a single RGB-D image. In another example, SAM can be prompted with gaze points detected by a wearable device, enabling new applications. Thanks to SAM's ability to generalize to new domains like ego-centric images, such systems work without need for additional training."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 5.335227012634277,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 5.0770463943481445,
+            "text": "1. Introduction\nModel (§3). The promptable segmentation task and the goal of real-world use impose constraints on the model architecture. In particular, the model must support fl exible prompts , needs to compute masks in amortized real-time to allow interactive use, and must be ambiguity-aware . Surprisingly, we find that a simple design satisfies all three constraints: a powerful image encoder computes an image embedding, a prompt encoder embeds prompts, and then the two information sources are combined in a lightweight mask decoder that predicts segmentation masks. We refer to this model as the Segment Anything Model, or SAM (see Fig. 1b). By separating SAM into an image encoder and a fast prompt encoder / mask decoder, the same image embedding can be reused (and its cost amortized) with different prompts. Given an image embedding, the prompt encoder and mask decoder predict a mask from a prompt in ∼ 50ms in a web browser. We focus on point, box, and mask prompts, and also present initial results with free-form text prompts. To make SAM ambiguity-aware, we design it to predict multiple masks for a single prompt allowing SAM to naturally handle ambiguity, such as the shirt vs . person example."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1448,
+          "output_tokens": 39,
+          "total_tokens": 1487,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_08f987fc2b03e32b016abd536a485c87d2a3f7a65896eaa6a0",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 1299,
+              "max_output_tokens": 3072,
+              "input_tokens": 1448,
+              "output_tokens": 39,
+              "total_tokens": 1487,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "phase": "initial",
+              "primary_query": "Segment Anything. Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ?",
+              "primary_dense_ids": [
+                64063547055625930,
+                15406296017028952,
+                9270632284231241,
+                13543244272649863,
+                5031803758043813,
+                14123834515729259,
+                46692682891537369,
+                48584351103358280,
+                18776440388243429,
+                60764218559430538,
+                3129537362477194,
+                41368826029461733,
+                49331893036460661,
+                50516194133628686,
+                39248417022111133,
+                32818677447830037,
+                70192568415500008,
+                758117459887501,
+                49565047074034140,
+                51705373565064246
+              ],
+              "primary_lexical_ids": [
+                9270632284231241,
+                11612068071696716,
+                14123834515729259,
+                5031803758043813,
+                50516194133628686,
+                13543244272649863,
+                64063547055625930,
+                15406296017028952,
+                48584351103358280,
+                18776440388243429,
+                40126860694700926,
+                3581770793565600,
+                11419478672142233,
+                52086369988377665,
+                41368826029461733,
+                14214218663783385,
+                40154283331830668,
+                18063126012946203,
+                46692682891537369,
+                3129001146993130
+              ],
+              "candidate_ids": [
+                9270632284231241,
+                15406296017028952,
+                64063547055625930,
+                48584351103358280,
+                5031803758043813,
+                18776440388243429,
+                60764218559430538,
+                39248417022111133,
+                758117459887501,
+                3129537362477194,
+                13543244272649863,
+                14123834515729259,
+                50516194133628686,
+                38261879643221979,
+                34772798277966698,
+                41368826029461733,
+                12735487142746401,
+                11612068071696716,
+                3129001146993130,
+                70192568415500008,
+                51705373565064246,
+                49331893036460661,
+                48817601139058781,
+                46692682891537369,
+                51309584681976605,
+                30500259798254997,
+                45346557218159840,
+                3575859441842272,
+                40126860694700926,
+                3581770793565600
+              ],
+              "ranked_ids": [
+                9270632284231241,
+                39248417022111133,
+                49331893036460661,
+                5031803758043813,
+                15406296017028952,
+                64063547055625930,
+                48584351103358280,
+                50516194133628686,
+                3129537362477194,
+                30500259798254997,
+                18776440388243429,
+                60764218559430538,
+                41368826029461733,
+                13543244272649863,
+                12735487142746401,
+                46692682891537369,
+                14123834515729259,
+                51705373565064246,
+                34772798277966698,
+                758117459887501,
+                45346557218159840,
+                70192568415500008,
+                38261879643221979,
+                48817601139058781,
+                3581770793565600,
+                3129001146993130,
+                3575859441842272,
+                51309584681976605,
+                11612068071696716,
+                40126860694700926
+              ]
+            }
+          ],
+          "coverage_checks": [],
+          "supplementary_search_attempted": false,
+          "expected_language": "fr",
+          "language_status": "match",
+          "language_check_method": "heuristic",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ?",
+              "query_variants": [
+                "Segment Anything. Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ?",
+                "Segment Anything. Quels types de prompts le modèle SAM accepte-t-il pour guider la segmentation ? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 1
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=2; intents=['prompt_mechanism']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 7794
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=129",
+              "duration_ms": 1299
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; language_status=match; language_check=heuristic; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "SAM accepte des prompts clairsemés sous forme de points, boîtes et texte, ainsi que des prompts denses sous forme de masques.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "total_fact_groups": 4,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "control",
+      "relevant_chunk_ids": [
+        9270632284231241
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "phase": "initial",
+          "primary_dense_ids": 3,
+          "primary_lexical_ids": 1,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    },
+    {
+      "id": "sam-ambiguity-en",
+      "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 5.140402721008286,
+      "response": {
+        "question": "How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+        "answer": "A single foreground point can be ambiguous because several objects or masks may be valid, while the ground truth contains only one mask. SAM normally ranks its three predicted masks and evaluation uses the top-ranked one; the oracle evaluation instead selects whichever of the three best matches the ground truth, isolating the effect of ambiguity resolution. [S1, S5]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.6. Ablations",
+            "score": 4.804503917694092
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 19,
+            "section": "D.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 10.045809745788574,
+            "text": "D.1. Zero-Shot Single Point Valid Mask Evaluation\nSingle point ambiguity and oracle evaluation. In addition to IoU after N points prompts, we report SAM's 'oracle' performance at 1 point by evaluating the predicted mask that best matches ground truth from amongst SAM's three predictions (rather than using the one that SAM itself ranks first, as we do by default). This protocol addresses possible single point prompt ambiguity by relaxing the requirement to guess the one right mask among several valid objects."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 9,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 6.178918838500977,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nResults. First, we look at automatic evaluation on the full suite of 23 datasets using mIoU. We compare per-dataset results in Fig. 9a against RITM. SAM yields higher results on 16 of the 23 datasets, by as much as ∼ 47 IoU. We also present an 'oracle' result, in which the most relevant of SAM's 3 masks is selected by comparing them to the ground truth, rather than selecting the most confident mask. This reveals the impact of ambiguity on automatic evaluation. In particular, with the oracle to perform ambiguity resolution, SAM outperforms RITM on all datasets."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7.1. Zero-Shot Single Point Valid Mask Evaluation",
+            "score": 5.917809009552002,
+            "text": "7.1. Zero-Shot Single Point Valid Mask Evaluation\nDatasets. We use a newly compiled suite of 23 datasets with diverse image distributions. Fig. 8 lists the datasets and shows a sample from each one (see appendix Table 7 for more details). We use all 23 datasets for mIoU evaluation. For the human study, we use the subset listed in Fig. 9b (due to the resource requirements of such studies). This subset includes both datasets for which SAM outperforms and underperforms RITM according to automatic metrics.\nFigure 8: Samples from the 23 diverse segmentation datasets used to evaluate SAM's zero-shot transfer capabilities.\nFigure 9: Point to mask evaluation on 23 datasets. (a) Mean IoU of SAM and the strongest single point segmenter, RITM [92]. Due to ambiguity, a single mask may not match ground truth; circles show 'oracle' results of the most relevant of SAM's 3 predictions. (b) Per-dataset comparison of mask quality ratings by annotators from 1 (worst) to 10 (best). All methods use the ground truth mask center as the prompt. (c, d) mIoU with varying number of points. SAM significantly outperforms prior interactive segmenters with 1 point and is on par with more points. Low absolute mIoU at 1 point is the result of ambiguity."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 4.807366371154785,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S5",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.6. Ablations",
+            "score": 4.804503917694092,
+            "text": "7.6. Ablations\nWeperform several ablations on our 23 dataset suite with the single center point prompt protocol. Recall that a single point may be ambiguous and that ambiguity may not be represented in the ground truth, which contains only a single mask per point. Since SAM is operating in a zeroshot transfer setting there can be systematic biases between SAM's top-ranked mask vs . the masks resulting from data annotation guidelines. We therefore additionally report the best mask with respect to the ground truth ('oracle').\nFig. 13 (left) plots SAM's performance when trained on cumulative data from the data engine stages. We observe that each stage increases mIoU. When training with all three stages, the automatic masks vastly outnumber the manual and semi-automatic masks. To address this, we found that oversampling the manual and semi-automatic masks during training by 10 × gave best results. This setup complicates training. We therefore tested a fourth setup that uses only the automatically generated masks. With this data, SAM performs only marginally lower than using all data ( ∼ 0.5 mIoU). Therefore, by default we use only the automatically generated masks to simplify the training setup."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "llm": {
+          "provider": "openai",
+          "model_id": "gpt-6-luna",
+          "reasoning_effort": "low",
+          "call_count": 1,
+          "input_tokens": 1527,
+          "output_tokens": 74,
+          "total_tokens": 1601,
+          "reasoning_tokens": 0,
+          "cached_input_tokens": 0,
+          "calls": [
+            {
+              "model_id": "gpt-6-luna",
+              "response_id": "resp_00080eedfea3dc4a016abd536e617c87d288996e92cb8c4221",
+              "status": "completed",
+              "error_code": null,
+              "duration_ms": 2349,
+              "max_output_tokens": 3072,
+              "input_tokens": 1527,
+              "output_tokens": 74,
+              "total_tokens": 1601,
+              "reasoning_tokens": 0,
+              "cached_input_tokens": 0
+            }
+          ]
+        },
+        "execution": {
+          "strategy": "global",
+          "retrieval_profile": "question_rerank",
+          "retrieval_audit": [
+            {
+              "document_id": "sam-2023",
+              "phase": "initial",
+              "primary_query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "primary_dense_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                64063547055625930,
+                39248417022111133,
+                29772822379358413,
+                5031803758043813,
+                62299977793421688,
+                11680030495004050,
+                3129537362477194,
+                9270632284231241,
+                30500259798254997,
+                41368826029461733,
+                57187572455034380,
+                40586964579323231,
+                18776440388243429,
+                44456723104906992,
+                13543244272649863,
+                49331893036460661,
+                10092672566980454
+              ],
+              "primary_lexical_ids": [
+                15406296017028952,
+                866951765437580,
+                10092672566980454,
+                11680030495004050,
+                57187572455034380,
+                40094430259897497,
+                29772822379358413,
+                46616021607256000,
+                40586964579323231,
+                14123834515729259,
+                7759663039700360,
+                64293858422799898,
+                5031803758043813,
+                18776440388243429,
+                60764218559430538,
+                9270632284231241,
+                35756872828065735,
+                64063547055625930,
+                7774996338046535,
+                62299977793421688
+              ],
+              "candidate_ids": [
+                866951765437580,
+                15406296017028952,
+                60764218559430538,
+                29772822379358413,
+                11680030495004050,
+                57187572455034380,
+                64063547055625930,
+                5031803758043813,
+                10092672566980454,
+                18776440388243429,
+                9270632284231241,
+                758117459887501,
+                40586964579323231,
+                62299977793421688,
+                39248417022111133,
+                14123834515729259,
+                3129537362477194,
+                41368826029461733,
+                40094430259897497,
+                30500259798254997,
+                48584351103358280,
+                34772798277966698,
+                38261879643221979,
+                50516194133628686,
+                64293858422799898,
+                7759663039700360,
+                35756872828065735,
+                46616021607256000,
+                13543244272649863,
+                44456723104906992
+              ],
+              "ranked_ids": [
+                866951765437580,
+                57187572455034380,
+                10092672566980454,
+                5031803758043813,
+                29772822379358413,
+                40094430259897497,
+                15406296017028952,
+                62299977793421688,
+                40586964579323231,
+                11680030495004050,
+                7759663039700360,
+                18776440388243429,
+                35756872828065735,
+                30500259798254997,
+                64063547055625930,
+                64293858422799898,
+                41368826029461733,
+                50516194133628686,
+                34772798277966698,
+                46616021607256000,
+                60764218559430538,
+                9270632284231241,
+                3129537362477194,
+                39248417022111133,
+                14123834515729259,
+                758117459887501,
+                44456723104906992,
+                48584351103358280,
+                13543244272649863,
+                38261879643221979
+              ]
+            }
+          ],
+          "coverage_checks": [],
+          "supplementary_search_attempted": false,
+          "expected_language": "en",
+          "language_status": "match",
+          "language_check_method": "heuristic",
+          "detected_document_ids": [
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "sam-2023",
+              "query": "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+              "query_variants": [
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation?",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact prompt mechanism and prompt input types: class text templates, context ensembling, points, boxes, text, masks, sparse prompts, dense prompts, prompt encoder.",
+                "Segment Anything. How does SAM handle the ambiguity of a single-point prompt during evaluation? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+              ],
+              "retrieval_intents": [
+                "prompt_mechanism",
+                "capabilities"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": false,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=sam-2023; facets=3; intents=['prompt_mechanism', 'capabilities']; ranking=question_rerank; rrf=30; selected=5",
+              "duration_ms": 2782
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['prompt_mechanism', 'capabilities']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=368",
+              "duration_ms": 2349
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; language_status=match; language_check=heuristic; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=False",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "A point may refer to several valid objects, so SAM produces three candidate masks. Oracle evaluation selects the candidate with the best match to ground truth to separate mask quality from ambiguity resolution.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true,
+      "trial": 1,
+      "role": "control",
+      "relevant_chunk_ids": [
+        866951765437580
+      ],
+      "target_ranks": [
+        {
+          "document_id": "sam-2023",
+          "phase": "initial",
+          "primary_dense_ids": 1,
+          "primary_lexical_ids": 2,
+          "candidate_ids": 1,
+          "ranked_ids": 1
+        }
+      ]
+    }
+  ],
+  "completed_runs": 5,
+  "aggregate": {
+    "evaluated_cases": 5,
+    "answerable_cases": 5,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.8,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_selected_evidence_recall": 1.0,
+    "mean_latency_seconds": 8.048337629801244
+  },
+  "target_aggregate": {
+    "evaluated_cases": 3,
+    "answerable_cases": 3,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.6666666666666666,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_selected_evidence_recall": 1.0,
+    "mean_latency_seconds": 8.66580275799788
+  }
+}

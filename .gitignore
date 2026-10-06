@@ -4,3 +4,14 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 docs/*
+!docs/milestones/
+docs/milestones/*
+!docs/milestones/*.md
+# The reviewed benchmark is versioned; local safety copies are not.
+data/evaluation/*.backup.jsonl
+# Secrets stay local; only the empty configuration template is versioned.
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]

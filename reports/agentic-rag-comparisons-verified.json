@@ -1,0 +1,725 @@
+{
+  "created_at": "2026-08-14T16:03:48.775488+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_balanced_per_source_v1",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 0,
+    "per_source": 5
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 5,
+    "answerable_cases": 5,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 0.4,
+    "abstention_accuracy": 0.6,
+    "mean_fact_coverage": 0.32,
+    "mean_citation_document_precision": 0.6,
+    "mean_citation_document_recall": 0.6,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 84.04508642919536
+  },
+  "cases": [
+    {
+      "id": "compare-clip-dinov2-supervision-en",
+      "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 118.96152099898609,
+      "response": {
+        "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+        "answer": "The supervision signals used to pre-train CLIP and DINOv2 are quite different. CLIP uses natural language supervision, specifically learning to predict image-text pairings from a batch of image-text pairs, which involves maximizing the cosine similarity of correct pairings and minimizing the similarity of incorrect pairings. This is often referred to as the InfoNCE loss [S1]. On the other hand, DINOv2 uses discriminative self-supervised learning, combining the DINO and iBOT losses with centering of SwAV, and includes additional techniques such as spreading features and a short high-resolution training phase [S2].\n\nIn summary, CLIP relies on natural language descriptions to learn visual representations, whereas DINOv2 uses self-supervised learning techniques without direct supervision from labels, focusing on learning robust visual features through contrastive learning methods. [S1][S2]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.84898734
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.86082697
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.84898734,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nGiven a batch of N (image, text) pairs, CLIP is trained to predict which of the N × N possible (image, text) pairings across a batch actually occurred. To do this, CLIP learns a multi-modal embedding space by jointly training an image encoder and text encoder to maximize the cosine similarity of the image and text embeddings of the N real pairs in the batch while minimizing the cosine similarity of the embeddings of the N 2 -N incorrect pairings. We optimize a symmetric cross entropy loss over these similarity scores. In Figure 3 we include pseudocode of the core of an implementation of CLIP. To our knowledge this batch construction technique and objective was first introduced in the area of deep metric learning as the multi-class N-pair loss Sohn (2016), was popularized for contrastive representation learning by Oord et al. (2018) as the InfoNCE loss, and was recently adapted for contrastive (text, image) representation learning in the domain of medical imaging by Zhang et al. (2020).\nwith high pointwise mutual information as well as the names of all Wikipedia articles above a certain search volume. Finally all WordNet synsets not already in the query list are added."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.86082697,
+            "text": "4 Discriminative Self-supervised Pre-training\nWe learn our features with a discriminative self-supervised method that can be seen as a combination of DINO and iBOT losses with the centering of SwAV (Caron et al., 2020). We also add a regularizer to spread features and a short high-resolution training phase. We rapidly introduce each of these approaches, but more details can be found in the related papers, or in our open-sourced code."
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 26,
+            "section": "8. Related Work",
+            "score": 0.85242844,
+            "text": "8. Related Work\nCLIP is an example of using natural language as a training signal for learning about a domain other than language. In this context, the earliest use of the term natural language supervision that we are aware of is the work of Ramanathan et al. (2013) which showed that natural language descriptions could be used along side other sources of supervision to improve performance on the task of video event understanding. However, as mentioned in the introduction and approach section, methods of leveraging natural language descriptions in computer vision well predate the use of this specific term, especially for image retrieval (Mori et al., 1999) and object classification (Wang et al., 2009). Other early work leveraged tags (but not natural language) associated with images for the task of semantic segmentation (Barnard et al., 2003). More recently, He & Peng (2017) and Liang et al. (2020) demonstrated using natural language descriptions and explanations to improve fine-grained visual classification of birds. Others have investigated how grounded language can be used to improve visual representations and classifiers on the ShapeWorld dataset (Kuhnle &Copestake, 2017; Andreas et al., 2017; Mu et al., 2019). Finally, techniques which combine natural language with reinforcement learning environments (Narasimhan et al., 2015) have demonstrated exciting emergent behaviors such as systematically accomplishing zero-shot tasks (Hill et al., 2019)."
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.8502903,
+            "text": "4 Discriminative Self-supervised Pre-training\n- Image-level objective (Caron et al., 2021). We consider the cross-entropy loss between the features extracted from a student and a teacher network. Both features are coming from the class token of a ViT, obtained from different crops of the same image. We learn the parameters of the student and build the teacher with an exponential moving average of past iterates (He et al., 2020).\n- Patch-level objective (Zhou et al., 2021). We randomly mask some of the input patches given to the student, but not to the teacher. We then add a cross-entropy loss between the patch features of both networks on each masked patch. This loss is combined with the image-level loss.\n- Untying head weights between both objectives. We observe that tying the weights associated with both objectives makes the model underfit at the patch-level while overfitting at the image-level. Untying these weights resolves this issue and improve the performances at both scales.\n- Sinkhorn-Knopp centering (Caron et al., 2020). Ruan et al. (2022) recommend to replace the teacher softmax-centering step of DINO and iBot by the Sinkhorn-Knopp (SK) batch normalization of SwAV (Caron et al., 2020). We run the Sinkhorn-Knopp algorithm steps for 3 iterations. For the student, we apply the softmax normalization.\n̸"
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 47,
+            "section": "E.3. Action Recognition in Videos",
+            "score": 0.8619448,
+            "text": "E.3. Action Recognition in Videos\nDespite this handicap, CLIP features transfer surprisingly well to this task. CLIP matches the best prior result on UCF101 in a linear probe evaluation setting and also outperforms all other models in our evaluation suite. On Kinetics-700, CLIP also outperforms the fine-tuned I3D baseline from the original paper. Since it does not require a training stage, we report CLIP's zero-shot performance when averaging predictions across all frames. CLIP also performs well in this setting and on Kinetics-700 its performance is within 1% of the fully supervised I3D baseline which is trained on 545000 labeled videos. Encouraged by these results, we also measure CLIP's performance on the recently introduced RareAct dataset (Miech et al., 2020a) which was designed to measure zero-shot recognition of unusual actions like 'hammering a phone' and 'drilling an egg'. CLIP improves over the prior state of the art, a S3D model trained on automatically extracted captions from 100 million instructional videos, by 10 points.\nWhile CLIP has encouragingly strong performance on the task of action recognition, we note that there are many differences between the models being compared beyond just their form of supervision such as model architecture, training data distribution, dataset size, and compute used. Further work is needed to more precisely determine what specific design decisions contribute to achieving high performance on this task."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "detected_document_ids": [
+            "clip-2021",
+            "dinov2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What supervision signals are used to pre-train CLIP?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "dinov2-2023",
+              "query": "What is the approach of DINOv2 in learning visual features without supervision?",
+              "retrieved_chunks": 20
+            }
+          ],
+          "candidate_chunks": 40,
+          "selected_chunks": 5,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'dinov2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 41465
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; retrieved=20",
+              "duration_ms": 82
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=dinov2-2023; retrieved=20",
+              "duration_ms": 80
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 8
+            },
+            {
+              "node": "generate_answer",
+              "detail": "abstained=False; citations=2",
+              "duration_ms": 77379
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP uses paired web image-text data and a contrastive image-text matching loss. DINOv2 uses no labels or text: a teacher-student self-supervised objective aligns global crop features and masked patch features.",
+      "fact_coverage": 0.6,
+      "matched_fact_groups": [
+        0,
+        1,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": true
+    },
+    {
+      "id": "compare-blip2-llava-bridge-fr",
+      "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+      "category": "comparison",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": false,
+      "latency_seconds": 53.349545999997645,
+      "response": {
+        "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+        "answer": "I cannot answer from the retrieved evidence alone.",
+        "citations": [],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 6,
+            "section": "3.4. Model Pre-training",
+            "score": 0.86479545,
+            "text": "3.4. Model Pre-training\nBLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models\nBLIP (Li et al., 2022), #Trainable Params. = 583M. BLIP (Li et al., 2022), Open- sourced?. = ✓. BLIP (Li et al., 2022), Visual Question Answering VQAv2 (test-dev).VQA acc. = -. BLIP (Li et al., 2022), Image Captioning NoCaps (val).CIDEr = 113.2. BLIP (Li et al., 2022), Image Captioning NoCaps (val).SPICE = 14.8. BLIP (Li et al., 2022), Image-Text Retrieval Flickr (test).TR@1 = 96.7. BLIP (Li et al., 2022), Image-Text Retrieval Flickr (test).IR@1 = 86.7. SimVLM (Wang et al., 2021b), #Trainable Params. = 1.4B. SimVLM (Wang et al., 2021b), Open- sourced?. = 7. SimVLM (Wang et al., 2021b), Visual Question Answering VQAv2 (test-dev).VQA acc. = -. SimVLM (Wang et al., 2021b), Image Captioning NoCaps (val).CIDEr = 112.2. SimVLM (Wang et al., 2021b), Image Captioning NoCaps (val).SPICE = -. SimVLM (Wang et al., 2021b), Image-Text"
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.8733608,
+            "text": "Abstract\nInstruction tuning large language models (LLMs) using machine-generated instruction-following data has improved zero-shot capabilities on new tasks, but the idea is less explored in the multimodal field. In this paper, we present the first attempt to use language-only GPT-4 to generate multimodal language-image instruction-following data. By instruction tuning on such generated data, we introduce LLaVA: L arge L anguage a nd V ision A ssistant, an end-to-end trained large multimodal model that connects a vision encoder and LLM for generalpurpose visual and language understanding. Our early experiments show that LLaVA demonstrates impressive multimodel chat abilities, sometimes exhibiting the behaviors of multimodal GPT-4 on unseen images/instructions, and yields a 85.1% relative score compared with GPT-4 on a synthetic multimodal instructionfollowing dataset. When fine-tuned on Science QA, the synergy of LLaVA and GPT-4 achieves a new state-of-the-art accuracy of 92.53%. We make GPT-4 generated visual instruction tuning data, our model and code base publicly available."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder",
+            "score": 0.86395717,
+            "text": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder\nIn the representation learning stage, we connect Q-Former to a frozen image encoder and perform pre-training using image-text pairs. We aim to train the Q-Former such that the queries can learn to extract visual representation that is most informative of the text. Inspired by BLIP (Li et al., 2022), we jointly optimize three pre-training objectives that share the same input format and model parameters. Each objective employs a different attention masking strategy between queries and text to control their interaction (see Figure 2)."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 4,
+            "section": "4.1 Architecture",
+            "score": 0.87218124,
+            "text": "4.1 Architecture\nThe primary goal is to effectively leverage the capabilities of both the pre-trained LLM and visual model. The network archtecture is illustrated in Figure 1. We choose LLaMA as our LLM f φ ( · ) parameterized by φ , as its effectiveness has been demonstrated in several open-source language-only instruction-tuning works. [43, 45, 34].\nFigure 1: LLaVA network architecture.\nFor an input image X v , we consider the pre-trained CLIP visual encoder ViT-L/14 [36], which provides the visual feature Z v = g ( X v ) . The grid features before and after the last Transformer layer are considered in our experiments. We consider a simple linear layer to connect image features into the word embedding space. Specifically, we apply a trainable projection matrix W to convert Z v into language embedding tokens H q , which have the same dimensionality of the word embedding space in the language model:\n<!-- formula-not-decoded -->"
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.1. Model Architecture",
+            "score": 0.88522005,
+            "text": "3.1. Model Architecture\nFigure 2. ( Left ) Model architecture of Q-Former and BLIP-2's first-stage vision-language representation learning objectives. We jointly optimize three objectives which enforce the queries (a set of learnable embeddings) to extract visual representation most relevant to the text. ( Right ) The self-attention masking strategy for each objective to control query-text interaction.\nIn our experiments, we use 32 queries where each query has a dimension of 768 (same as the hidden dimension of the Q-Former). We use Z to denote the output query representation. The size of Z ( 32 × 768 ) is much smaller than the size of frozen image features ( e . g . 257 × 1024 for ViT-L/14). This bottleneck architecture works together with our pre-training objectives into forcing the queries to extract visual information that is most relevant to the text."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": true,
+        "reason": "The language model judged the retrieved evidence insufficient.",
+        "execution": {
+          "strategy": "per_source",
+          "detected_document_ids": [
+            "blip2-2023",
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "How does BLIP-2 connect a visual encoder to a language model?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "llava-2023",
+              "query": "What is the mechanism for connecting a visual encoder to a language model in LLaVA?",
+              "retrieved_chunks": 20
+            }
+          ],
+          "candidate_chunks": 40,
+          "selected_chunks": 5,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['blip2-2023', 'llava-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 16722
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=blip2-2023; retrieved=20",
+              "duration_ms": 112
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=llava-2023; retrieved=20",
+              "duration_ms": 100
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 7
+            },
+            {
+              "node": "generate_answer",
+              "detail": "abstained=True; citations=0",
+              "duration_ms": 36489
+            }
+          ]
+        }
+      },
+      "reference_answer": "BLIP-2 emploie un Q-Former avec des requêtes apprenables comme goulot d'étranglement entre deux modèles gelés. LLaVA original utilise une projection linéaire entraînable pour convertir les caractéristiques CLIP en tokens compatibles avec l'espace d'embedding de LLaMA.",
+      "fact_coverage": 0.0,
+      "matched_fact_groups": [],
+      "total_fact_groups": 5,
+      "citation_document_precision": 0.0,
+      "citation_document_recall": 0.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    },
+    {
+      "id": "compare-clip-sam-prompts-en",
+      "question": "How do prompts play different roles in CLIP zero-shot classification and SAM segmentation?",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 77.64455379798892,
+      "response": {
+        "question": "How do prompts play different roles in CLIP zero-shot classification and SAM segmentation?",
+        "answer": "In CLIP zero-shot classification, prompts are used to guide the model in understanding visual concepts directly specified through natural language, whereas in SAM segmentation, prompts play a role in prompting the model to perform specific tasks like edge detection, object proposal generation, and instance segmentation. For CLIP, zero-shot performance is analyzed by comparing it to fully supervised models and few-shot methods. The analysis shows that zero-shot CLIP matches the performance of a 4-shot logistic regression on the same feature space, suggesting that prompts in CLIP can effectively communicate visual concepts without the need for extensive training data. In contrast, SAM uses prompts to engineer tasks, starting from basic edge detection to more complex text-to-mask segmentation, demonstrating its capability to perform a range of image understanding tasks through prompt engineering. [S1], [S4]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 9,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": 0.8784101
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.5. Zero-Shot Text-to-Mask",
+            "score": 0.8640436
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 9,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": 0.8784101,
+            "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nFigure 6. Zero-shot CLIP outperforms few-shot linear probes. Zero-shot CLIP matches the average performance of a 4-shot linear classifier trained on the same feature space and nearly matches the best results of a 16-shot linear classifier across publicly available models. For both BiT-M and SimCLRv2, the best performing model is highlighted. Light gray lines are other models in the eval suite. The 20 datasets with at least 16 examples per class were used in this analysis."
+          },
+          {
+            "reference": "S2",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 8,
+            "section": "7. Zero-Shot Transfer Experiments",
+            "score": 0.87457114,
+            "text": "7. Zero-Shot Transfer Experiments\nIn this section, we present zero-shot transfer experiments with SAM, the Segment Anything Model. We consider five tasks, four of which differ significantly from the promptable segmentation task used to train SAM. These experiments evaluate SAM on datasets and tasks that were not seen dur- ing training (our usage of 'zero-shot transfer' follows its usage in CLIP [82]). The datasets may include novel image distributions, such as underwater or ego-centric images ( e.g . Fig. 8) that, to our knowledge, do not appear in SA-1B.\nOur experiments begin by testing the core goal of promptable segmentation: producing a valid mask from any prompt. We emphasize the challenging scenario of a single foreground point prompt, since it is more likely to be ambiguous than other more specific prompts. Next, we present a sequence of experiments that traverse low, mid, and highlevel image understanding and roughly parallel the historical development of the field. Specifically, we prompt SAM to (1) perform edge detection, (2) segment everything, i.e . object proposal generation, (3) segment detected objects, i.e . instance segmentation, and (4), as a proof-of-concept, to segment objects from free-form text. These four tasks differ significantly from the promptable segmentation task that SAM was trained on and are implemented via prompt engineering. Our experiments conclude with an ablation study."
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 8,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": 0.8664874,
+            "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nSince task-agnostic zero-shot classifiers for computer vision have been understudied, CLIP provides a promising opportunity to gain a better understanding of this type of model. In this section, we conduct a study of various properties of CLIP's zero-shot classifiers. As a first question, we look simply at how well zero-shot classifiers perform. To contextualize this, we compare to the performance of a simple off-the-shelf baseline: fitting a fully supervised, regularized, logistic regression classifier on the features of the canonical ResNet-50. In Figure 5 we show this comparison across 27 datasets. Please see Appendix A for details of datasets and setup.\nZero-shot CLIP outperforms this baseline slightly more of- Zero-Shot CLIP vs. Linear Probe on ResNet50\nFigure 5. Zero-shot CLIP is competitive with a fully supervised baseline. Across a 27 dataset eval suite, a zero-shot CLIP classifier outperforms a fully supervised linear classifier fitted on ResNet-50 features on 16 datasets, including ImageNet."
+          },
+          {
+            "reference": "S4",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 11,
+            "section": "7.5. Zero-Shot Text-to-Mask",
+            "score": 0.8640436,
+            "text": "7.5. Zero-Shot Text-to-Mask\nApproach. Finally, we consider an even higher-level task: segmenting objects from free-form text. This experiment is a proof-of-concept of SAM's ability to process text prompts. While we used the exact same SAM in all prior experiments, for this one SAM's training procedure is modified to make it text-aware, but in a way that does not require new text annotations. Specifically, for each manually collected mask with area larger than 100 2 we extract the CLIP image embedding. Then, during training, we prompt SAM with the extracted CLIP image embeddings as its first interaction. The key observation here is that because CLIP's image embeddings are trained to align with its text embeddings, we can train with image embeddings, but use text embeddings for inference. That is, at inference time we run text through CLIP's text encoder and then give the resulting text embedding as a prompt to SAM (see §D.5 for details).\nFigure 12: Zero-shot text-to-mask. SAM can work with simple and nuanced text prompts. When SAM fails to make a correct prediction, an additional point prompt can help."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 9,
+            "section": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE",
+            "score": 0.8626065,
+            "text": "3.1.5. ANALYSIS OF ZERO-SHOT CLIP PERFORMANCE\nWhile comparing zero-shot performance to fully supervised models contextualizes the task-learning capabilities of CLIP, comparing to few-shot methods is a more direct comparison, since zero-shot is its limit. In Figure 6, we visualize how zero-shot CLIP compares to few-shot logistic regression on the features of many image models including the best publicly available ImageNet models, self-supervised learning methods, and CLIP itself. While it is intuitive to expect zero-shot to underperform one-shot, we instead find that zero-shot CLIP matches the performance of 4-shot logistic regression on the same feature space. This is likely due to an important difference between the zero-shot and few-shot approach. First, CLIP's zero-shot classifier is generated via natural language which allows for visual concepts to be directly specified ('communicated'). By contrast, 'normal' supervised learning must infer concepts indirectly from training examples. Context-less example-based learning has the drawback that many different hypotheses can be consistent with the data, especially in the one-shot case. A single image often contains many different visual concepts. Although a capable learner is able to exploit visual cues and heuristics, such as assuming that the concept being demonstrated is the primary object in an image, there is no guarantee."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "detected_document_ids": [
+            "clip-2021",
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What roles do prompts play in CLIP's zero-shot classification?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "sam-2023",
+              "query": "How do prompts influence SAM's segmentation tasks?",
+              "retrieved_chunks": 20
+            }
+          ],
+          "candidate_chunks": 40,
+          "selected_chunks": 5,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'sam-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 13102
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; retrieved=20",
+              "duration_ms": 74
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=sam-2023; retrieved=20",
+              "duration_ms": 69
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 13
+            },
+            {
+              "node": "generate_answer",
+              "detail": "abstained=False; citations=2",
+              "duration_ms": 64446
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP turns textual class descriptions and templates into classifier weights, often ensembling prompt templates. SAM uses spatial or semantic prompts such as points, boxes, text, or masks to specify which region should be segmented.",
+      "fact_coverage": 0.2,
+      "matched_fact_groups": [
+        0
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    },
+    {
+      "id": "compare-training-data-scale-en",
+      "question": "Compare the reported training-data scale of CLIP, DINOv2, and SAM.",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": false,
+      "latency_seconds": 71.09186930999567,
+      "response": {
+        "question": "Compare the reported training-data scale of CLIP, DINOv2, and SAM.",
+        "answer": "I cannot answer from the retrieved evidence alone.",
+        "citations": [],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.86758685,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nGiven a batch of N (image, text) pairs, CLIP is trained to predict which of the N × N possible (image, text) pairings across a batch actually occurred. To do this, CLIP learns a multi-modal embedding space by jointly training an image encoder and text encoder to maximize the cosine similarity of the image and text embeddings of the N real pairs in the batch while minimizing the cosine similarity of the embeddings of the N 2 -N incorrect pairings. We optimize a symmetric cross entropy loss over these similarity scores. In Figure 3 we include pseudocode of the core of an implementation of CLIP. To our knowledge this batch construction technique and objective was first introduced in the area of deep metric learning as the multi-class N-pair loss Sohn (2016), was popularized for contrastive representation learning by Oord et al. (2018) as the InfoNCE loss, and was recently adapted for contrastive (text, image) representation learning in the domain of medical imaging by Zhang et al. (2020).\nwith high pointwise mutual information as well as the names of all Wikipedia articles above a certain search volume. Finally all WordNet synsets not already in the query list are added."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 29,
+            "section": "B.1 Unsupervised pre-training",
+            "score": 0.87324667,
+            "text": "B.1 Unsupervised pre-training\n142,109,386\nTable 15: Composition of our LVD-142M dataset. We report the list of datasets and associated splits used to build the dataset, how they were included (as is without retrieval or via sample-based or cluster-based retrieval). For retrievals, we indicate the actual number of retrieved images and the final number included in the dataset.\n\nTable 16: Training hyperparameters for DINOv2-S, DINOv2-B, DINOv2-L and DINOv2-g. All models run for 625k iterations with optimizer AdamW, an initial LayerScale value of 1e-5, a weight decay cosine schedule from 0.04 to 0.2, a learning rate warmup of 100k iterations, a teacher momentum cosine schedule from 0.994 to 1, and we train in float16 precision in all cases (except for the DINO heads where we reduce the gradients in float32)."
+          },
+          {
+            "reference": "S3",
+            "document_id": "sam-2023",
+            "title": "Segment Anything",
+            "page": 28,
+            "section": "Data",
+            "score": 0.8584247,
+            "text": "Data\nCost and impact of compute\nRisks and harms\nUse cases We trained SAM on licensed images. The images were filtered for objectionable content by the provider, but we acknowledge the possibility of false negatives. We performed a geographic analysis of the SA-1B dataset in §6. While SA-1B is more geographically diverse than many of its predecessors, we acknowledge that some geographic regions and economic groups are underrepresented.\nSAMwastrained on 256 A100 GPUS for 68 hours. We acknowledge the environmental impact and cost of training large scale models. The environmental impact of training the released SAM model is approximately 6963 kWh resulting in an estimated 2.8 metric tons of carbon dioxide given the specific data center used, using the calculation described in [77] and the ML CO 2 Impact calculator [61]. This is equivalent to ∼ 7k miles driven by the average gasoline-powered passenger vehicle in the US [101]. We released the SAM models to both reduce the need for retraining and lower the barrier to entry for large scale vision research.\nWe evaluated SAM for fairness in §6. Downstream use cases of SAM will create their own potential for biases and fairness concerns. As such we recommend users run their own fairness evaluation when using SAM for their specific use case.\nWe implore users to use their best judgement for downstream use of the model.\nTable 9: Model Card for SAM, following the procedure detailed in [75]."
+          },
+          {
+            "reference": "S4",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 47,
+            "section": "E.3. Action Recognition in Videos",
+            "score": 0.8848861,
+            "text": "E.3. Action Recognition in Videos\nDespite this handicap, CLIP features transfer surprisingly well to this task. CLIP matches the best prior result on UCF101 in a linear probe evaluation setting and also outperforms all other models in our evaluation suite. On Kinetics-700, CLIP also outperforms the fine-tuned I3D baseline from the original paper. Since it does not require a training stage, we report CLIP's zero-shot performance when averaging predictions across all frames. CLIP also performs well in this setting and on Kinetics-700 its performance is within 1% of the fully supervised I3D baseline which is trained on 545000 labeled videos. Encouraged by these results, we also measure CLIP's performance on the recently introduced RareAct dataset (Miech et al., 2020a) which was designed to measure zero-shot recognition of unusual actions like 'hammering a phone' and 'drilling an egg'. CLIP improves over the prior state of the art, a S3D model trained on automatically extracted captions from 100 million instructional videos, by 10 points.\nWhile CLIP has encouragingly strong performance on the task of action recognition, we note that there are many differences between the models being compared beyond just their form of supervision such as model architecture, training data distribution, dataset size, and compute used. Further work is needed to more precisely determine what specific design decisions contribute to achieving high performance on this task."
+          },
+          {
+            "reference": "S5",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 30,
+            "section": "B.1 Unsupervised pre-training",
+            "score": 0.853153,
+            "text": "B.1 Unsupervised pre-training\nDINOv2-S (distilled), Arch. = ViT-S/14. DINOv2-S (distilled), Drop-rate = 0. DINOv2-S (distilled), LR = 1e-3. DINOv2-S (distilled), Batch size = 2048. DINOv2-B (distilled), Arch. = ViT-B/14. DINOv2-B (distilled), Drop-rate = 0. DINOv2-B (distilled), LR = 1e-3. DINOv2-B (distilled), Batch size = 2048. DINOv2-L (distilled), Arch. = ViT-L/14. DINOv2-L (distilled), Drop-rate = 0. DINOv2-L (distilled), LR = 1e-3. DINOv2-L (distilled), Batch size = 2048. DINOv2-L (from scratch), Arch. = ViT-L/14. DINOv2-L (from scratch), Drop-rate = 0.4. DINOv2-L (from scratch), LR = 3.5e-4. DINOv2-L (from scratch), Batch size = 3072. DINOv2-g (from scratch), Arch. = ViT-g/14. DINOv2-g (from scratch), Drop-rate = 0.4. DINOv2-g (from scratch), LR = 3.5e-4. DINOv2-g (from scratch), Batch size = 3072"
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": true,
+        "reason": "The language model judged the retrieved evidence insufficient.",
+        "execution": {
+          "strategy": "per_source",
+          "detected_document_ids": [
+            "clip-2021",
+            "dinov2-2023",
+            "sam-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What is the reported training data scale for CLIP?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "dinov2-2023",
+              "query": "What is the reported training data scale for DINOv2?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "sam-2023",
+              "query": "What is the reported training data scale for SAM?",
+              "retrieved_chunks": 20
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'dinov2-2023', 'sam-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=3 source-restricted searches; planner=llm",
+              "duration_ms": 19870
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; retrieved=20",
+              "duration_ms": 77
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=dinov2-2023; retrieved=20",
+              "duration_ms": 74
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=sam-2023; retrieved=20",
+              "duration_ms": 55
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 3 source(s)",
+              "duration_ms": 13
+            },
+            {
+              "node": "generate_answer",
+              "detail": "abstained=True; citations=0",
+              "duration_ms": 51121
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP reports 400 million image-text pairs; DINOv2 builds the curated LVD-142M corpus of about 142 million images; SAM's SA-1B contains about 11 million images and more than one billion masks.",
+      "fact_coverage": 0.0,
+      "matched_fact_groups": [],
+      "total_fact_groups": 4,
+      "citation_document_precision": 0.0,
+      "citation_document_recall": 0.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    },
+    {
+      "id": "compare-frozen-components-en",
+      "question": "Which large components remain frozen in BLIP-2 and during LLaVA's first feature-alignment stage, and what small bridge is trained?",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 99.17794203900849,
+      "response": {
+        "question": "Which large components remain frozen in BLIP-2 and during LLaVA's first feature-alignment stage, and what small bridge is trained?",
+        "answer": "In BLIP-2 and during LLaVA's first feature-alignment stage, the large components that remain frozen are the image encoder and the large language model (LLM). Specifically, the visual encoder and LLM weights are kept frozen, while only the trainable parameters such as the projection matrix \\(W\\) are updated. The small bridge that is trained during this stage is the alignment between the visual features and the text space, aiming to align the image features \\(H_v\\) with the pre-trained LLM word embedding.\n\nReferences:\n[S1] and [S2]",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "2.2. Modular Vision-Language Pre-training",
+            "score": 0.8374326
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 5,
+            "section": "4.2 Training",
+            "score": 0.82374185
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "2.2. Modular Vision-Language Pre-training",
+            "score": 0.8374326,
+            "text": "2.2. Modular Vision-Language Pre-training\nMore similar to us are methods that leverage off-the-shelf pre-trained models and keep them frozen during VLP. Some methods freeze the image encoder, including the early work which adopts a frozen object detector to extract visual features (Chen et al., 2020; Li et al., 2020; Zhang et al., 2021), and the recent LiT (Zhai et al., 2022) which uses a frozen pre-trained image encoder for CLIP (Radford et al., 2021) pre-training. Some methods freeze the language model to use the knowledge from LLMs for vision-to-language generation tasks (Tsimpoukelli et al., 2021; Alayrac et al., 2022; Chen et al., 2022a). The key challenge in using a frozen LLM is to align visual features to the text space. To achieve this, Frozen (Tsimpoukelli et al., 2021) finetunes an image encoder whose outputs are directly used as soft prompts for the LLM. Flamingo (Alayrac et al., 2022) inserts new cross-attention layers into the LLM to inject visual features, and pre-trains the new layers on billions of image-text pairs. Both methods adopt the language modeling loss, where the language model generates texts conditioned on the image."
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 5,
+            "section": "4.2 Training",
+            "score": 0.82374185,
+            "text": "4.2 Training\nStage 1: Pre-training for Feature Alignment. To strike a balance between concept coverage and training efficiency, we filter CC3M to 595K image-text pairs. Please see the Appendix for details of the filtering process. These pairs are converted to the instruction-following data using the naive expansion method describe in Section 3. Each sample can be treated as a single-turn conversation. To construct the input X instruct in (2), for an image X v , a question X q in Table 8 is randomly sampled, which is a language instruction to request the assistant to describe the image briefly. The prediction answer X a is the original caption. In training, we keep both the visual encoder and LLM weights frozen, and maximize the likelihood of (3) with trainable parameters θ = W (the projection matrix) only. In this way, the image features H v can be aligned with the pre-trained LLM word embedding. This stage can be understood as training a compatible visual tokenizer for the frozen LLM.\nStage 2: Fine-tuning End-to-End. We only keep the visual encoder weights frozen, and continue to update both the pre-trained weights of the projection layer and LLM in LLaV A; i.e., the trainable parameters are θ = { W , φ } in (3). We consider two specific use case scenarios:"
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder",
+            "score": 0.8297368,
+            "text": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder\nImage-Text Matching (ITM) aims to learn fine-grained alignment between image and text representation. It is a binary classification task where the model is asked to predict whether an image-text pair is positive (matched) or negative (unmatched). We use a bi-directional self-attention mask where all queries and texts can attend to each other. The output query embeddings Z thus capture multimodal information. We feed each output query embedding into a two-class linear classifier to obtain a logit, and average the logits across all queries as the output matching score. We adopt the hard negative mining strategy from Li et al. (2021; 2022) to create informative negative pairs.\nFigure 3. BLIP-2's second-stage vision-to-language generative pre-training, which bootstraps from frozen large language models (LLMs). ( Top ) Bootstrapping a decoder-based LLM (e.g. OPT). ( Bottom ) Bootstrapping an encoder-decoder-based LLM (e.g. FlanT5). The fully-connected layer adapts from the output dimension of the Q-Former to the input dimension of the chosen LLM."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 5,
+            "section": "4.2 Training",
+            "score": 0.7986047,
+            "text": "4.2 Training\nFor each image X v , we generate multi-turn conversation data ( X 1 q , X 1 a , · · · , X T q , X T a ) , where T is the total number of turns. We organize them as a sequence, by treating all answers as the assistant's response, and the instruction X t instruct at the t -th turn as:\n<!-- formula-not-decoded -->\nThis leads to the unified format for the multimodal instruction-following sequence illustrated in Table 2. We perform instruction-tuning of the LLM on the prediction tokens, using its original auto-regressive training objective.\nSpecifically, for a sequence of length L , we compute the probability of generating target answers X a by:\n<!-- formula-not-decoded -->\nwhere θ is the trainable parameters, X instruct ,<i and X a ,<i are the instruction and answer tokens in all turns before the current prediction token x i , respectively. Please see Table 2 for an illustration of the prediction tokens. For the conditionals in (3), we explicitly add X v to emphasize the fact that the image is grounded for all answers, and we skip X system-message and all previous <STOP> for better readability, though they are also conditioned. For LLaVA model training, we consider a two-stage instruction-tuning procedure."
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder",
+            "score": 0.8394874,
+            "text": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder\nImage-Text Contrastive Learning (ITC) learns to align image representation and text representation such that their mutual information is maximized. It achieves so by contrasting the image-text similarity of a positive pair against those of negative pairs. We align the output query representation Z from the image transformer with the text representation t from the text transformer, where t is the output embedding of the [CLS] token. Since Z contains multiple output embeddings (one from each query), we first compute the pairwise similarity between each query output and t , and then select the highest one as the image-text similarity. To avoid information leak, we employ a unimodal self-attention mask, where the queries and text are not allowed to see each other. Due to the use of a frozen image encoder, we can fit more samples per GPU compared to end-to-end methods. Therefore, we use in-batch negatives instead of the momentum queue in BLIP."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "detected_document_ids": [
+            "blip2-2023",
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "Which large components remain frozen in BLIP-2 and during the first feature-alignment stage of LLaVA?",
+              "retrieved_chunks": 20
+            },
+            {
+              "document_id": "llava-2023",
+              "query": "What small bridge is trained during the first feature-alignment stage of LLaVA?",
+              "retrieved_chunks": 20
+            }
+          ],
+          "candidate_chunks": 40,
+          "selected_chunks": 5,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['blip2-2023', 'llava-2023']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 23601
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=blip2-2023; retrieved=20",
+              "duration_ms": 45
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=llava-2023; retrieved=20",
+              "duration_ms": 41
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 8
+            },
+            {
+              "node": "generate_answer",
+              "detail": "abstained=False; citations=2",
+              "duration_ms": 75515
+            }
+          ]
+        }
+      },
+      "reference_answer": "BLIP-2 freezes the image encoder and LLM while training its lightweight Q-Former bridge. In LLaVA stage 1, both the visual encoder and LLM are also frozen, but only a linear projection matrix is trained for feature alignment.",
+      "fact_coverage": 0.8,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": true
+    }
+  ]
+}

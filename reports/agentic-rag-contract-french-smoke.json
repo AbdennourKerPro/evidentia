@@ -1,0 +1,175 @@
+{
+  "created_at": "2026-08-14T18:10:03.740937+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_hybrid_rrf_response_contract_v3",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 0,
+    "per_source": 1
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 1,
+    "answerable_cases": 1,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 0.0,
+    "abstention_accuracy": 0.0,
+    "mean_fact_coverage": 0.0,
+    "mean_citation_document_precision": 0.0,
+    "mean_citation_document_recall": 0.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 251.46741033099534
+  },
+  "cases": [
+    {
+      "id": "compare-blip2-llava-bridge-fr",
+      "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+      "category": "comparison",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": false,
+      "latency_seconds": 251.46741033099534,
+      "response": {
+        "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+        "answer": "Je ne peux pas répondre à partir des seules preuves retrouvées.",
+        "citations": [],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.031054405392392875,
+            "text": "1. Introduction\nTo achieve effective vision-language alignment with frozen unimodal models, we propose a Querying Transformer (QFormer) pre-trained with a new two-stage pre-training strategy. As shown in Figure 1, Q-Former is a lightweight transformer which employs a set of learnable query vectors to extract visual features from the frozen image encoder. It acts as an information bottleneck between the frozen image encoder and the frozen LLM, where it feeds the most useful visual feature for the LLM to output the desired text. In the first pre-training stage, we perform vision-language representation learning which enforces the Q-Former to learn visual representation most relevant to the text. In the second pre-training stage, we perform vision-to-language generative learning by connecting the output of the Q-Former to a frozen LLM, and trains the Q-Former such that its output visual representation can be interpreted by the LLM.\nWe name our VLP framework as BLIP-2: Bootstrapping Language-Image Pre-training with frozen unimodal models. The key advantages of BLIP-2 include:"
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.03252247488101534,
+            "text": "Abstract\nInstruction tuning large language models (LLMs) using machine-generated instruction-following data has improved zero-shot capabilities on new tasks, but the idea is less explored in the multimodal field. In this paper, we present the first attempt to use language-only GPT-4 to generate multimodal language-image instruction-following data. By instruction tuning on such generated data, we introduce LLaVA: L arge L anguage a nd V ision A ssistant, an end-to-end trained large multimodal model that connects a vision encoder and LLM for generalpurpose visual and language understanding. Our early experiments show that LLaVA demonstrates impressive multimodel chat abilities, sometimes exhibiting the behaviors of multimodal GPT-4 on unseen images/instructions, and yields a 85.1% relative score compared with GPT-4 on a synthetic multimodal instructionfollowing dataset. When fine-tuned on Science QA, the synergy of LLaVA and GPT-4 achieves a new state-of-the-art accuracy of 92.53%. We make GPT-4 generated visual instruction tuning data, our model and code base publicly available."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.03055037313432836,
+            "text": "Abstract\nThe cost of vision-and-language pre-training has become increasingly prohibitive due to end-toend training of large-scale models. This paper proposes BLIP-2, a generic and efficient pretraining strategy that bootstraps vision-language pre-training from off-the-shelf frozen pre-trained image encoders and frozen large language models. BLIP-2 bridges the modality gap with a lightweight Querying Transformer, which is pretrained in two stages. The first stage bootstraps vision-language representation learning from a frozen image encoder. The second stage bootstraps vision-to-language generative learning from a frozen language model. BLIP-2 achieves state-of-the-art performance on various visionlanguage tasks, despite having significantly fewer trainable parameters than existing methods. For example, our model outperforms Flamingo80B by 8.7% on zero-shot VQAv2 with 54x fewer trainable parameters. We also demonstrate the model's emerging capabilities of zero-shot image-to-text generation that can follow natural language instructions."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 4,
+            "section": "4.1 Architecture",
+            "score": 0.03252247488101534,
+            "text": "4.1 Architecture\nThe primary goal is to effectively leverage the capabilities of both the pre-trained LLM and visual model. The network archtecture is illustrated in Figure 1. We choose LLaMA as our LLM f φ ( · ) parameterized by φ , as its effectiveness has been demonstrated in several open-source language-only instruction-tuning works. [43, 45, 34].\nFigure 1: LLaVA network architecture.\nFor an input image X v , we consider the pre-trained CLIP visual encoder ViT-L/14 [36], which provides the visual feature Z v = g ( X v ) . The grid features before and after the last Transformer layer are considered in our experiments. We consider a simple linear layer to connect image features into the word embedding space. Specifically, we apply a trainable projection matrix W to convert Z v into language embedding tokens H q , which have the same dimensionality of the word embedding space in the language model:\n<!-- formula-not-decoded -->"
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 0.029827662395050816,
+            "text": "1. Introduction\n- BLIP-2 effectively leverages both frozen pre-trained image models and language models. We bridge the modality gap using a Q-Former pre-trained in two-stages: representation learning stage and generative learning stage. BLIP-2 achieves state-of-the-art performance on various vision-language tasks including visual question answering, image captioning, and image-text retrieval.\n- Powered by LLMs ( e . g . OPT (Zhang et al., 2022), FlanT5 (Chung et al., 2022)), BLIP-2 can be prompted to perform zero-shot image-to-text generation that follows natural language instructions, which enables emerging capabilities such as visual knowledge reasoning, visual conversation, etc. (see Figure 4 for examples).\n- Due to the use of frozen unimodal models and a lightweight Q-Former, BLIP-2 is more compute-efficient than exisiting state-of-the-arts. For example, BLIP-2 outperforms Flamingo (Alayrac et al., 2022) by 8.7% on zero-shot VQAv2, while using 54 × fewer trainable parameters. Furthermore, our results show that BLIP-2 is a generic method that can harvest more advanced unimodal models for better VLP performance."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": true,
+        "reason": "The generated answer failed the response contract: missing_citation_documents:blip2-2023",
+        "execution": {
+          "strategy": "per_source",
+          "expected_language": "fr",
+          "detected_document_ids": [
+            "blip2-2023",
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "How does BLIP-2 connect a visual encoder to a language model?",
+              "retrieved_chunks": 29
+            },
+            {
+              "document_id": "llava-2023",
+              "query": "What is the mechanism for connecting a visual encoder to a language model in LLaVA?",
+              "retrieved_chunks": 25
+            }
+          ],
+          "candidate_chunks": 54,
+          "selected_chunks": 5,
+          "correction_attempted": true,
+          "response_contract_valid": false,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['blip2-2023', 'llava-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; planner=llm",
+              "duration_ms": 36814
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=blip2-2023; dense=20; bm25=20; rrf=29",
+              "duration_ms": 87
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=llava-2023; dense=20; bm25=20; rrf=25",
+              "duration_ms": 74
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=930",
+              "duration_ms": 96559
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['premature_abstention']",
+              "duration_ms": 0
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['premature_abstention']; corrected_characters=1702",
+              "duration_ms": 117981
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['missing_citation_documents:blip2-2023']",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=True; citations=0; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "BLIP-2 emploie un Q-Former avec des requêtes apprenables comme goulot d'étranglement entre deux modèles gelés. LLaVA original utilise une projection linéaire entraînable pour convertir les caractéristiques CLIP en tokens compatibles avec l'espace d'embedding de LLaMA.",
+      "fact_coverage": 0.0,
+      "matched_fact_groups": [],
+      "total_fact_groups": 5,
+      "citation_document_precision": 0.0,
+      "citation_document_recall": 0.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    }
+  ]
+}

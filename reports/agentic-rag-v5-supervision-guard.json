@@ -1,0 +1,501 @@
+{
+  "created_at": "2026-08-14T23:42:01.965997+00:00",
+  "complete": false,
+  "completed_cases": 2,
+  "requested_cases": 5,
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_fact_plan_intent_multifacet_response_contract_v5",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 0,
+    "per_source": 2
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 2,
+    "answerable_cases": 2,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 0.5,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 0.7,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 563.1621574484961,
+    "response_contract_valid_rate": 1.0,
+    "fact_contract_valid_rate": 1.0,
+    "correction_rate": 1.0,
+    "planned_fact_cases": 1,
+    "fact_planning_fallback_rate": 0.0,
+    "mean_planned_fact_coverage": 1.0
+  },
+  "cases": [
+    {
+      "id": "compare-clip-dinov2-supervision-en",
+      "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+      "category": "comparison",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 429.37023047999537,
+      "response": {
+        "question": "Compare the supervision signals used to pre-train CLIP and DINOv2.",
+        "answer": "The supervision signals used to pre-train CLIP and DINOv2 are fundamentally different. CLIP uses image-text pairs for training, aiming to predict which text accompanies each image [S1, S3]. Specifically, CLIP is trained to maximize the cosine similarity of the image and text embeddings of the correct pairs while minimizing the similarity of incorrect pairs [S3]. On the other hand, DINOv2 does not use image-text pairs; instead, it focuses on learning robust visual features through a contrastive objective [S2]. DINOv2 trains a student and teacher network to predict the features of the same image from different crops, using a cross-entropy loss [S2].\n\nBoth models share a key similarity in trying to predict the relationship between images and text, but CLIP explicitly uses image-text pairs as supervision, whereas DINOv2 does not rely on such pairs [S1, S2]. Training for DINOv2 is self-supervised [S2], whereas CLIP uses a contrastive objective [S3].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.06977706150953533
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.07823154712891969
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.07923879934487457
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.06977706150953533,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nDue to the large size of our pre-training dataset, over-fitting is not a major concern and the details of training CLIP are simplified compared to the implementation of Zhang et al. (2020). We train CLIP from scratch without initializing the image encoder with ImageNet weights or the text encoder with pre-trained weights. We do not use the non-linear projection between the representation and the contrastive embedding space, a change which was introduced by Bachman et al. (2019) and popularized by Chen et al. (2020b). We instead use only a linear projection to map from each encoder's representation to the multi-modal embedding space. We did not notice a difference in training efficiency between the two versions and speculate that non-linear projections may be co-adapted with details of current image only in self-supervised representation learning methods. We also remove the text transformation function t u from Zhang et al. (2020) which samples a single sentence at uniform from the text since many of the (image, text) pairs in CLIP's pretraining dataset are only a single sentence. We also simplify the image transformation function t v . A random square crop from resized images is the only data augmentation used during training."
+          },
+          {
+            "reference": "S2",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 5,
+            "section": "4 Discriminative Self-supervised Pre-training",
+            "score": 0.07923879934487457,
+            "text": "4 Discriminative Self-supervised Pre-training\n- Image-level objective (Caron et al., 2021). We consider the cross-entropy loss between the features extracted from a student and a teacher network. Both features are coming from the class token of a ViT, obtained from different crops of the same image. We learn the parameters of the student and build the teacher with an exponential moving average of past iterates (He et al., 2020).\n- Patch-level objective (Zhou et al., 2021). We randomly mask some of the input patches given to the student, but not to the teacher. We then add a cross-entropy loss between the patch features of both networks on each masked patch. This loss is combined with the image-level loss.\n- Untying head weights between both objectives. We observe that tying the weights associated with both objectives makes the model underfit at the patch-level while overfitting at the image-level. Untying these weights resolves this issue and improve the performances at both scales.\n- Sinkhorn-Knopp centering (Caron et al., 2020). Ruan et al. (2022) recommend to replace the teacher softmax-centering step of DINO and iBot by the Sinkhorn-Knopp (SK) batch normalization of SwAV (Caron et al., 2020). We run the Sinkhorn-Knopp algorithm steps for 3 iterations. For the student, we apply the softmax normalization.\n̸"
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.07823154712891969,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nGiven a batch of N (image, text) pairs, CLIP is trained to predict which of the N × N possible (image, text) pairings across a batch actually occurred. To do this, CLIP learns a multi-modal embedding space by jointly training an image encoder and text encoder to maximize the cosine similarity of the image and text embeddings of the N real pairs in the batch while minimizing the cosine similarity of the embeddings of the N 2 -N incorrect pairings. We optimize a symmetric cross entropy loss over these similarity scores. In Figure 3 we include pseudocode of the core of an implementation of CLIP. To our knowledge this batch construction technique and objective was first introduced in the area of deep metric learning as the multi-class N-pair loss Sohn (2016), was popularized for contrastive representation learning by Oord et al. (2018) as the InfoNCE loss, and was recently adapted for contrastive (text, image) representation learning in the domain of medical imaging by Zhang et al. (2020).\nwith high pointwise mutual information as well as the names of all Wikipedia articles above a certain search volume. Finally all WordNet synsets not already in the query list are added."
+          },
+          {
+            "reference": "S4",
+            "document_id": "dinov2-2023",
+            "title": "DINOv2: Learning Robust Visual Features without Supervision",
+            "page": 30,
+            "section": "B.1 Unsupervised pre-training",
+            "score": 0.03125,
+            "text": "B.1 Unsupervised pre-training\nEMA update for the teacher. The teacher is initialized with the same state as the student, and is an exponential moving average of the student network, with a momentum value in [0.994, 1.0] following a cosine schedule. It is updated at the end of every training step."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 4,
+            "section": "2.3. Selecting an Efficient Pre-Training Method",
+            "score": 0.03278688524590164,
+            "text": "2.3. Selecting an Efficient Pre-Training Method\nBoth these approaches share a key similarity. They try to predict the exact words of the text accompanying each image. This is a difficult task due to the wide variety of descriptions, comments, and related text that co-occur with images. Recent work in contrastive representation learning for images has found that contrastive objectives can learn better representations than their equivalent predictive objective (Tian et al., 2019). Other work has found that although generative models of images can learn high quality image representations, they require over an order of magnitude more compute than contrastive models with the same performance (Chen et al., 2020a). Noting these findings, we explored training a system to solve the potentially easier proxy task of predicting only which text as a whole is paired with which image and not the exact words of that text. Starting with the same bag-of-words encoding baseline, we swapped the predictive objective for a contrastive objective in Figure 2 and observed a further 4x efficiency improvement in the rate of zero-shot transfer to ImageNet."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "expected_language": "en",
+          "detected_document_ids": [
+            "clip-2021",
+            "dinov2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "What supervision signals are used to pre-train CLIP?",
+              "query_variants": [
+                "What supervision signals are used to pre-train CLIP?",
+                "What supervision signals are used to pre-train CLIP? Exact pre-training supervision and objective: paired or unpaired data, labels or text, contrastive or predictive loss, teacher-student targets, global and local views, masked patches, image-level and patch-level loss."
+              ],
+              "retrieval_intents": [
+                "training_objective"
+              ],
+              "retrieved_chunks": 30
+            },
+            {
+              "document_id": "dinov2-2023",
+              "query": "What is the approach of DINOv2 in learning visual features without supervision?",
+              "query_variants": [
+                "What is the approach of DINOv2 in learning visual features without supervision?",
+                "What is the approach of DINOv2 in learning visual features without supervision? Exact pre-training supervision and objective: paired or unpaired data, labels or text, contrastive or predictive loss, teacher-student targets, global and local views, masked patches, image-level and patch-level loss."
+              ],
+              "retrieval_intents": [
+                "training_objective"
+              ],
+              "retrieved_chunks": 30
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "The supervision uses image-text pairs.",
+              "anchor": "image-text pairs",
+              "alternatives": [
+                "image and text pairs",
+                "paired images and text"
+              ],
+              "references": [
+                "S1",
+                "S3"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "Training uses a contrastive objective.",
+              "anchor": "contrastive objective",
+              "alternatives": [
+                "contrastive loss",
+                "contrastive learning"
+              ],
+              "references": [
+                "S3",
+                "S5"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "Training is self-supervised.",
+              "anchor": "self-supervised",
+              "alternatives": [
+                "without supervision",
+                "no supervision"
+              ],
+              "references": [
+                "S2"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "The objective uses teacher and student networks.",
+              "anchor": "teacher and student",
+              "alternatives": [
+                "teacher-student",
+                "student and teacher"
+              ],
+              "references": [
+                "S2",
+                "S4"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 4,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['clip-2021', 'dinov2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; facets=4; intents=['training_objective']; planner=llm",
+              "duration_ms": 87204
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=clip-2021; facets=2; intents=['training_objective']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 824
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=dinov2-2023; facets=2; intents=['training_objective']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 649
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=4; references=['S1', 'S2', 'S3', 'S4', 'S5']; fallback=False",
+              "duration_ms": 2
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=865",
+              "duration_ms": 200453
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=en; issues=['missing_planned_fact_anchors:F3', 'missing_planned_fact_citations:F2']",
+              "duration_ms": 1
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['missing_planned_fact_anchors:F3', 'missing_planned_fact_citations:F2']; corrected_characters=958",
+              "duration_ms": 140801
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=3; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP uses paired web image-text data and a contrastive image-text matching loss. DINOv2 uses no labels or text: a teacher-student self-supervised objective aligns global crop features and masked patch features.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": true
+    },
+    {
+      "id": "compare-blip2-llava-bridge-fr",
+      "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+      "category": "comparison",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 696.9540844169969,
+      "response": {
+        "question": "Compare le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage.",
+        "answer": "Le mécanisme utilisé par BLIP-2 et LLaVA pour relier un encodeur visuel à un modèle de langage présente des similitudes et des différences notables.\n\n**Similitudes :**\n- Dans les deux approches, l'encodeur visuel est utilisé pour extraire des caractéristiques visuelles qui sont ensuite projetées dans l'espace des mots du modèle de langage. Par exemple, dans BLIP-2 [S1, S3], l'encodeur visuel extrait des caractéristiques visuelles qui sont utilisées pour former des représentations visuelles qui conditionnent le modèle de langage. De même, dans LLaVA [S4], l'encodeur visuel fournit des caractéristiques visuelles qui sont converties en tokens de mot linguistique via une couche linéaire.\n\n**Différences :**\n- **Nature des modules trainable :** BLIP-2 utilise Q-Former comme module trainable qui interagit avec l'encodeur visuel et le modèle de langage [S5], tandis que LLaVA utilise une couche linéaire simple pour projeter les caractéristiques visuelles en tokens de mot linguistique [S4].\n- **Processus d'apprentissage :** BLIP-2 implique un processus de pré-entraînement en deux étapes où Q-Former est pré-entraîné pour extraire des représentations visuelles pertinentes et ensuite entraîné pour générer des textes en fonction de ces représentations [S1, S3]. LLaVA semble être principalement un modèle de langage pré-entraîné qui utilise un encodeur visuel pré-entraîné pour générer des tokens de mot linguistique [S4].\n\nEn résumé, bien que les deux approches utilisent des encodeurs visuels pour générer des représentations visuelles qui sont ensuite utilisées pour conditionner des modèles de langage, BLIP-2 utilise un module trainable plus complexe et un processus de pré-entraînement en plusieurs étapes, tandis que LLaVA utilise une projection simple et un modèle de langage pré-entraîné.",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.09361550021155221
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 4,
+            "section": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM",
+            "score": 0.07529202995752292
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 4,
+            "section": "4.1 Architecture",
+            "score": 0.09809624537281864
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3.1. Model Architecture",
+            "score": 0.058412698412698416
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.09361550021155221,
+            "text": "1. Introduction\nTo achieve effective vision-language alignment with frozen unimodal models, we propose a Querying Transformer (QFormer) pre-trained with a new two-stage pre-training strategy. As shown in Figure 1, Q-Former is a lightweight transformer which employs a set of learnable query vectors to extract visual features from the frozen image encoder. It acts as an information bottleneck between the frozen image encoder and the frozen LLM, where it feeds the most useful visual feature for the LLM to output the desired text. In the first pre-training stage, we perform vision-language representation learning which enforces the Q-Former to learn visual representation most relevant to the text. In the second pre-training stage, we perform vision-to-language generative learning by connecting the output of the Q-Former to a frozen LLM, and trains the Q-Former such that its output visual representation can be interpreted by the LLM.\nWe name our VLP framework as BLIP-2: Bootstrapping Language-Image Pre-training with frozen unimodal models. The key advantages of BLIP-2 include:"
+          },
+          {
+            "reference": "S2",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 4,
+            "section": "4.1 Architecture",
+            "score": 0.09454022679829131,
+            "text": "4.1 Architecture\nThus we have a sequence of visual tokens H v . Note that our simple projection scheme is lightweight and cost-effective, which allows us to iterate data centric experiments quickly. More sophisticated (but expensive) schemes to connect the image and language representations can also be considered, such as gated cross-attention in Flamingo [2] and Q-former in BLIP-2 [25], or other vision encoders such as SAM [21] that provide object-level features. We leave exploring possibly more effective and sophisticated architecture designs for LLaV A as future work.\n```\nX system-message <STOP> \\ n Human : X 1 instruct <STOP> \\ n Assistant : X 1 a <STOP> \\ n Human : X 2 instruct <STOP> \\ n Assistant : X 2 a <STOP> \\ n · · ·\n```\nTable 2: The input sequence used to train the model. Only two conversation turns are illustrated here; in practice, the number of turns varies based on the instruction-following data. In our current implementation, X system-message = A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. and <STOP> = ### . The model is trained to predict the assistant answers and where to stop, and thus only green sequence/tokens are used to compute the loss in the auto-regressive model."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 4,
+            "section": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM",
+            "score": 0.07529202995752292,
+            "text": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM\nIn the generative pre-training stage, we connect QFormer (with the frozen image encoder attached) to a frozen LLM to harvest the LLM's generative language capability. As shown in Figure 3, we use a fully-connected (FC) layer to linearly project the output query embeddings Z into the same dimension as the text embedding of the LLM. The projected query embeddings are then prepended to the input text embeddings. They function as soft visual prompts that condition the LLM on visual representation extracted by the Q-Former. Since the Q-Former has been pre-trained to extract language-informative visual representation, it effectively functions as an information bottleneck that feeds the most useful information to the LLM while removing irrelevant visual information. This reduces the burden of the LLM to learn vision-language alignment, thus mitigating the catastrophic forgetting problem."
+          },
+          {
+            "reference": "S4",
+            "document_id": "llava-2023",
+            "title": "Visual Instruction Tuning",
+            "page": 4,
+            "section": "4.1 Architecture",
+            "score": 0.09809624537281864,
+            "text": "4.1 Architecture\nThe primary goal is to effectively leverage the capabilities of both the pre-trained LLM and visual model. The network archtecture is illustrated in Figure 1. We choose LLaMA as our LLM f φ ( · ) parameterized by φ , as its effectiveness has been demonstrated in several open-source language-only instruction-tuning works. [43, 45, 34].\nFigure 1: LLaVA network architecture.\nFor an input image X v , we consider the pre-trained CLIP visual encoder ViT-L/14 [36], which provides the visual feature Z v = g ( X v ) . The grid features before and after the last Transformer layer are considered in our experiments. We consider a simple linear layer to connect image features into the word embedding space. Specifically, we apply a trainable projection matrix W to convert Z v into language embedding tokens H q , which have the same dimensionality of the word embedding space in the language model:\n<!-- formula-not-decoded -->"
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3.1. Model Architecture",
+            "score": 0.058412698412698416,
+            "text": "3.1. Model Architecture\nWe propose Q-Former as the trainable module to bridge the gap between a frozen image encoder and a frozen LLM. It extracts a fixed number of output features from the image encoder, independent of input image resolution. As shown in Figure 2, Q-Former consists of two transformer submod- ules that share the same self-attention layers: (1) an image transformer that interacts with the frozen image encoder for visual feature extraction, (2) a text transformer that can function as both a text encoder and a text decoder. We create a set number of learnable query embeddings as input to the image transformer. The queries interact with each other through self-attention layers, and interact with frozen image features through cross-attention layers (inserted every other transformer block). The queries can additionally interact with the text through the same self-attention layers. Depending on the pre-training task, we apply different self-attention masks to control query-text interaction. We initialize QFormer with the pre-trained weights of BERTbase (Devlin et al., 2019), whereas the cross-attention layers are randomly initialized. In total, Q-Former contains 188M parameters. Note that the queries are considered as model parameters."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "per_source",
+          "expected_language": "fr",
+          "detected_document_ids": [
+            "blip2-2023",
+            "llava-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "How does BLIP-2 connect a visual encoder to a language model?",
+              "query_variants": [
+                "How does BLIP-2 connect a visual encoder to a language model?",
+                "How does BLIP-2 connect a visual encoder to a language model? Exact architecture of the trainable bridge: learnable queries, information bottleneck, relevant visual features, frozen image encoder, frozen language model, projection."
+              ],
+              "retrieval_intents": [
+                "architecture_bridge"
+              ],
+              "retrieved_chunks": 30
+            },
+            {
+              "document_id": "llava-2023",
+              "query": "What is the mechanism for connecting a visual encoder to a language model in LLaVA?",
+              "query_variants": [
+                "What is the mechanism for connecting a visual encoder to a language model in LLaVA?",
+                "What is the mechanism for connecting a visual encoder to a language model in LLaVA? Exact architecture of the trainable bridge: learnable queries, information bottleneck, relevant visual features, frozen image encoder, frozen language model, projection."
+              ],
+              "retrieval_intents": [
+                "architecture_bridge"
+              ],
+              "retrieved_chunks": 30
+            }
+          ],
+          "candidate_chunks": 60,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=per_source; detected=['blip2-2023', 'llava-2023']; comparison_marker=True",
+              "duration_ms": 1
+            },
+            {
+              "node": "plan_source_retrieval",
+              "detail": "planned=2 source-restricted searches; facets=4; intents=['architecture_bridge']; planner=llm",
+              "duration_ms": 88100
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=blip2-2023; facets=2; intents=['architecture_bridge']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 430
+            },
+            {
+              "node": "retrieve_source",
+              "detail": "document=llava-2023; facets=2; intents=['architecture_bridge']; dense_lists=2; bm25_lists=2; rrf=30",
+              "duration_ms": 507
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 2 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=none; fallback=False",
+              "duration_ms": 10
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=1713",
+              "duration_ms": 341354
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['truncated_or_unbalanced_answer']",
+              "duration_ms": 1
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['truncated_or_unbalanced_answer']; corrected_characters=1803",
+              "duration_ms": 266869
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=4; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "BLIP-2 emploie un Q-Former avec des requêtes apprenables comme goulot d'étranglement entre deux modèles gelés. LLaVA original utilise une projection linéaire entraînable pour convertir les caractéristiques CLIP en tokens compatibles avec l'espace d'embedding de LLaMA.",
+      "fact_coverage": 0.4,
+      "matched_fact_groups": [
+        0,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    }
+  ]
+}

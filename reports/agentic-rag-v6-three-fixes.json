@@ -1,0 +1,680 @@
+{
+  "created_at": "2026-08-15T22:48:34.953799+00:00",
+  "complete": true,
+  "completed_cases": 3,
+  "requested_cases": 3,
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_fact_plan_intent_multifacet_response_contract_v5",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 3,
+    "per_source": 0
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 3,
+    "answerable_cases": 3,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 1.0,
+    "abstention_accuracy": 1.0,
+    "mean_fact_coverage": 1.0,
+    "mean_citation_document_precision": 1.0,
+    "mean_citation_document_recall": 1.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_selected_evidence_recall": 1.0,
+    "mean_latency_seconds": 108.28575342632637,
+    "response_contract_valid_rate": 1.0,
+    "fact_contract_valid_rate": 1.0,
+    "correction_rate": 1.0,
+    "planned_fact_cases": 2,
+    "fact_planning_fallback_rate": 0.0,
+    "mean_planned_fact_coverage": 1.0
+  },
+  "cases": [
+    {
+      "id": "clip-zero-shot-classifier-en",
+      "question": "How does CLIP turn its image-text matching capability into a zero-shot image classifier?",
+      "category": "method",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 134.04123426799197,
+      "response": {
+        "question": "How does CLIP turn its image-text matching capability into a zero-shot image classifier?",
+        "answer": "CLIP turns its image-text matching capability into a zero-shot image classifier by first computing the feature embedding of an image and the set of possible text pairings using their respective encoders. It then calculates the cosine similarity of these embeddings [S1]. A temperature parameter τ scales the similarity scores [S1], and the softmax converts the scaled scores into a probability distribution [S1, S3]. This process effectively transforms the image-text matching capability into a zero-shot image classifier capable of predicting the most probable class for a given image without any additional training [S1]. The class names are encoded as text [F1].\n\nCandidate class names are encoded as text [S1].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 6,
+            "section": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER",
+            "score": 0.1623647519998657
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 2,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.07509881422924902
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 6,
+            "section": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER",
+            "score": 0.1623647519998657,
+            "text": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER\nCLIP is pre-trained to predict if an image and a text snippet are paired together in its dataset. To perform zero-shot classification, we reuse this capability. For each dataset, we use the names of all the classes in the dataset as the set of potential text pairings and predict the most probable (image, text) pair according to CLIP. In a bit more detail, we first compute the feature embedding of the image and the feature embedding of the set of possible texts by their respective encoders. The cosine similarity of these embeddings is then calculated, scaled by a temperature parameter τ , and normalized into a probability distribution via a softmax. Note that this prediction layer is a multinomial logistic regression classifier with L2-normalized inputs, L2-normalized weights, no bias, and temperature scaling. When interpreted this way, the image encoder is the computer vision backbone which computes a feature representation for the image and the text encoder is a hypernetwork (Ha et al., 2016) which generates the weights of a linear classifier based on the text specifying the visual concepts that the classes represent. Lei Ba et al. (2015) first introduced a zero-shot image classifier of this form while the idea of generating a classifier from natural language dates back to at least Elhoseiny et al. (2013)."
+          },
+          {
+            "reference": "S2",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 6,
+            "section": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER",
+            "score": 0.0690976651322722,
+            "text": "3.1.2. USING CLIP FOR ZERO-SHOT TRANSFER\nContinuing with this interpretation, every step of CLIP pre-training can be viewed as optimizing the performance of a randomly created proxy to a computer vision dataset which contains 1 example per class and has 32,768 total classes defined via natural language descriptions. For zero-shot evaluation, we cache the zero-shot classifier once it has been computed by the text encoder and reuse it for all subsequent predictions. This allows the cost of generating it to be amortized across all the predictions in a dataset."
+          },
+          {
+            "reference": "S3",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 2,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.07509881422924902,
+            "text": "1. Introduction and Motivating Work\nThis line of work represents the current pragmatic middle ground between learning from a limited amount of supervised 'gold-labels' and learning from practically unlimited amounts of raw text. However, it is not without compro- mises. Both works carefully design, and in the process limit, their supervision to 1000 and 18291 classes respectively. Natural language is able to express, and therefore supervise, a much wider set of visual concepts through its generality. Both approaches also use static softmax classifiers to perform prediction and lack a mechanism for dynamic outputs. This severely curtails their flexibility and limits their 'zero-shot' capabilities."
+          },
+          {
+            "reference": "S4",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 2,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.11744115039889688,
+            "text": "1. Introduction and Motivating Work\nA crucial difference between these weakly supervised models and recent explorations of learning image representations directly from natural language is scale. While Mahajan et al. (2018) and Kolesnikov et al. (2019) trained their models for accelerator years on millions to billions of images, VirTex, ICMLM, and ConVIRT trained for accelerator days on one to two hundred thousand images. In this work, we close this gap and study the behaviors of image classifiers trained with natural language supervision at large scale. Enabled by the large amounts of publicly available data of this form on the internet, we create a new dataset of 400 million (image, text) pairs and demonstrate that a simplified version of ConVIRT trained from scratch, which we call CLIP, for Contrastive Language-Image Pre-training, is an efficient method of learning from natural language supervision. We study the scalability of CLIP by training a series of eight models spanning almost 2 orders of magnitude of compute and observe that transfer performance is a smoothly predictable function of compute (Hestness et al., 2017; Kaplan et al., 2020). We find that CLIP, similar to the GPT family, learns to perform a wide set of tasks during pre-training including OCR, geo-localization, action recognition, and many others. We measure this by benchmarking the zero-shot transfer performance of CLIP on over 30 existing datasets and find it can be competitive with prior task-specific supervised models."
+          },
+          {
+            "reference": "S5",
+            "document_id": "clip-2021",
+            "title": "Learning Transferable Visual Models From Natural Language Supervision",
+            "page": 1,
+            "section": "1. Introduction and Motivating Work",
+            "score": 0.1128940537927347,
+            "text": "1. Introduction and Motivating Work\nAdopting more recent architectures and pre-training approaches, VirTex (Desai & Johnson, 2020), ICMLM (Bulent Sariyildiz et al., 2020), and ConVIRT (Zhang et al., 2020) have recently demonstrated the potential of transformer-based language modeling, masked language modeling, and contrastive objectives to learn image representations from text.\nFigure 1. Summary of our approach. While standard image models jointly train an image feature extractor and a linear classifier to predict some label, CLIP jointly trains an image encoder and a text encoder to predict the correct pairings of a batch of (image, text) training examples. At test time the learned text encoder synthesizes a zero-shot linear classifier by embedding the names or descriptions of the target dataset's classes."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "global",
+          "expected_language": "en",
+          "detected_document_ids": [
+            "clip-2021"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "clip-2021",
+              "query": "Learning Transferable Visual Models From Natural Language Supervision. How does CLIP turn its image-text matching capability into a zero-shot image classifier?",
+              "query_variants": [
+                "Learning Transferable Visual Models From Natural Language Supervision. How does CLIP turn its image-text matching capability into a zero-shot image classifier?",
+                "Learning Transferable Visual Models From Natural Language Supervision. How does CLIP turn its image-text matching capability into a zero-shot image classifier? Exact inference and decision mechanism: candidate labels or text descriptions, image and text representations, similarity or scoring, normalization or temperature, probabilities, and final predicted class.",
+                "Learning Transferable Visual Models From Natural Language Supervision. How does CLIP turn its image-text matching capability into a zero-shot image classifier? Exact reported evaluation tasks and emerging zero-shot capabilities: task names, instruction following, visual reasoning, conversation."
+              ],
+              "retrieval_intents": [
+                "inference_mechanism",
+                "capabilities"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "clip-2021: Candidate class names are encoded as text.",
+              "anchor": "class names",
+              "alternatives": [
+                "candidate classes",
+                "possible texts",
+                "class descriptions"
+              ],
+              "references": [
+                "S1",
+                "S5"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "clip-2021: Image and text embeddings are compared with cosine similarity.",
+              "anchor": "cosine similarity",
+              "alternatives": [
+                "cosine-similarity"
+              ],
+              "references": [
+                "S1"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "clip-2021: A temperature parameter scales the similarity scores.",
+              "anchor": "temperature",
+              "alternatives": [
+                "temperature parameter",
+                "temperature scaling"
+              ],
+              "references": [
+                "S1"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "clip-2021: Softmax converts the scores into a probability distribution.",
+              "anchor": "softmax",
+              "alternatives": [
+                "probability distribution"
+              ],
+              "references": [
+                "S1",
+                "S3"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 4,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['clip-2021']; comparison_marker=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=clip-2021; facets=3; intents=['inference_mechanism', 'capabilities']; rrf=30; selected=5",
+              "duration_ms": 4055
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=4; references=['S1', 'S3', 'S5']; intents=['inference_mechanism', 'capabilities']; fallback=False",
+              "duration_ms": 1
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=851",
+              "duration_ms": 101103
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=en; issues=['missing_planned_fact_anchors:F1']",
+              "duration_ms": 2
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['missing_planned_fact_anchors:F1']; corrected_characters=714; deterministic_repair=fact_plan",
+              "duration_ms": 28852
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "CLIP encodes the image and text descriptions of candidate classes, compares their normalized embeddings with cosine similarity, applies temperature scaling and softmax, and predicts the most probable image-text pairing.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "total_fact_groups": 4,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true
+    },
+    {
+      "id": "blip2-bottleneck-fr",
+      "question": "Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+      "category": "method",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 127.40274549898459,
+      "response": {
+        "question": "Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+        "answer": "Le Q-Former de BLIP-2 est décrit comme un goulot d'étranglement entre la vision et le LLM car il filtre les informations visuelles les plus pertinentes pour le modèle de langage, en supprimant les informations non essentielles. Comme mentionné dans [S1], il \"agit comme un goulot d'étranglement d'information entre l'encodeur d'images gelé et le modèle de langage gelé\" ([S1], page 1, section 1. Introduction). De plus, selon [S2], il \"effectue une réduction de la charge sur le modèle de langage pour apprendre l'alignement vision-langage, en minimisant le problème de l'oubli catastrophique\" ([S2], page 4, section 3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM).\n\nLe module utilise des requêtes apprenables [S1]. Le module extrait les caractéristiques visuelles pertinentes [S1].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.09655936012691699
+          },
+          {
+            "reference": "S2",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 4,
+            "section": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM",
+            "score": 0.08896803859490426
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.09655936012691699,
+            "text": "1. Introduction\nTo achieve effective vision-language alignment with frozen unimodal models, we propose a Querying Transformer (QFormer) pre-trained with a new two-stage pre-training strategy. As shown in Figure 1, Q-Former is a lightweight transformer which employs a set of learnable query vectors to extract visual features from the frozen image encoder. It acts as an information bottleneck between the frozen image encoder and the frozen LLM, where it feeds the most useful visual feature for the LLM to output the desired text. In the first pre-training stage, we perform vision-language representation learning which enforces the Q-Former to learn visual representation most relevant to the text. In the second pre-training stage, we perform vision-to-language generative learning by connecting the output of the Q-Former to a frozen LLM, and trains the Q-Former such that its output visual representation can be interpreted by the LLM.\nWe name our VLP framework as BLIP-2: Bootstrapping Language-Image Pre-training with frozen unimodal models. The key advantages of BLIP-2 include:"
+          },
+          {
+            "reference": "S2",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 4,
+            "section": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM",
+            "score": 0.08896803859490426,
+            "text": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM\nIn the generative pre-training stage, we connect QFormer (with the frozen image encoder attached) to a frozen LLM to harvest the LLM's generative language capability. As shown in Figure 3, we use a fully-connected (FC) layer to linearly project the output query embeddings Z into the same dimension as the text embedding of the LLM. The projected query embeddings are then prepended to the input text embeddings. They function as soft visual prompts that condition the LLM on visual representation extracted by the Q-Former. Since the Q-Former has been pre-trained to extract language-informative visual representation, it effectively functions as an information bottleneck that feeds the most useful information to the LLM while removing irrelevant visual information. This reduces the burden of the LLM to learn vision-language alignment, thus mitigating the catastrophic forgetting problem."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3.1. Model Architecture",
+            "score": 0.08584415584415583,
+            "text": "3.1. Model Architecture\nWe propose Q-Former as the trainable module to bridge the gap between a frozen image encoder and a frozen LLM. It extracts a fixed number of output features from the image encoder, independent of input image resolution. As shown in Figure 2, Q-Former consists of two transformer submod- ules that share the same self-attention layers: (1) an image transformer that interacts with the frozen image encoder for visual feature extraction, (2) a text transformer that can function as both a text encoder and a text decoder. We create a set number of learnable query embeddings as input to the image transformer. The queries interact with each other through self-attention layers, and interact with frozen image features through cross-attention layers (inserted every other transformer block). The queries can additionally interact with the text through the same self-attention layers. Depending on the pre-training task, we apply different self-attention masks to control query-text interaction. We initialize QFormer with the pre-trained weights of BERTbase (Devlin et al., 2019), whereas the cross-attention layers are randomly initialized. In total, Q-Former contains 188M parameters. Note that the queries are considered as model parameters."
+          },
+          {
+            "reference": "S4",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder",
+            "score": 0.029850746268656716,
+            "text": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder\nImage-grounded Text Generation (ITG) loss trains the Q-Former to generate texts, given input images as the condition. Since the architecture of Q-Former does not allow direct interactions between the frozen image encoder and the text tokens, the information required for generating the text must be first extracted by the queries, and then passed to the text tokens via self-attention layers. Therefore, the queries are forced to extract visual features that capture all the information about the text. We employ a multimodal causal self-attention mask to control query-text interaction, similar to the one used in UniLM (Dong et al., 2019). The queries can attend to each other but not the text tokens. Each text token can attend to all queries and its previous text tokens. We also replace the [CLS] token with a new [DEC] token as the first text token to signal the decoding task."
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3. Method",
+            "score": 0.0958225745110991,
+            "text": "3. Method\nWe propose BLIP-2, a new vision-language pre-training method that bootstraps from frozen pre-trained unimodal models. In order to bridge the modality gap, we propose a Querying Transformer (Q-Former) pre-trained in two stages: (1) vision-language representation learning stage with a frozen image encoder and (2) vision-to-language generative learning stage with a frozen LLM. This section first introduces the model architecture of Q-Former, and then delineates the two-stage pre-training procedures."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "global",
+          "expected_language": "fr",
+          "detected_document_ids": [
+            "blip2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+              "query_variants": [
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ? Exact architecture of the trainable bridge: learnable queries, information bottleneck, relevant visual features, frozen image encoder, frozen language model, projection."
+              ],
+              "retrieval_intents": [
+                "architecture_bridge"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "blip2-2023: Le module utilise des requêtes apprenables.",
+              "anchor": "requêtes apprenables",
+              "alternatives": [
+                "vecteurs de requête apprenants",
+                "requêtes apprenantes",
+                "learnable queries"
+              ],
+              "references": [
+                "S1",
+                "S3"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "blip2-2023: Le module extrait les caractéristiques visuelles pertinentes.",
+              "anchor": "caractéristiques visuelles pertinentes",
+              "alternatives": [
+                "représentations visuelles pertinentes",
+                "informations visuelles pertinentes"
+              ],
+              "references": [
+                "S1"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "blip2-2023: Le système conserve un encodeur d'images gelé.",
+              "anchor": "encodeur d'images gelé",
+              "alternatives": [
+                "encodeur d'image gelé",
+                "encodeur d'image figé"
+              ],
+              "references": [
+                "S1",
+                "S2",
+                "S3",
+                "S4",
+                "S5"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "blip2-2023: Le système conserve un LLM gelé.",
+              "anchor": "LLM gelé",
+              "alternatives": [
+                "LLM figé",
+                "modèle de langage gelé"
+              ],
+              "references": [
+                "S1",
+                "S2",
+                "S3",
+                "S5"
+              ]
+            },
+            {
+              "id": "F5",
+              "claim": "blip2-2023: Le module agit comme un goulot d'étranglement d'information.",
+              "anchor": "goulot d'étranglement d'information",
+              "alternatives": [
+                "goulot d'étranglement"
+              ],
+              "references": [
+                "S1",
+                "S2"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 5,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['blip2-2023']; comparison_marker=True",
+              "duration_ms": 1
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=blip2-2023; facets=2; intents=['architecture_bridge']; rrf=29; selected=5",
+              "duration_ms": 783
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=5; references=['S1', 'S2', 'S3', 'S4', 'S5']; intents=['architecture_bridge']; fallback=False",
+              "duration_ms": 4
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=439",
+              "duration_ms": 62863
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['missing_planned_fact_anchors:F1,F2']",
+              "duration_ms": 1
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['missing_planned_fact_anchors:F1,F2']; corrected_characters=807; deterministic_repair=fact_plan",
+              "duration_ms": 63742
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=fr; issues=none",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=2; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Le Q-Former utilise des requêtes apprenables pour extraire uniquement les caractéristiques visuelles les plus pertinentes pour le texte, puis fournit cette représentation compacte au LLM gelé.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "total_fact_groups": 4,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true
+    },
+    {
+      "id": "blip2-efficiency-en",
+      "question": "What efficiency comparison does BLIP-2 report against Flamingo80B on zero-shot VQAv2?",
+      "category": "factoid",
+      "language": "en",
+      "expected_abstention": false,
+      "abstention_correct": true,
+      "latency_seconds": 63.41328051200253,
+      "response": {
+        "question": "What efficiency comparison does BLIP-2 report against Flamingo80B on zero-shot VQAv2?",
+        "answer": "For example, our model outperforms Flamingo80B by 8.7% on zero-shot VQAv2 with 54x fewer trainable parameters [S1].",
+        "citations": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.09836065573770492
+          }
+        ],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "Abstract",
+            "score": 0.09836065573770492,
+            "text": "Abstract\nThe cost of vision-and-language pre-training has become increasingly prohibitive due to end-toend training of large-scale models. This paper proposes BLIP-2, a generic and efficient pretraining strategy that bootstraps vision-language pre-training from off-the-shelf frozen pre-trained image encoders and frozen large language models. BLIP-2 bridges the modality gap with a lightweight Querying Transformer, which is pretrained in two stages. The first stage bootstraps vision-language representation learning from a frozen image encoder. The second stage bootstraps vision-to-language generative learning from a frozen language model. BLIP-2 achieves state-of-the-art performance on various visionlanguage tasks, despite having significantly fewer trainable parameters than existing methods. For example, our model outperforms Flamingo80B by 8.7% on zero-shot VQAv2 with 54x fewer trainable parameters. We also demonstrate the model's emerging capabilities of zero-shot image-to-text generation that can follow natural language instructions."
+          },
+          {
+            "reference": "S2",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "1. Introduction",
+            "score": 0.09372160381644706,
+            "text": "1. Introduction\n- BLIP-2 effectively leverages both frozen pre-trained image models and language models. We bridge the modality gap using a Q-Former pre-trained in two-stages: representation learning stage and generative learning stage. BLIP-2 achieves state-of-the-art performance on various vision-language tasks including visual question answering, image captioning, and image-text retrieval.\n- Powered by LLMs ( e . g . OPT (Zhang et al., 2022), FlanT5 (Chung et al., 2022)), BLIP-2 can be prompted to perform zero-shot image-to-text generation that follows natural language instructions, which enables emerging capabilities such as visual knowledge reasoning, visual conversation, etc. (see Figure 4 for examples).\n- Due to the use of frozen unimodal models and a lightweight Q-Former, BLIP-2 is more compute-efficient than exisiting state-of-the-arts. For example, BLIP-2 outperforms Flamingo (Alayrac et al., 2022) by 8.7% on zero-shot VQAv2, while using 54 × fewer trainable parameters. Furthermore, our results show that BLIP-2 is a generic method that can harvest more advanced unimodal models for better VLP performance."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 6,
+            "section": "4.1. Instructed Zero-shot Image-to-Text Generation",
+            "score": 0.09600614439324116,
+            "text": "4.1. Instructed Zero-shot Image-to-Text Generation\nAs shown in Table 2. BLIP-2 achieves state-of-the-art result on the VQAv2 (Goyal et al., 2017) and GQA (Hudson & Manning, 2019) datasets. It outperforms Flamingo80B by 8.7% on VQAv2, despite having 54x fewer trainable parameters. On the OK-VQA (Marino et al., 2019) dataset, BLIP-2 comes secondary to Flamingo80B. We hypothesis that this is because OK-VQA focuses more on open-world knowledge than visual understanding, and the 70B Chinchilla (Hoffmann et al., 2022) language model from Flamingo80B possesses more knowledge than the 11B FlanT5XXL.\nWe make a promising observation from Table 2: a stronger image encoder or a stronger LLM both lead to better performance. This observation is supported by several facts: (1) ViT-G outperforms ViT-L for both OPT and FlanT5. (2) Within the same LLM family, larger models outperform smaller ones. (3) FlanT5, an instructiontuned LLM, outperforms the unsupervised-trained OPT on VQA. This observation validates BLIP-2 as a generic vision-language pre-training method that can efficiently harvest the rapid advances in vision and natural language communities."
+          },
+          {
+            "reference": "S4",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 6,
+            "section": "4. Experiment",
+            "score": 0.07672511312217195,
+            "text": "4. Experiment\nTable 1 provides an overview of the performance of BLIP-2 on various zero-shot vision-language tasks. Compared to previous state-of-the-art models, BLIP-2 achieves improved performance while requiring substantially fewer number of trainable parameters during vision-language pre-training."
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.04433713784021071,
+            "text": "1. Introduction\nVision-language pre-training (VLP) research has witnessed a rapid advancement in the past few years, where pre-trained models with increasingly larger scale have been developed to continuously push the state-of-the-art on various downstream tasks (Radford et al., 2021; Li et al., 2021; 2022; Wang et al., 2022a; Alayrac et al., 2022; Wang et al., 2022b). However, most state-of-the-art vision-language models incur a high computation cost during pre-training, due to end-to-end training using large-scale models and datasets.\nVision-language research sits at the intersection between vision and language, therefore it is naturally expected that vision-language models can harvest from the readilyavailable unimodal models from the vision and natural lan- guage communities. In this paper, we propose a generic and compute-efficient VLP method by bootstrapping from offthe-shelf pre-trained vision models and language models. Pre-trained vision models offer high-quality visual representation. Pre-trained language models, in particular large language models (LLMs), offer strong language generation and zero-shot transfer abilities. To reduce computation cost and counteract the issue of catastrophic forgetting, the unimodal pre-trained models remain frozen during the pre-training."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": false,
+        "reason": null,
+        "execution": {
+          "strategy": "global",
+          "expected_language": "en",
+          "detected_document_ids": [
+            "blip2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. What efficiency comparison does BLIP-2 report against Flamingo80B on zero-shot VQAv2?",
+              "query_variants": [
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. What efficiency comparison does BLIP-2 report against Flamingo80B on zero-shot VQAv2?",
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. What efficiency comparison does BLIP-2 report against Flamingo80B on zero-shot VQAv2? Exact experimental comparison and efficiency trade-off: compared methods, benchmark or task, reported performance difference, and parameter, memory, compute, or data ratio."
+              ],
+              "retrieval_intents": [
+                "quantitative_comparison"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 0,
+          "correction_attempted": true,
+          "response_contract_valid": true,
+          "response_publishable": true,
+          "fact_contract_valid": true,
+          "contract_issues": [],
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['blip2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=blip2-2023; facets=2; intents=['quantitative_comparison']; rrf=30; selected=5",
+              "duration_ms": 986
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=0; references=none; intents=['quantitative_comparison']; fallback=False",
+              "duration_ms": 0
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=117",
+              "duration_ms": 51324
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=en; issues=['language_mismatch:expected=en']",
+              "duration_ms": 0
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['language_mismatch:expected=en']; corrected_characters=115; deterministic_repair=numeric_evidence",
+              "duration_ms": 11095
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=True; language=en; issues=none",
+              "duration_ms": 0
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=False; citations=1; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "BLIP-2 reports outperforming Flamingo80B by 8.7% on zero-shot VQAv2 while using 54 times fewer trainable parameters.",
+      "fact_coverage": 1.0,
+      "matched_fact_groups": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "total_fact_groups": 5,
+      "citation_document_precision": 1.0,
+      "citation_document_recall": 1.0,
+      "retrieved_document_recall": 1.0,
+      "selected_evidence_recall": 1.0,
+      "matched_evidence_targets": [
+        0
+      ],
+      "passed": true
+    }
+  ]
+}

@@ -2,11 +2,8 @@
 FROM python:3.12-slim
 
 # Keep Python logs visible in Docker and avoid creating .pyc files in the image.
-# OpenVINO GenAI's native extension needs the runtime libraries bundled by the
-# Python `openvino` wheel to be visible to Linux's linker.
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    LD_LIBRARY_PATH=/usr/local/lib/python3.12/site-packages/openvino/libs
+    PYTHONUNBUFFERED=1
 
 # All following paths are relative to /app inside the image.
 WORKDIR /app
@@ -27,8 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application source after the dependency layer.
 COPY app ./app
 
-# The one-time model downloader uses the same image and writes to model_cache.
+# Include API smoke checks, evaluators and retrieval-model downloaders.
 COPY scripts ./scripts
+
+# Keep deterministic contract tests runnable in the same Python environment.
+COPY tests ./tests
 
 # Documentation metadata: the actual host-to-container mapping is set at runtime.
 EXPOSE 8000

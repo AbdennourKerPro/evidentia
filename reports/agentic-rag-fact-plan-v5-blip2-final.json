@@ -1,0 +1,240 @@
+{
+  "created_at": "2026-08-14T22:44:01.954812+00:00",
+  "benchmark": "/data/evaluation/rag_benchmark.jsonl",
+  "collection": "arxiv_chunks_e5_small",
+  "llm_model": "OpenVINO/Qwen2.5-7B-Instruct-int4-ov",
+  "pipeline": "langgraph_fact_plan_intent_multifacet_response_contract_v5",
+  "top_k": 5,
+  "strategy_counts": {
+    "global": 1,
+    "per_source": 0
+  },
+  "metric_limitations": "Fact coverage uses explicit term groups. Compare this report with the baseline report generated from the same verified benchmark and top-k.",
+  "aggregate": {
+    "evaluated_cases": 1,
+    "answerable_cases": 1,
+    "abstention_cases": 0,
+    "end_to_end_pass_rate": 0.0,
+    "abstention_accuracy": 0.0,
+    "mean_fact_coverage": 0.0,
+    "mean_citation_document_precision": 0.0,
+    "mean_citation_document_recall": 0.0,
+    "mean_retrieved_document_recall": 1.0,
+    "mean_latency_seconds": 170.13962858599552,
+    "response_contract_valid_rate": 0.0,
+    "correction_rate": 1.0,
+    "planned_fact_cases": 1,
+    "fact_planning_fallback_rate": 0.0,
+    "mean_planned_fact_coverage": 0.5
+  },
+  "cases": [
+    {
+      "id": "blip2-bottleneck-fr",
+      "question": "Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+      "category": "method",
+      "language": "fr",
+      "expected_abstention": false,
+      "abstention_correct": false,
+      "latency_seconds": 170.13962858599552,
+      "response": {
+        "question": "Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+        "answer": "Je ne peux pas répondre à partir des seules preuves retrouvées.",
+        "citations": [],
+        "evidence": [
+          {
+            "reference": "S1",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 1,
+            "section": "1. Introduction",
+            "score": 0.09655936012691699,
+            "text": "1. Introduction\nTo achieve effective vision-language alignment with frozen unimodal models, we propose a Querying Transformer (QFormer) pre-trained with a new two-stage pre-training strategy. As shown in Figure 1, Q-Former is a lightweight transformer which employs a set of learnable query vectors to extract visual features from the frozen image encoder. It acts as an information bottleneck between the frozen image encoder and the frozen LLM, where it feeds the most useful visual feature for the LLM to output the desired text. In the first pre-training stage, we perform vision-language representation learning which enforces the Q-Former to learn visual representation most relevant to the text. In the second pre-training stage, we perform vision-to-language generative learning by connecting the output of the Q-Former to a frozen LLM, and trains the Q-Former such that its output visual representation can be interpreted by the LLM.\nWe name our VLP framework as BLIP-2: Bootstrapping Language-Image Pre-training with frozen unimodal models. The key advantages of BLIP-2 include:"
+          },
+          {
+            "reference": "S2",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 4,
+            "section": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM",
+            "score": 0.08896803859490426,
+            "text": "3.3. Bootstrap Vision-to-Language Generative Learning from a Frozen LLM\nIn the generative pre-training stage, we connect QFormer (with the frozen image encoder attached) to a frozen LLM to harvest the LLM's generative language capability. As shown in Figure 3, we use a fully-connected (FC) layer to linearly project the output query embeddings Z into the same dimension as the text embedding of the LLM. The projected query embeddings are then prepended to the input text embeddings. They function as soft visual prompts that condition the LLM on visual representation extracted by the Q-Former. Since the Q-Former has been pre-trained to extract language-informative visual representation, it effectively functions as an information bottleneck that feeds the most useful information to the LLM while removing irrelevant visual information. This reduces the burden of the LLM to learn vision-language alignment, thus mitigating the catastrophic forgetting problem."
+          },
+          {
+            "reference": "S3",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3.1. Model Architecture",
+            "score": 0.08584415584415583,
+            "text": "3.1. Model Architecture\nWe propose Q-Former as the trainable module to bridge the gap between a frozen image encoder and a frozen LLM. It extracts a fixed number of output features from the image encoder, independent of input image resolution. As shown in Figure 2, Q-Former consists of two transformer submod- ules that share the same self-attention layers: (1) an image transformer that interacts with the frozen image encoder for visual feature extraction, (2) a text transformer that can function as both a text encoder and a text decoder. We create a set number of learnable query embeddings as input to the image transformer. The queries interact with each other through self-attention layers, and interact with frozen image features through cross-attention layers (inserted every other transformer block). The queries can additionally interact with the text through the same self-attention layers. Depending on the pre-training task, we apply different self-attention masks to control query-text interaction. We initialize QFormer with the pre-trained weights of BERTbase (Devlin et al., 2019), whereas the cross-attention layers are randomly initialized. In total, Q-Former contains 188M parameters. Note that the queries are considered as model parameters."
+          },
+          {
+            "reference": "S4",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 3,
+            "section": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder",
+            "score": 0.029850746268656716,
+            "text": "3.2. Bootstrap Vision-Language Representation Learning from a Frozen Image Encoder\nImage-grounded Text Generation (ITG) loss trains the Q-Former to generate texts, given input images as the condition. Since the architecture of Q-Former does not allow direct interactions between the frozen image encoder and the text tokens, the information required for generating the text must be first extracted by the queries, and then passed to the text tokens via self-attention layers. Therefore, the queries are forced to extract visual features that capture all the information about the text. We employ a multimodal causal self-attention mask to control query-text interaction, similar to the one used in UniLM (Dong et al., 2019). The queries can attend to each other but not the text tokens. Each text token can attend to all queries and its previous text tokens. We also replace the [CLS] token with a new [DEC] token as the first text token to signal the decoding task."
+          },
+          {
+            "reference": "S5",
+            "document_id": "blip2-2023",
+            "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
+            "page": 2,
+            "section": "3. Method",
+            "score": 0.0958225745110991,
+            "text": "3. Method\nWe propose BLIP-2, a new vision-language pre-training method that bootstraps from frozen pre-trained unimodal models. In order to bridge the modality gap, we propose a Querying Transformer (Q-Former) pre-trained in two stages: (1) vision-language representation learning stage with a frozen image encoder and (2) vision-to-language generative learning stage with a frozen LLM. This section first introduces the model architecture of Q-Former, and then delineates the two-stage pre-training procedures."
+          }
+        ],
+        "retrieved_chunks": 5,
+        "abstained": true,
+        "reason": "The generated answer failed the response contract: missing_planned_fact_anchors:F1,F3",
+        "execution": {
+          "strategy": "global",
+          "expected_language": "fr",
+          "detected_document_ids": [
+            "blip2-2023"
+          ],
+          "planned_queries": [
+            {
+              "document_id": "blip2-2023",
+              "query": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+              "query_variants": [
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ?",
+                "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models. Pourquoi le Q-Former de BLIP-2 est-il décrit comme un goulot d'étranglement entre la vision et le LLM ? Exact architecture of the trainable bridge: learnable queries, information bottleneck, relevant visual features, frozen image encoder, frozen language model, projection."
+              ],
+              "retrieval_intents": [
+                "architecture_bridge"
+              ],
+              "retrieved_chunks": 5
+            }
+          ],
+          "candidate_chunks": 5,
+          "selected_chunks": 5,
+          "fact_plan": [
+            {
+              "id": "F1",
+              "claim": "Le module utilise des requêtes apprenables.",
+              "anchor": "requêtes apprenables",
+              "alternatives": [
+                "vecteurs de requête apprenants",
+                "requêtes apprenantes",
+                "learnable queries"
+              ],
+              "references": [
+                "S1",
+                "S3"
+              ]
+            },
+            {
+              "id": "F2",
+              "claim": "Le système conserve un encodeur d'images gelé.",
+              "anchor": "encodeur d'images gelé",
+              "alternatives": [
+                "encodeur d'image gelé",
+                "encodeur d'image figé",
+                "encodeur d'image froid"
+              ],
+              "references": [
+                "S1",
+                "S2",
+                "S3",
+                "S4",
+                "S5"
+              ]
+            },
+            {
+              "id": "F3",
+              "claim": "Le système conserve un LLM gelé.",
+              "anchor": "LLM gelé",
+              "alternatives": [
+                "LLM figé",
+                "LLM froid",
+                "modèle de langage gelé"
+              ],
+              "references": [
+                "S1",
+                "S2",
+                "S3",
+                "S5"
+              ]
+            },
+            {
+              "id": "F4",
+              "claim": "Le module agit comme un goulot d'étranglement d'information.",
+              "anchor": "goulot d'étranglement d'information",
+              "alternatives": [
+                "goulot d'étranglement",
+                "entrave d'information"
+              ],
+              "references": [
+                "S1",
+                "S2"
+              ]
+            }
+          ],
+          "fact_planning_fallback": false,
+          "covered_planned_facts": 2,
+          "correction_attempted": true,
+          "response_contract_valid": false,
+          "steps": [
+            {
+              "node": "analyze_question",
+              "detail": "strategy=global; detected=['blip2-2023']; comparison_marker=True",
+              "duration_ms": 0
+            },
+            {
+              "node": "retrieve_global",
+              "detail": "document=blip2-2023; facets=2; intents=['architecture_bridge']; rrf=29; selected=5",
+              "duration_ms": 6998
+            },
+            {
+              "node": "select_evidence",
+              "detail": "selected=5 chunks from 1 source(s)",
+              "duration_ms": 0
+            },
+            {
+              "node": "plan_answer",
+              "detail": "facts=4; references=['S1', 'S2', 'S3', 'S4', 'S5']; fallback=False",
+              "duration_ms": 4
+            },
+            {
+              "node": "generate_answer",
+              "detail": "draft_characters=408",
+              "duration_ms": 94628
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['missing_planned_fact_anchors:F1,F2,F3']",
+              "duration_ms": 1
+            },
+            {
+              "node": "correct_answer",
+              "detail": "issues=['missing_planned_fact_anchors:F1,F2,F3']; corrected_characters=718",
+              "duration_ms": 68475
+            },
+            {
+              "node": "validate_answer",
+              "detail": "valid=False; language=fr; issues=['missing_planned_fact_anchors:F1,F3']",
+              "duration_ms": 1
+            },
+            {
+              "node": "finalize_answer",
+              "detail": "abstained=True; citations=0; corrected=True",
+              "duration_ms": 0
+            }
+          ]
+        }
+      },
+      "reference_answer": "Le Q-Former utilise des requêtes apprenables pour extraire uniquement les caractéristiques visuelles les plus pertinentes pour le texte, puis fournit cette représentation compacte au LLM gelé.",
+      "fact_coverage": 0.0,
+      "matched_fact_groups": [],
+      "total_fact_groups": 4,
+      "citation_document_precision": 0.0,
+      "citation_document_recall": 0.0,
+      "retrieved_document_recall": 1.0,
+      "passed": false
+    }
+  ]
+}

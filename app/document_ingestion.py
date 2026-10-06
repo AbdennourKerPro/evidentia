@@ -7,13 +7,11 @@ from functools import lru_cache
 from hashlib import sha256
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from docling.chunking import HybridChunker
-from docling.document_converter import DocumentConverter
-from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
-from docling_core.types.doc import DoclingDocument
-from transformers import AutoTokenizer
+if TYPE_CHECKING:
+    from docling.chunking import HybridChunker
+    from docling_core.types.doc import DoclingDocument
 
 from app.embeddings import EMBEDDING_MODEL_ID, EMBEDDING_MODEL_REVISION
 from app.schemas import ConversionReport, EvidenceChunk
@@ -31,6 +29,8 @@ class UnknownSourceError(ValueError):
 
 def convert_source(source_id: str) -> ConversionReport:
     """Convert one declared PDF and persist Markdown plus lossless Docling JSON."""
+
+    from docling.document_converter import DocumentConverter
 
     source = _find_source(source_id)
     source_pdf = RAW_DIR / source["filename"]
@@ -69,6 +69,8 @@ def chunk_source(source_id: str) -> tuple[list[EvidenceChunk], Path]:
     The generated JSON is deliberately saved before embedding. It makes the
     otherwise invisible retrieval input inspectable without looking at Qdrant.
     """
+
+    from docling_core.types.doc import DoclingDocument
 
     source = _find_source(source_id)
     document_path = PROCESSED_DIR / source_id / "document.json"
@@ -111,6 +113,10 @@ def _find_source(source_id: str) -> dict[str, str]:
 @lru_cache
 def _get_chunker() -> HybridChunker:
     """Load the E5 tokenizer once and make chunks fit its input budget."""
+
+    from docling.chunking import HybridChunker
+    from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
+    from transformers import AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(
         EMBEDDING_MODEL_ID,

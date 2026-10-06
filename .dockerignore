@@ -1,7 +1,10 @@
 __pycache__/
 *.py[cod]
 .env
+.env.*
 .venv/
 .git/
 docs/
 reports/
+# PDFs and converted artifacts are mounted by Compose, never baked into the image.
+data/

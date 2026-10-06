@@ -3,16 +3,25 @@
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.benchmark_review import (
+    ReviewCaseResponse,
+    ReviewCollectionResponse,
+    ReviewUpdate,
+    list_review_cases,
+    update_review_case,
+)
 from app.demo_corpus import DEMO_CHUNKS
 from app.document_ingestion import UnknownSourceError, chunk_source, convert_source
 from app.embeddings import EMBEDDING_MODEL_ID, embed_passages, embed_query
 from app.llm_gateway import (
-    LLM_MODEL_ID,
-    LlmModelUnavailableError,
-    is_model_downloaded,
+    LlmGatewayError,
+    capture_llm_calls,
+    summarize_llm_calls,
 )
+from app.hybrid_retrieval import clear_bm25_cache
 from app.qdrant_gateway import qdrant_is_available
 from app.qdrant_gateway import (
     ARXIV_COLLECTION_NAME,
@@ -22,6 +31,7 @@ from app.qdrant_gateway import (
     search_chunks,
 )
 from app.schemas import (
+    AgenticAskResponse,
     AskRequest,
     AskResponse,
     ConversionReport,
@@ -31,7 +41,8 @@ from app.schemas import (
     LlmStatus,
     SearchResponse,
 )
-from app.settings import get_llm_model_path, get_openvino_device
+from app.agentic_rag import answer_agentic_question
+from app.settings import get_openai_settings
 from app.rag_service import answer_question
 
 
@@ -41,9 +52,25 @@ app = FastAPI(
     description="Multimodal evidence exploration prototype.",
 )
 
+
+@app.exception_handler(LlmGatewayError)
+async def handle_llm_error(request: Request, error: LlmGatewayError) -> JSONResponse:
+    """Expose a sanitized API failure, never an upstream body or a secret."""
+
+    return JSONResponse(
+        status_code=error.http_status,
+        content={"detail": str(error), "code": error.code},
+    )
+
 # The lightweight local interface is served by the same container as the API.
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/ui", StaticFiles(directory=STATIC_DIR, html=True), name="ui")
+REVIEW_STATIC_DIR = Path(__file__).parent / "review_static"
+app.mount(
+    "/review",
+    StaticFiles(directory=REVIEW_STATIC_DIR, html=True),
+    name="review",
+)
 
 
 @app.middleware("http")
@@ -51,7 +78,7 @@ async def disable_ui_cache(request: Request, call_next):
     """Prevent stale HTML, CSS, and JavaScript during local UI development."""
 
     response = await call_next(request)
-    if request.url.path.startswith("/ui"):
+    if request.url.path.startswith(("/ui", "/review")):
         response.headers["Cache-Control"] = "no-store"
     return response
 
@@ -89,13 +116,18 @@ def readiness_check() -> dict[str, str]:
 
 @app.get("/llm/status", response_model=LlmStatus)
 def llm_status() -> LlmStatus:
-    """Report model-file availability without allocating the LLM in memory."""
+    """Check local configuration without any network request or billed tokens."""
 
+    try:
+        settings = get_openai_settings()
+    except ValueError as error:
+        raise LlmGatewayError(str(error), code="invalid_llm_configuration") from None
     return LlmStatus(
-        model_id=LLM_MODEL_ID,
-        model_path=str(get_llm_model_path()),
-        device=get_openvino_device(),
-        downloaded=is_model_downloaded(),
+        model_id=settings.model_id,
+        configured=bool(settings.api_key),
+        reasoning_effort=settings.reasoning_effort,
+        max_output_tokens=settings.max_output_tokens,
+        configuration_error=None if settings.api_key else "OPENAI_API_KEY is missing.",
     )
 
 
@@ -148,6 +180,7 @@ def index_document(source_id: str) -> DocumentIndexingReport:
         vectors,
         collection_name=ARXIV_COLLECTION_NAME,
     )
+    clear_bm25_cache()
 
     return DocumentIndexingReport(
         source_id=source_id,
@@ -208,18 +241,57 @@ def indexed_arxiv_documents() -> IndexedDocumentResponse:
     )
 
 
+@app.get("/evaluation/cases", response_model=ReviewCollectionResponse)
+def evaluation_cases() -> ReviewCollectionResponse:
+    """Return the human-review queue enriched with its source chunks."""
+
+    return list_review_cases()
+
+
+@app.patch(
+    "/evaluation/cases/{case_id}",
+    response_model=ReviewCaseResponse,
+)
+def review_evaluation_case(case_id: str, update: ReviewUpdate) -> ReviewCaseResponse:
+    """Persist corrections and the review status of one benchmark entry."""
+
+    try:
+        return update_review_case(case_id, update)
+    except KeyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown evaluation case: {case_id}",
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        ) from error
+
+
 @app.post("/ask", response_model=AskResponse)
 def ask_question(request: AskRequest) -> AskResponse:
     """Generate an evidence-grounded answer from the indexed arXiv collection."""
 
-    try:
-        return answer_question(
+    with capture_llm_calls() as calls:
+        response = answer_question(
             question=request.question,
             limit=request.limit,
             document_ids=request.document_ids,
         )
-    except LlmModelUnavailableError as error:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(error),
-        ) from error
+    response.llm = summarize_llm_calls(calls)
+    return response
+
+
+@app.post("/agentic/ask", response_model=AgenticAskResponse)
+def ask_agentic_question(request: AskRequest) -> AgenticAskResponse:
+    """Run the observable LangGraph RAG workflow on the arXiv collection."""
+
+    with capture_llm_calls() as calls:
+        response = answer_agentic_question(
+            question=request.question,
+            limit=request.limit,
+            document_ids=request.document_ids,
+        )
+    response.llm = summarize_llm_calls(calls)
+    return response

@@ -1,0 +1,10 @@
+# Code-only update of an already installed and tested environment.
+# Tag the tested local image before building; this also keeps a rollback image.
+# Use the ordinary Dockerfile when intentionally changing dependencies.
+ARG BASE_IMAGE=evidentia-app:pre-retrieval-v7
+FROM ${BASE_IMAGE}
+
+WORKDIR /app
+COPY app ./app
+COPY scripts ./scripts
+COPY tests ./tests

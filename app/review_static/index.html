@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Interface locale de vérification du benchmark RAG Evidentia."
+    />
+    <title>Evidentia — Revue du benchmark</title>
+    <link rel="stylesheet" href="/review/review.css?v=review-20260813-1" />
+  </head>
+  <body>
+    <div class="review-shell">
+      <aside class="queue-sidebar" aria-label="File de revue">
+        <div class="sidebar-header">
+          <a class="brand" href="/ui/" aria-label="Retour à Evidentia">
+            <span class="brand-mark" aria-hidden="true">E</span>
+            <span>
+              <strong>Evidentia</strong>
+              <small>Benchmark studio</small>
+            </span>
+          </a>
+          <a class="back-link" href="/ui/">Retour au chat</a>
+        </div>
+
+        <section class="progress-card" aria-labelledby="review-progress-title">
+          <div class="progress-copy">
+            <div>
+              <p class="eyebrow">PROGRESSION</p>
+              <h1 id="review-progress-title">
+                <span id="verified-count">—</span>/<span id="total-count">—</span>
+                vérifiés
+              </h1>
+            </div>
+            <span id="progress-percent" class="progress-percent">0 %</span>
+          </div>
+          <div
+            class="progress-track"
+            role="progressbar"
+            aria-label="Progression de la vérification"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <span id="progress-bar"></span>
+          </div>
+          <p id="remaining-count" class="remaining-count">Chargement…</p>
+        </section>
+
+        <section class="queue-tools" aria-label="Filtres du benchmark">
+          <label class="search-field">
+            <span class="visually-hidden">Rechercher un cas</span>
+            <span aria-hidden="true">⌕</span>
+            <input id="case-search" type="search" placeholder="Question ou identifiant…" />
+          </label>
+          <div class="filter-row">
+            <label>
+              <span class="visually-hidden">Filtrer par état</span>
+              <select id="status-filter">
+                <option value="all">Tous les états</option>
+                <option value="needs_human_review">À vérifier</option>
+                <option value="verified">Vérifiés</option>
+              </select>
+            </label>
+            <label>
+              <span class="visually-hidden">Filtrer par catégorie</span>
+              <select id="category-filter">
+                <option value="all">Toutes catégories</option>
+                <option value="factoid">Faits</option>
+                <option value="method">Méthodes</option>
+                <option value="comparison">Comparaisons</option>
+                <option value="abstention">Abstentions</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <div id="case-list" class="case-list" aria-live="polite"></div>
+        <p id="queue-empty" class="queue-empty" hidden>Aucun cas ne correspond aux filtres.</p>
+      </aside>
+
+      <main class="review-main">
+        <header class="review-toolbar">
+          <button id="mobile-queue-toggle" class="mobile-queue-toggle" type="button">
+            File de revue
+          </button>
+          <div class="toolbar-position">
+            <span id="case-position">Chargement du benchmark…</span>
+            <span id="save-state" class="save-state" aria-live="polite"></span>
+          </div>
+          <div class="navigation-buttons">
+            <button id="previous-case" type="button" aria-label="Cas précédent">←</button>
+            <button id="next-case" type="button" aria-label="Cas suivant">→</button>
+          </div>
+        </header>
+
+        <section id="loading-state" class="center-state">
+          <span class="spinner" aria-hidden="true"></span>
+          <p>Chargement des questions et de leurs preuves…</p>
+        </section>
+
+        <section id="error-state" class="center-state error-state" hidden>
+          <strong>Impossible de charger le benchmark</strong>
+          <p id="error-message"></p>
+          <button id="retry-button" type="button">Réessayer</button>
+        </section>
+
+        <article id="case-editor" class="case-editor" hidden>
+          <header class="case-heading">
+            <div>
+              <p id="case-id" class="case-id"></p>
+              <h2>Vérification de l’entrée</h2>
+            </div>
+            <span id="case-status" class="status-badge"></span>
+          </header>
+
+          <div id="case-metadata" class="metadata-row"></div>
+
+          <section class="review-guide" aria-labelledby="guide-title">
+            <div class="guide-icon" aria-hidden="true">✓</div>
+            <div>
+              <h3 id="guide-title">Ce que vous devez confirmer</h3>
+              <p>
+                La question est claire, la réponse est fidèle aux preuves et les groupes
+                de termes couvrent les faits essentiels sans imposer une formulation unique.
+              </p>
+            </div>
+          </section>
+
+          <form id="review-form">
+            <section class="editor-section">
+              <div class="section-heading">
+                <div>
+                  <span class="section-number">01</span>
+                  <h3>Question</h3>
+                </div>
+                <span class="field-hint">Modifiable</span>
+              </div>
+              <label class="field-block">
+                <span class="field-label">Question soumise au RAG</span>
+                <textarea id="question-field" rows="3" maxlength="1000" required></textarea>
+              </label>
+            </section>
+
+            <section class="editor-section">
+              <div class="section-heading">
+                <div>
+                  <span class="section-number">02</span>
+                  <h3>Vérité terrain</h3>
+                </div>
+                <span class="field-hint">Modifiable</span>
+              </div>
+
+              <div class="ground-truth-grid">
+                <div class="read-only-panel">
+                  <span class="field-label">Documents attendus</span>
+                  <div id="expected-documents" class="document-chips"></div>
+                  <p>
+                    Ces documents doivent contribuer à la réponse. Leur structure reste
+                    verrouillée pendant la revue éditoriale.
+                  </p>
+                </div>
+                <div id="abstention-panel" class="read-only-panel abstention-panel" hidden>
+                  <span class="field-label">Comportement attendu</span>
+                  <strong>Le système doit s’abstenir</strong>
+                  <p>Le corpus ne contient pas une preuve suffisante pour répondre.</p>
+                </div>
+              </div>
+
+              <label id="answer-field-block" class="field-block">
+                <span class="field-label">Réponse de référence</span>
+                <textarea id="reference-answer-field" rows="5" maxlength="5000"></textarea>
+              </label>
+
+              <label id="terms-field-block" class="field-block">
+                <span class="field-label">Groupes de termes attendus</span>
+                <textarea id="terms-field" rows="5" spellcheck="false"></textarea>
+                <span class="field-help">
+                  Une ligne = un fait. Séparez les formulations alternatives avec
+                  <code>|</code>, par exemple <code>400 millions | 400 million</code>.
+                </span>
+              </label>
+            </section>
+
+            <section class="editor-section">
+              <div class="section-heading">
+                <div>
+                  <span class="section-number">03</span>
+                  <h3>Preuves dans le corpus</h3>
+                </div>
+                <span class="field-hint read-only">Lecture seule</span>
+              </div>
+              <p class="section-intro">
+                Chaque passage ci-dessous contient l’un des fragments de preuve du benchmark.
+                Vérifiez que la réponse de référence n’affirme rien de plus.
+              </p>
+              <div id="evidence-list" class="evidence-list"></div>
+              <div id="no-evidence" class="no-evidence" hidden>
+                <strong>Aucune preuve attendue</strong>
+                <p>C’est normal pour une question d’abstention.</p>
+              </div>
+            </section>
+
+            <section class="editor-section notes-section">
+              <div class="section-heading">
+                <div>
+                  <span class="section-number">04</span>
+                  <h3>Notes de revue</h3>
+                </div>
+                <span class="field-hint">Facultatif</span>
+              </div>
+              <label class="field-block">
+                <span class="visually-hidden">Notes de revue</span>
+                <textarea
+                  id="notes-field"
+                  rows="3"
+                  maxlength="3000"
+                  placeholder="Ambiguïté repérée, correction effectuée, point à revoir…"
+                ></textarea>
+              </label>
+            </section>
+          </form>
+        </article>
+
+        <footer id="review-actions" class="review-actions" hidden>
+          <div>
+            <p id="action-title">Décision de revue</p>
+            <span id="action-help">Les modifications non enregistrées sont signalées.</span>
+          </div>
+          <div class="action-buttons">
+            <button id="save-draft-button" class="secondary-button" type="button">
+              Enregistrer à vérifier
+            </button>
+            <button id="verify-button" class="primary-button" type="button">
+              Valider ce cas
+              <span aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <template id="case-list-item-template">
+      <button class="case-list-item" type="button">
+        <span class="list-status" aria-hidden="true"></span>
+        <span class="list-copy">
+          <span class="list-meta"></span>
+          <strong class="list-question"></strong>
+          <span class="list-id"></span>
+        </span>
+      </button>
+    </template>
+
+    <template id="evidence-template">
+      <details class="evidence-card" open>
+        <summary>
+          <span class="evidence-index"></span>
+          <span class="evidence-summary-copy">
+            <strong class="evidence-document"></strong>
+            <span class="evidence-location"></span>
+          </span>
+          <span class="evidence-chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="evidence-body">
+          <div class="target-phrases">
+            <span>Fragments recherchés</span>
+            <div class="target-phrase-list"></div>
+          </div>
+          <pre class="evidence-text"></pre>
+        </div>
+      </details>
+    </template>
+
+    <script src="/review/review.js?v=review-20260813-1"></script>
+  </body>
+</html>
