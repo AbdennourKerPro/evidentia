@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import unittest
+from pathlib import Path
 
 from app.response_contract import (
     INSUFFICIENT_EVIDENCE_MARKER,
@@ -39,6 +41,33 @@ class QuestionLanguageTests(unittest.TestCase):
             detect_question_language("How do CLIP and SAM use prompts?"),
             "en",
         )
+
+    def test_detects_french_question_without_accent_or_listed_marker(self) -> None:
+        for question in (
+            "Quels encodeurs d'images BLIP-2 explore-t-il ?",
+            "Combien de GPU sont utilises pour SAM ?",
+            "Pourquoi CLIP utilise-t-il un objectif contrastif ?",
+        ):
+            with self.subTest(question=question):
+                self.assertEqual(detect_question_language(question), "fr")
+
+    def test_english_contractions_stay_english(self) -> None:
+        for question in (
+            "What doesn't CLIP's zero-shot classifier handle well?",
+            "Why isn't SAM trained on ImageNet? I'd like the dataset size.",
+            "Which encoders does BLIP-2 explore?",
+        ):
+            with self.subTest(question=question):
+                self.assertEqual(detect_question_language(question), "en")
+
+    def test_matches_language_labels_of_the_benchmark(self) -> None:
+        benchmark = Path(__file__).parents[1] / "data/evaluation/rag_benchmark.jsonl"
+        for line in benchmark.read_text(encoding="utf-8").splitlines():
+            case = json.loads(line)
+            with self.subTest(case=case["id"]):
+                self.assertEqual(
+                    detect_question_language(case["question"]), case["language"]
+                )
 
     def test_detects_chinese_question(self) -> None:
         self.assertEqual(detect_question_language("这些模型如何使用图像？"), "zh")
