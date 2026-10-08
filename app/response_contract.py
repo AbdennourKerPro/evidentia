@@ -22,6 +22,8 @@ _VALID_CITATION_GROUP_PATTERN = re.compile(
 _REFERENCE_POSITION_PATTERN = re.compile(r"S(\d+)", flags=re.IGNORECASE)
 _WORD_PATTERN = re.compile(r"[a-zà-öø-ÿ]+", flags=re.IGNORECASE)
 _CJK_PATTERN = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
+# Elided French forms (d'images, l'article, qu'est-ce, n'est) never occur in English.
+_FRENCH_ELISION_PATTERN = re.compile(r"\b(?:[dlnmjcs]|qu)['\u2019][a-zà-öø-ÿ]", flags=re.IGNORECASE)
 
 _FRENCH_MARKERS = {
     "afin",
@@ -55,6 +57,22 @@ _FRENCH_MARKERS = {
     "une",
     "utilise",
     "utilisent",
+    # Interrogatives and function words that carry no accent: without them a
+    # question such as "Quels encodeurs explore-t-il ?" was classified English.
+    "combien",
+    "du",
+    "il",
+    "ils",
+    "lequel",
+    "lesquels",
+    "lesquelles",
+    "laquelle",
+    "pourquoi",
+    "quand",
+    "quels",
+    "quelles",
+    "quoi",
+    "sur",
 }
 
 _ENGLISH_MARKERS = {
@@ -135,7 +153,9 @@ def detect_question_language(question: str) -> ResponseLanguage:
         return "zh"
 
     tokens = _tokens(question)
-    french_score = sum(token in _FRENCH_MARKERS for token in tokens)
+    french_score = sum(token in _FRENCH_MARKERS for token in tokens) + len(
+        _FRENCH_ELISION_PATTERN.findall(question)
+    )
     english_score = sum(token in _ENGLISH_MARKERS for token in tokens)
     has_french_diacritic = any(
         character in "àâçéèêëîïôùûüÿœ"
