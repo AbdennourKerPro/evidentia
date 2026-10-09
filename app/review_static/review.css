@@ -1,3 +1,6 @@
+/* The hidden attribute must win over the display rules of state panels. */
+[hidden] { display: none !important; }
+
 :root {
   color-scheme: light;
   --ink: #202124;

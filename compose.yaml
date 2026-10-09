@@ -10,6 +10,8 @@ services:
     environment:
       QDRANT_URL: http://qdrant:6333
       HF_HOME: /models/huggingface
+      # Benchmark file edited by the review UI (the 30 English draft cases).
+      BENCHMARK_PATH: /data/evaluation/rag_english30.draft.jsonl
       RERANKER_MODEL_PATH: /models/huggingface/mmarco-minilmv2-l12-h384-v1
       # Deploy the coverage recovery; other profiles remain explicit ablations.
       RAG_RETRIEVAL_PROFILE: ${RAG_RETRIEVAL_PROFILE:-candidate_recovery}
