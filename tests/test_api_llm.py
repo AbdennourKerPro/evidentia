@@ -229,6 +229,7 @@ class ApiLlmTests(unittest.TestCase):
 
     def test_langgraph_uncertain_language_is_checked_without_rewrite(self) -> None:
         self.install_answers([
+            "What does this model do?",
             "Le réseau atteint 81,7 % après adaptation [S1].",
             '{"status":"match"}',
         ])
@@ -242,10 +243,11 @@ class ApiLlmTests(unittest.TestCase):
         self.assertFalse(payload["execution"]["correction_attempted"])
         self.assertEqual(payload["execution"]["language_status"], "match")
         self.assertEqual(payload["execution"]["language_check_method"], "llm_verification")
-        self.assertEqual(payload["llm"]["call_count"], 2)
+        self.assertEqual(payload["llm"]["call_count"], 3)
 
     def test_langgraph_uncertain_verdict_cannot_loop_or_publish(self) -> None:
         self.install_answers([
+            "What does this model do?",
             "Le réseau atteint 81,7 % après adaptation [S1].",
             '{"status":"uncertain"}',
             "Le réseau atteint 81,7 % après adaptation [S1].",
@@ -260,7 +262,7 @@ class ApiLlmTests(unittest.TestCase):
         self.assertTrue(payload["abstained"], payload)
         self.assertTrue(payload["execution"]["correction_attempted"])
         self.assertIn("language_uncertain:expected=fr", payload["execution"]["contract_issues"])
-        self.assertEqual(payload["llm"]["call_count"], 4)
+        self.assertEqual(payload["llm"]["call_count"], 5)
 
 
 if __name__ == "__main__":
