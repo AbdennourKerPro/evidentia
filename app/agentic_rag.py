@@ -57,6 +57,7 @@ from app.schemas import (
     AgenticTraceStep,
     AskResponse,
     CandidateRecoveryAudit,
+    CoverageRequirement,
     EvidenceCoverage,
     PlannedFact,
     RetrievalAudit,
@@ -65,6 +66,8 @@ from app.schemas import (
 
 
 Strategy = Literal["global", "per_source"]
+
+FALLBACK_SEARCH_LIMIT = 20
 
 DOCUMENT_CATALOG = {
     "clip-2021": {
@@ -679,9 +682,19 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
     """Add verified missing proof from the existing pool; never reselect top-k."""
 
     started = perf_counter()
+
+    def fallback_search(gap: CoverageRequirement) -> list[SearchResult]:
+        """Local embedding only: search the gap's English query when no candidate exists."""
+
+        document_ids = [gap.document_id] if gap.document_id else state.get("selected_document_ids")
+        return search_chunks(
+            embed_query(gap.search_query or gap.aspect), limit=FALLBACK_SEARCH_LIMIT,
+            collection_name=ARXIV_COLLECTION_NAME, document_ids=document_ids,
+        )
+
     recovered = recover_candidate_evidence(
         selected=state.get("selected_results", []), candidates=state.get("candidate_pool", []),
-        coverage=state["coverage_checks"][-1],
+        coverage=state["coverage_checks"][-1], fallback_search=fallback_search,
     )
     return {
         "selected_results": recovered.results,

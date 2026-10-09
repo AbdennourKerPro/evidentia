@@ -81,6 +81,31 @@ class CandidateRecoveryTests(unittest.TestCase):
         self.assertEqual(updated.audit.diagnostic, "no_additional_candidates")
         generate.assert_not_called()
 
+    def test_empty_pool_uses_fallback_search_for_the_gap(self):
+        calls = []
+
+        def fallback(gap):
+            calls.append(gap)
+            return [*self.initial, *self.pool]
+
+        updated, rerank, generate = self.run_recovery(candidates=[], fallback_search=fallback)
+        self.assertEqual(calls, [self.gap])
+        self.assertEqual(rerank.call_args.args[0][0][1], self.pool)
+        self.assertEqual(updated.audit.added_chunk_ids, [2])
+        self.assertTrue(updated.coverage.sufficient)
+        generate.assert_called_once()
+
+    def test_fallback_is_not_used_when_pool_has_candidates(self):
+        calls = []
+        self.run_recovery(fallback_search=lambda gap: calls.append(gap) or [])
+        self.assertEqual(calls, [])
+
+    def test_empty_fallback_keeps_context_without_verification(self):
+        updated, _, generate = self.run_recovery(candidates=[], fallback_search=lambda gap: list(self.initial))
+        self.assertEqual(updated.audit.diagnostic, "no_additional_candidates")
+        self.assertEqual(updated.results, self.initial)
+        generate.assert_not_called()
+
     def test_wrong_article_is_excluded_before_ranking(self):
         wrong = self.pool[0].model_copy(update={"document_id": "other"})
         _, rerank, generate = self.run_recovery(candidates=[wrong])

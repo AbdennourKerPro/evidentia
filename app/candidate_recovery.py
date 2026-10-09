@@ -1,4 +1,7 @@
-"""Fill question-coverage gaps from existing candidates, without new retrieval.
+"""Fill question-coverage gaps from existing candidates.
+
+When no candidate exists for a gap, one optional fallback search (supplied by
+the caller, using the gap's English query) may fill the pool for that gap.
 
 Original evidence stays first, hence S1..S5 remain stable. Candidate relevance
 is scored per missing aspect. Only locally verified supporting quotes can cause
@@ -9,7 +12,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from app.evidence_coverage import parse_coverage_assessment
 from app.hybrid_retrieval import rerank_candidate_groups
@@ -238,11 +241,14 @@ def select_recovery_gaps(requirements: Sequence[CoverageRequirement]) -> list[Co
 def recover_candidate_evidence(
     *, selected: Sequence[SearchResult], candidates: Sequence[SearchResult],
     coverage: EvidenceCoverage,
+    fallback_search: Callable[[CoverageRequirement], Sequence[SearchResult]] | None = None,
 ) -> CandidateRecoveryResult:
     """One recovery, two gaps, three proposals/gap, two verified additions max.
 
     An unknown decomposition is not guessed. API errors propagate, malformed
     verification keeps the original context. No selected passage is evicted.
+    A gap without any candidate may use ``fallback_search``; its results are
+    verified exactly like pool candidates.
     """
 
     initial = list(selected)
@@ -256,6 +262,9 @@ def recover_candidate_evidence(
     proposals: dict[int, SearchResult] = {}
     for gap in gaps:
         scoped = [item for item in pool.values() if gap.document_id is None or item.document_id == gap.document_id]
+        if not scoped and fallback_search is not None:
+            scoped = [item for item in fallback_search(gap) if item.chunk_id not in selected_ids]
+            pool.update((item.chunk_id, item) for item in scoped)
         if not scoped:
             continue
         ranked = rerank_candidate_groups([(gap.search_query or gap.aspect, scoped)])
