@@ -24,10 +24,12 @@ from app.hybrid_retrieval import (
     MultiFacetCandidates,
     rerank_candidate_groups,
     retrieve_multifacet_candidates,
+    reciprocal_rank_fusion,
     round_robin_select,
 )
 from app.llm_gateway import generate_chat
 from app.qdrant_gateway import ARXIV_COLLECTION_NAME, search_chunks
+from app.query_translation import english_search_query
 from app.query_expansion import (
     RetrievalIntent,
     build_query_variants,
@@ -57,6 +59,7 @@ from app.schemas import (
     AgenticTraceStep,
     AskResponse,
     CandidateRecoveryAudit,
+    CoverageRequirement,
     EvidenceCoverage,
     PlannedFact,
     RetrievalAudit,
@@ -65,6 +68,8 @@ from app.schemas import (
 
 
 Strategy = Literal["global", "per_source"]
+
+FALLBACK_SEARCH_LIMIT = 20
 
 DOCUMENT_CATALOG = {
     "clip-2021": {
@@ -405,27 +410,33 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
                 ],
             }
 
-    results = search_chunks(
-        embed_query(state["question"]),
-        limit=state["limit"],
-        collection_name=ARXIV_COLLECTION_NAME,
-        document_ids=state.get("selected_document_ids"),
-    )
+    english_query = english_search_query(state["question"])
+    queries = [state["question"], *([english_query] if english_query else [])]
+    rankings = [
+        search_chunks(
+            vector, limit=state["limit"] if len(queries) == 1 else FALLBACK_SEARCH_LIMIT,
+            collection_name=ARXIV_COLLECTION_NAME,
+            document_ids=state.get("selected_document_ids"),
+        )
+        for vector in map(embed_query, queries)
+    ]
+    results = rankings[0] if len(rankings) == 1 else reciprocal_rank_fusion(rankings, limit=state["limit"])
     return {
         "plans": [
             {
                 "document_id": None,
                 "query": state["question"],
-                "query_variants": [state["question"]],
+                "query_variants": queries,
                 "retrieval_intents": retrieval_intents,
             }
         ],
         "retrieval_batches": [{"document_id": None, "results": results}],
-        "candidate_pool": list(results),
+        "candidate_pool": list({item.chunk_id: item for ranking in rankings for item in ranking}.values()),
         "trace": [
             _trace(
                 "retrieve_global",
-                f"retrieved={len(results)} chunks with one vector search",
+                f"retrieved={len(results)} chunks; "
+                f"english_query={english_query or 'none'}",
                 started,
             )
         ],
@@ -679,9 +690,19 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
     """Add verified missing proof from the existing pool; never reselect top-k."""
 
     started = perf_counter()
+
+    def fallback_search(gap: CoverageRequirement) -> list[SearchResult]:
+        """Local embedding only: search the gap's English query when no candidate exists."""
+
+        document_ids = [gap.document_id] if gap.document_id else state.get("selected_document_ids")
+        return search_chunks(
+            embed_query(gap.search_query or gap.aspect), limit=FALLBACK_SEARCH_LIMIT,
+            collection_name=ARXIV_COLLECTION_NAME, document_ids=document_ids,
+        )
+
     recovered = recover_candidate_evidence(
         selected=state.get("selected_results", []), candidates=state.get("candidate_pool", []),
-        coverage=state["coverage_checks"][-1],
+        coverage=state["coverage_checks"][-1], fallback_search=fallback_search,
     )
     return {
         "selected_results": recovered.results,
