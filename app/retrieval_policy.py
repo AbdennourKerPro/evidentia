@@ -35,3 +35,9 @@ def preserves_original_query(profile: RetrievalProfile) -> bool:
     """The final profile includes the original-query change from step two."""
 
     return profile in {"original_query", "coverage_retry"}
+
+
+def keeps_primary_hits(profile: RetrievalProfile) -> bool:
+    """Recovery profiles keep every original-query hit past the RRF cut."""
+
+    return profile in {"candidate_recovery", "coverage_answer_plan"}

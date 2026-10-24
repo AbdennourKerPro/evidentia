@@ -264,6 +264,7 @@ def retrieve_multifacet_candidates(
     fusion_limit: int = 30,
     expansion_weight: float = 2.0,
     preserve_primary: bool = False,
+    keep_primary_hits: bool = False,
 ) -> MultiFacetCandidates:
     """Fuse dense and BM25 rankings from one primary and several facet queries."""
 
@@ -298,15 +299,16 @@ def retrieve_multifacet_candidates(
         rankings.extend([dense, lexical])
         weights.extend([query_weight, query_weight])
 
+    protect_primary = preserve_primary or keep_primary_hits
     fused = reciprocal_rank_fusion(
         rankings,
         limit=(
             sum(len(ranking) for ranking in rankings)
-            if preserve_primary else fusion_limit
+            if protect_primary else fusion_limit
         ),
         weights=weights,
     )
-    if preserve_primary:
+    if protect_primary:
         fused = preserve_primary_pool(
             fused, [dense_rankings[0], lexical_rankings[0]], limit=fusion_limit,
         )
@@ -320,29 +322,20 @@ def retrieve_multifacet_candidates(
 def preserve_primary_pool(
     fused: Sequence[SearchResult],
     primary_rankings: Sequence[Sequence[SearchResult]],
-    *, limit: int, reserve_per_ranking: int = 5,
+    *, limit: int,
 ) -> list[SearchResult]:
     """Protect original-query candidates before truncation, not final answers.
 
-    Keep the top few dense/BM25 hits even when expansion votes dominate RRF.
+    Keep the RRF top ``limit`` plus every dense/BM25 hit of the original
+    query, even when expansion votes or RRF ties push it past the cut.
     All retained candidates are still reranked against the complete question.
     """
 
     if limit <= 0:
         return []
-    # Interleave the primary dense/lexical hits before reserving their slots.
-    protected_ids: list[int] = []
-    for rank in range(reserve_per_ranking):
-        for ranking in primary_rankings:
-            if rank < len(ranking) and ranking[rank].chunk_id not in protected_ids:
-                protected_ids.append(ranking[rank].chunk_id)
-    protected_ids = protected_ids[:limit]
-    retained_ids = set(protected_ids)
-    for result in fused:
-        if len(retained_ids) >= limit:
-            break
-        retained_ids.add(result.chunk_id)
-    return [result for result in fused if result.chunk_id in retained_ids][:limit]
+    retained_ids = {result.chunk_id for result in fused[:limit]}
+    retained_ids.update(result.chunk_id for ranking in primary_rankings for result in ranking)
+    return [result for result in fused if result.chunk_id in retained_ids]
 
 
 def rerank_candidate_groups(

@@ -49,6 +49,7 @@ from app.language_verification import validate_answer_with_language_check
 from app.retrieval_policy import (
     RetrievalProfile,
     get_retrieval_profile,
+    keeps_primary_hits,
     preserves_original_query,
     validate_retrieval_profile,
 )
@@ -374,6 +375,7 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
                 document_id=document_id,
                 fusion_limit=max(30, state["limit"]),
                 preserve_primary=preserves_original_query(state["retrieval_profile"]),
+                keep_primary_hits=keeps_primary_hits(state["retrieval_profile"]),
             )
             ranked_results = _rank_candidates(
                 question=state["question"],
@@ -531,6 +533,7 @@ def _retrieve_source(task: RetrievalTask) -> AgenticRagState:
         lexical_limit=task["candidate_limit"],
         fusion_limit=max(30, task["candidate_limit"]),
         preserve_primary=preserves_original_query(task["retrieval_profile"]),
+        keep_primary_hits=keeps_primary_hits(task["retrieval_profile"]),
     )
     ranked_results = _rank_candidates(
         question=task["question"],
