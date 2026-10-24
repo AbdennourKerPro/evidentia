@@ -203,6 +203,7 @@ class CandidateRecoveryAudit(BaseModel):
     added_chunk_ids: list[int] = Field(default_factory=list)
     missing_aspects: list[str] = Field(default_factory=list)
     diagnostic: str | None = None
+    fallback_used: bool = False
 
 
 class AgenticExecution(BaseModel):

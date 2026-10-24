@@ -33,6 +33,10 @@ CROSS_ENCODER_REQUIRED_FILES = (
 BM25_K1 = 1.5
 BM25_B = 0.75
 RRF_K = 60
+# Bibliography chunks match many queries but never support an answer.
+REFERENCE_SECTION_PATTERN = re.compile(
+    r"^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:references|bibliography)\s*$", re.IGNORECASE,
+)
 
 _STOP_WORDS = {
     "about",
@@ -196,6 +200,18 @@ def search_bm25(*, query: str, document_id: str, limit: int) -> list[SearchResul
     ]
 
 
+def is_reference_section(section: str) -> bool:
+    """Detect a References/Bibliography heading, optionally numbered."""
+
+    return bool(REFERENCE_SECTION_PATTERN.match(section or ""))
+
+
+def drop_reference_sections(results: Sequence[SearchResult]) -> list[SearchResult]:
+    """Filter retrieved bibliography chunks; the index itself is unchanged."""
+
+    return [result for result in results if not is_reference_section(result.section)]
+
+
 def reciprocal_rank_fusion(
     rankings: Sequence[Sequence[SearchResult]],
     *,
@@ -265,6 +281,7 @@ def retrieve_multifacet_candidates(
     expansion_weight: float = 2.0,
     preserve_primary: bool = False,
     keep_primary_hits: bool = False,
+    exclude_references: bool = False,
 ) -> MultiFacetCandidates:
     """Fuse dense and BM25 rankings from one primary and several facet queries."""
 
@@ -289,6 +306,8 @@ def retrieve_multifacet_candidates(
             document_id=document_id,
             limit=lexical_limit,
         )
+        if exclude_references:
+            dense, lexical = drop_reference_sections(dense), drop_reference_sections(lexical)
         # The original question keeps half the total budget, regardless of how
         # many expansions were generated. Baseline weights remain reproducible.
         query_weight = 1.0 if position == 0 else (

@@ -40,6 +40,13 @@ exact marker INSUFFICIENT_EVIDENCE and nothing else.
 {coverage_requirements}
 {fact_requirements}"""
 
+# Opt-in profile guidance: generic wording rules, never facts about a paper.
+SOURCE_FIDELITY_GUIDELINES = """Copy model names, dataset names, identifiers,
+and values exactly as written in the EVIDENCES, and state their provenance
+(for example "X from Y" when the evidence attributes X to Y).
+Never claim that an article does not say something; say instead that the
+supplied passages do not cover it."""
+
 
 def answer_question(
     *, question: str, limit: int, document_ids: list[str] | None = None
@@ -99,6 +106,7 @@ def generate_answer_draft(
     planned_facts: Sequence[PlannedFact] = (),
     retrieval_intents: Sequence[str] = (),
     coverage_plan: str = "",
+    answer_guidelines: str = "",
 ) -> str:
     """Generate a first answer or one correction from the same evidence window."""
 
@@ -133,13 +141,16 @@ def generate_answer_draft(
         )
         max_output_tokens = 4096
 
+    system_message = SYSTEM_MESSAGE.format(
+        language=LANGUAGE_LABELS[expected_language],
+        comparison_requirements=comparison_requirements,
+        coverage_requirements=coverage_requirements,
+        fact_requirements=fact_requirements,
+    )
+    if answer_guidelines:
+        system_message += "\n" + answer_guidelines
     generated_answer = generate_chat(
-        system_message=SYSTEM_MESSAGE.format(
-            language=LANGUAGE_LABELS[expected_language],
-            comparison_requirements=comparison_requirements,
-            coverage_requirements=coverage_requirements,
-            fact_requirements=fact_requirements,
-        ),
+        system_message=system_message,
         user_message=user_message,
         max_output_tokens=max_output_tokens,
     )

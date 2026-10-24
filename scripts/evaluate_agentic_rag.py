@@ -13,7 +13,7 @@ from app.agentic_rag import answer_agentic_question
 from app.evaluation import load_benchmark, select_cases, write_json_report
 from app.llm_gateway import capture_llm_calls, get_llm_configuration, summarize_llm_calls
 from app.qdrant_gateway import ARXIV_COLLECTION_NAME
-from app.retrieval_policy import get_retrieval_profile
+from app.retrieval_policy import get_retrieval_profile, recovers_candidates
 from scripts.rag_evaluation_common import aggregate_case_reports, score_answer
 
 
@@ -179,7 +179,7 @@ def _build_report(
         "top_k": args.limit,
         "context_policy": {
             "initial_limit": args.limit,
-            "max_verified_additions": 2 if get_retrieval_profile() in {"candidate_recovery", "coverage_answer_plan"} else 0,
+            "max_verified_additions": 2 if recovers_candidates(get_retrieval_profile()) else 0,
             "original_context_preserved": True,
         },
         "strategy_counts": strategy_counts,
