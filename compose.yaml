@@ -18,7 +18,7 @@ services:
       # Compose reads .env locally. Never put a real key in this YAML or the image.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
-      OPENAI_REASONING_EFFORT: ${OPENAI_REASONING_EFFORT:-low}
+      OPENAI_REASONING_EFFORT: none
       OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-60}
       OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-1}
       OPENAI_MAX_OUTPUT_TOKENS: ${OPENAI_MAX_OUTPUT_TOKENS:-4096}
