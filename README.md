@@ -380,8 +380,9 @@ Un cas « répondable » attend une réponse ; un cas d'abstention attend un ref
 
 ## 6. Benchmarks (anglais)
 
-Les fichiers sont dans `data/evaluation/`. Ce sont des brouillons relus, gardés
-localement et **non versionnés dans git à ce jour**.
+Les fichiers sont dans `data/evaluation/` (brouillons relus, versionnés). Le
+détail des fichiers, des règles de relecture et de l'archive de l'ancien
+benchmark est dans [`data/evaluation/README.md`](data/evaluation/README.md).
 
 ### 6.1 Structure d'un cas
 
@@ -588,7 +589,7 @@ Le détail de chaque étape, y compris les essais abandonnés, est dans
 - **Questions sans article nommé** : elles passent encore par une recherche dense
   seule sur tout le corpus. BM25 n'existe que par article.
 - **Évaluation** : agrandir le benchmark anglais avec des questions réellement
-  indépendantes d'English30, et versionner les brouillons relus.
+  indépendantes d'English30.
 - **Corpus** : cinq articles, texte seulement, pas de figures.
 
 ## 11. Licence
