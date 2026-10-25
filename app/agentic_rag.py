@@ -39,6 +39,7 @@ from app.query_expansion import (
     rerank_for_intents,
 )
 from app.rag_service import (
+    ABSTENTION_CORRECTION_NOTE,
     SOURCE_FIDELITY_GUIDELINES,
     finalize_answer,
     generate_answer_draft,
@@ -373,7 +374,11 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
             primary_query=primary_query,
             preserve_original=preserves_original_query(state["retrieval_profile"]),
         )
-        if len(variants) > 1:
+        if uses_recovery_v2(state["retrieval_profile"]):
+            # Lexical matches need English text: add the translated question.
+            english_query = english_search_query(state["question"])
+            variants = list(dict.fromkeys([*variants, *([english_query] if english_query else [])]))
+        if len(variants) > 1 or uses_recovery_v2(state["retrieval_profile"]):
             candidates = retrieve_multifacet_candidates(
                 queries=variants,
                 query_vectors=embed_queries(variants),
@@ -712,11 +717,21 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
     v2 = uses_recovery_v2(state["retrieval_profile"])
 
     def fallback_search(gap: CoverageRequirement) -> list[SearchResult]:
-        """Local embedding only: search the gap's English query."""
+        """Local models only: search the gap's English query.
 
+        v2 fuses dense and BM25 rankings when the gap names one article.
+        """
+
+        query = gap.search_query or gap.aspect
+        if v2 and gap.document_id:
+            return retrieve_multifacet_candidates(
+                queries=[query], query_vectors=[embed_query(query)], document_id=gap.document_id,
+                dense_limit=FALLBACK_SEARCH_LIMIT, lexical_limit=FALLBACK_SEARCH_LIMIT,
+                fusion_limit=2 * FALLBACK_SEARCH_LIMIT, exclude_references=True,
+            ).fused
         document_ids = [gap.document_id] if gap.document_id else state.get("selected_document_ids")
         found = search_chunks(
-            embed_query(gap.search_query or gap.aspect), limit=FALLBACK_SEARCH_LIMIT,
+            embed_query(query), limit=FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME, document_ids=document_ids,
         )
         return drop_reference_sections(found) if v2 else found
@@ -929,6 +944,9 @@ def _correct_answer(state: AgenticRagState) -> AgenticRagState:
         retrieval_intents=detect_retrieval_intents(state["question"]),
         coverage_plan=_generation_coverage_plan(state),
         answer_guidelines=_answer_guidelines(state),
+        correction_note=(
+            ABSTENTION_CORRECTION_NOTE if uses_recovery_v2(state["retrieval_profile"]) else ""
+        ),
     )
     repaired_answer, repair_kind = repair_corrected_answer_from_evidence(
         question=state["question"],

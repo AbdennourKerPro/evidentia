@@ -3,21 +3,25 @@
 import json
 import os
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import httpx
 from fastapi.testclient import TestClient
 
 from app.agentic_rag import (
-    _answer_guidelines, _recover_candidates, _route_after_coverage, _route_after_selection,
+    _answer_guidelines, _correct_answer, _recover_candidates, _retrieve_global,
+    _route_after_coverage, _route_after_selection,
 )
 from app.candidate_recovery import (
     CANDIDATES_PER_GAP, CANDIDATES_PER_GAP_V2, MAX_ADDITIONS,
     assess_question_coverage, plan_articles, recover_candidate_evidence,
 )
-from app.hybrid_retrieval import drop_reference_sections, is_reference_section, retrieve_multifacet_candidates
+from app.hybrid_retrieval import (
+    MultiFacetCandidates, drop_reference_sections, is_reference_section, retrieve_multifacet_candidates,
+)
 from app.main import app
-from app.rag_service import SOURCE_FIDELITY_GUIDELINES, generate_answer_draft
+from app.rag_service import ABSTENTION_CORRECTION_NOTE, SOURCE_FIDELITY_GUIDELINES, generate_answer_draft
 from app.retrieval_policy import (
     RETRIEVAL_PROFILES, keeps_primary_hits, recovers_candidates, uses_recovery_v2,
     validate_retrieval_profile,
@@ -248,23 +252,106 @@ class RecoveryV2Tests(unittest.TestCase):
         self.assertFalse(old_options["search_unresolved_gaps"] or old_options["added_support_only"])
         self.assertIn("fallback_used=False", update["trace"][0]["detail"])
 
-    def test_agentic_fallback_drops_reference_chunks(self):
+    def run_fallback(self, gap, profile="candidate_recovery_v2", **patches):
         state = {
-            "retrieval_profile": "candidate_recovery_v2", "selected_results": self.initial,
+            "retrieval_profile": profile, "selected_results": self.initial,
             "candidate_pool": [], "coverage_checks": [self.coverage],
         }
-        hits = [from_article(5, "paper", "[1] Citation.", section="References"), *self.found]
         captured = {}
 
         def fake_recovery(**kwargs):
-            captured["found"] = kwargs["fallback_search"](self.gap)
+            captured["found"] = kwargs["fallback_search"](gap)
             return recover_candidate_evidence(selected=kwargs["selected"], candidates=[], coverage=EvidenceCoverage(sufficient=None))
 
         with patch("app.agentic_rag.recover_candidate_evidence", side_effect=fake_recovery), patch(
             "app.agentic_rag.embed_query", return_value=[0.1]
-        ), patch("app.agentic_rag.search_chunks", return_value=hits):
+        ), patch("app.agentic_rag.search_chunks", return_value=patches.get("dense", [])) as dense, patch(
+            "app.agentic_rag.retrieve_multifacet_candidates",
+            return_value=MultiFacetCandidates(dense_rankings=([],), lexical_rankings=([],), fused=patches.get("fused", [])),
+        ) as hybrid:
             _recover_candidates(state)
-        self.assertEqual(captured["found"], self.found)
+        return captured["found"], dense, hybrid
+
+    def test_agentic_fallback_drops_reference_chunks_without_article(self):
+        hits = [from_article(5, "paper", "[1] Citation.", section="References"), *self.found]
+        found, _, hybrid = self.run_fallback(self.gap.model_copy(update={"document_id": None}), dense=hits)
+        self.assertEqual(found, self.found)
+        hybrid.assert_not_called()
+
+    def test_agentic_fallback_is_hybrid_for_one_article(self):
+        found, dense, hybrid = self.run_fallback(self.gap, fused=self.found)
+        self.assertEqual(found, self.found)
+        dense.assert_not_called()
+        self.assertEqual(hybrid.call_args.kwargs["queries"], ["training corpus size"])
+        self.assertEqual(hybrid.call_args.kwargs["document_id"], "paper")
+        self.assertTrue(hybrid.call_args.kwargs["exclude_references"])
+
+    def test_previous_profile_fallback_stays_dense(self):
+        found, _, hybrid = self.run_fallback(self.gap, profile="candidate_recovery", dense=self.found)
+        self.assertEqual(found, self.found)
+        hybrid.assert_not_called()
+
+
+class RecoveryV2AnswerTests(unittest.TestCase):
+    def test_guidelines_keep_abstention_for_an_absent_subject(self):
+        self.assertIn("exactly as written", SOURCE_FIDELITY_GUIDELINES)
+        self.assertIn("never replaces abstention", SOURCE_FIDELITY_GUIDELINES)
+        self.assertIn("INSUFFICIENT_EVIDENCE", SOURCE_FIDELITY_GUIDELINES)
+
+    def test_correction_note_is_only_added_to_corrections(self):
+        evidence = [result(1, "Evidence text")]
+        with patch("app.rag_service.generate_chat", return_value="Supported [S1].") as generate:
+            generate_answer_draft(question="What?", results=evidence, correction_note="NOTE")
+            generate_answer_draft(
+                question="What?", results=evidence, previous_answer="INSUFFICIENT_EVIDENCE",
+                correction_issues=["premature_abstention"], correction_note="NOTE",
+            )
+        self.assertNotIn("NOTE", generate.call_args_list[0].kwargs["user_message"])
+        self.assertTrue(generate.call_args_list[1].kwargs["user_message"].endswith("NOTE"))
+
+    def correct(self, profile):
+        state = {
+            "question": "What?", "retrieval_profile": profile, "strategy": "global",
+            "selected_results": [result(1, "Evidence text")], "generated_answer": "INSUFFICIENT_EVIDENCE",
+            "answer_validation": SimpleNamespace(issues=("premature_abstention",)), "fact_plan": [],
+        }
+        with patch("app.agentic_rag.generate_answer_draft", return_value="INSUFFICIENT_EVIDENCE") as draft, patch(
+            "app.agentic_rag.repair_corrected_answer_from_evidence", return_value=("INSUFFICIENT_EVIDENCE", None)
+        ):
+            _correct_answer(state)
+        return draft.call_args.kwargs
+
+    def test_v2_correction_allows_abstention(self):
+        self.assertEqual(self.correct("candidate_recovery_v2")["correction_note"], ABSTENTION_CORRECTION_NOTE)
+        self.assertEqual(self.correct("candidate_recovery")["correction_note"], "")
+
+
+class RecoveryV2RetrievalTests(unittest.TestCase):
+    def retrieve(self, profile):
+        state = {"question": "Which encoders does the paper explore?", "retrieval_profile": profile,
+                 "detected_document_ids": ["paper"], "limit": 5}
+        hits = [result(1, "Encoder text")]
+        with patch("app.agentic_rag.retrieve_multifacet_candidates", return_value=MultiFacetCandidates(
+            dense_rankings=(hits,), lexical_rankings=(hits,), fused=hits,
+        )) as hybrid, patch("app.agentic_rag.embed_queries", return_value=[[0.1]]), patch(
+            "app.agentic_rag.embed_query", return_value=[0.1]
+        ), patch("app.agentic_rag.search_chunks", return_value=hits) as dense, patch(
+            "app.agentic_rag.rerank_candidate_groups", return_value={"paper": hits}
+        ):
+            update = _retrieve_global(state)
+        return update, hybrid, dense
+
+    def test_detected_article_uses_hybrid_retrieval_with_one_variant(self):
+        update, hybrid, dense = self.retrieve("candidate_recovery_v2")
+        self.assertEqual(len(hybrid.call_args.kwargs["queries"]), 1)
+        self.assertTrue(hybrid.call_args.kwargs["exclude_references"])
+        dense.assert_not_called()
+        self.assertEqual(update["candidate_pool"][0].chunk_id, 1)
+
+    def test_previous_profile_keeps_dense_route_for_one_variant(self):
+        _, hybrid, dense = self.retrieve("candidate_recovery")
+        hybrid.assert_not_called()
+        dense.assert_called()
 
 
 class RecoveryV2HttpTests(unittest.TestCase):

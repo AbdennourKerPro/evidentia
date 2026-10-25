@@ -44,8 +44,15 @@ exact marker INSUFFICIENT_EVIDENCE and nothing else.
 SOURCE_FIDELITY_GUIDELINES = """Copy model names, dataset names, identifiers,
 and values exactly as written in the EVIDENCES, and state their provenance
 (for example "X from Y" when the evidence attributes X to Y).
-Never claim that an article does not say something; say instead that the
-supplied passages do not cover it."""
+When the EVIDENCES answer the question but omit a secondary detail, never claim
+that an article does not say it; say instead that the supplied passages do not
+cover that detail. This never replaces abstention: if the question is mainly
+about an entity, system, or subject that the EVIDENCES do not describe, facts
+about another entity do not answer it, so reply only INSUFFICIENT_EVIDENCE."""
+
+ABSTENTION_CORRECTION_NOTE = """These errors do not forbid abstaining: if the
+main subject of the QUESTION is absent from EVIDENCES, return only
+INSUFFICIENT_EVIDENCE instead of a partial answer about something else."""
 
 
 def answer_question(
@@ -107,6 +114,7 @@ def generate_answer_draft(
     retrieval_intents: Sequence[str] = (),
     coverage_plan: str = "",
     answer_guidelines: str = "",
+    correction_note: str = "",
 ) -> str:
     """Generate a first answer or one correction from the same evidence window."""
 
@@ -137,6 +145,7 @@ def generate_answer_draft(
                 "VALIDATION ERRORS:\n" + "\n".join(issue_lines),
                 "Rewrite the answer from scratch and fix every validation error. "
                 "Keep using only EVIDENCES. Return only the corrected answer.",
+                *([correction_note] if correction_note else []),
             ]
         )
         max_output_tokens = 4096
