@@ -14,7 +14,7 @@ RETRIEVAL_PROFILES = (
     "coverage_diagnostic", "candidate_recovery", "coverage_answer_plan",
     "candidate_recovery_v2",
 )
-DEFAULT_RETRIEVAL_PROFILE: RetrievalProfile = "candidate_recovery"
+DEFAULT_RETRIEVAL_PROFILE: RetrievalProfile = "candidate_recovery_v2"
 
 
 def validate_retrieval_profile(profile: str) -> RetrievalProfile:
