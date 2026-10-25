@@ -9,6 +9,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from scripts.evaluate_agentic_rag import PIPELINE_ID, _load_resumable_cases, source_fingerprint
+from app.evaluation import EvaluationCase, select_cases
 from app.llm_gateway import get_llm_configuration
 from app.retrieval_policy import get_retrieval_profile
 
@@ -100,6 +101,37 @@ class EvaluationCheckpointTests(unittest.TestCase):
             path = Path(directory) / "report.json"
             self.write_checkpoint(path, source_sha256=source_fingerprint())
             self.assertIn("case-a", _load_resumable_cases(path))
+
+    def test_rejects_changed_language_filter(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "report.json"
+            self.write_checkpoint(path, language_filter="en")
+            self.assertIn("case-a", _load_resumable_cases(path, language="en"))
+            with self.assertRaisesRegex(ValueError, "language filter"):
+                _load_resumable_cases(path)
+
+
+class LanguageFilterTests(unittest.TestCase):
+    def case(self, case_id: str, language: str) -> EvaluationCase:
+        return EvaluationCase(
+            id=case_id, category="abstention", language=language,
+            question="Is this answerable?", should_abstain=True,
+        )
+
+    def test_language_filter_keeps_benchmark_order(self) -> None:
+        cases = [self.case("a-en", "en"), self.case("b-fr", "fr"), self.case("c-en", "en")]
+        selected = select_cases(cases, case_ids=None, max_cases=None, language="en")
+        self.assertEqual([case.id for case in selected], ["a-en", "c-en"])
+        self.assertEqual(len(select_cases(cases, case_ids=None, max_cases=None)), 3)
+
+    def test_language_filter_combines_with_case_limit(self) -> None:
+        cases = [self.case("a-fr", "fr"), self.case("b-en", "en"), self.case("c-en", "en")]
+        selected = select_cases(cases, case_ids=None, max_cases=1, language="en")
+        self.assertEqual([case.id for case in selected], ["b-en"])
+
+    def test_language_filter_without_match_is_an_error(self) -> None:
+        with self.assertRaises(ValueError):
+            select_cases([self.case("a-fr", "fr")], case_ids=None, max_cases=None, language="en")
 
 
 if __name__ == "__main__":

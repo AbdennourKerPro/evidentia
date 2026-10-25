@@ -101,10 +101,13 @@ def select_cases(
     *,
     case_ids: Sequence[str] | None,
     max_cases: int | None,
+    language: str | None = None,
 ) -> list[EvaluationCase]:
     """Apply optional command-line filters while preserving benchmark order."""
 
     selected = list(cases)
+    if language is not None:
+        selected = [case for case in selected if case.language == language]
     if case_ids:
         requested = set(case_ids)
         selected = [case for case in selected if case.id in requested]

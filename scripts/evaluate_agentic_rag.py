@@ -42,6 +42,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--case-id", action="append", dest="case_ids")
     parser.add_argument("--max-cases", type=int)
     parser.add_argument(
+        "--language",
+        choices=("en", "fr"),
+        help="Evaluate only benchmark cases in this language; the file is unchanged.",
+    )
+    parser.add_argument(
         "--resume",
         action="store_true",
         help="Reuse completed cases from an existing compatible output report.",
@@ -57,9 +62,12 @@ def main() -> None:
         load_benchmark(args.benchmark),
         case_ids=args.case_ids,
         max_cases=args.max_cases,
+        language=args.language,
     )
     reports_by_id = (
-        _load_resumable_cases(args.output, top_k=args.limit, benchmark=args.benchmark)
+        _load_resumable_cases(
+            args.output, top_k=args.limit, benchmark=args.benchmark, language=args.language,
+        )
         if args.resume else {}
     )
 
@@ -170,6 +178,7 @@ def _build_report(
         "requested_cases": requested_cases,
         "benchmark": str(args.benchmark),
         "benchmark_sha256": sha256(args.benchmark.read_bytes()).hexdigest(),
+        "language_filter": args.language,
         "source_sha256": source_fingerprint(),
         "collection": ARXIV_COLLECTION_NAME,
         "llm_model": get_llm_configuration()["model_id"],
@@ -193,7 +202,8 @@ def _build_report(
 
 
 def _load_resumable_cases(
-    output: Path, *, top_k: int | None = None, benchmark: Path | None = None
+    output: Path, *, top_k: int | None = None, benchmark: Path | None = None,
+    language: str | None = None,
 ) -> dict[str, dict[str, object]]:
     """Load only reports produced by this exact pipeline implementation."""
 
@@ -213,6 +223,8 @@ def _load_resumable_cases(
         raise ValueError("Cannot resume an evaluation after the production source changed.")
     if top_k is not None and payload.get("top_k") != top_k:
         raise ValueError("Cannot resume an evaluation with a different top-k.")
+    if payload.get("language_filter") != language:
+        raise ValueError("Cannot resume an evaluation with a different language filter.")
     if benchmark is not None:
         current_hash = sha256(benchmark.read_bytes()).hexdigest()
         if payload.get("benchmark_sha256") != current_hash:
