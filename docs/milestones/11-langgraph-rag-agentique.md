@@ -159,7 +159,7 @@ Un smoke test peut cibler un seul cas :
 docker compose run --rm api python -u -m scripts.evaluate_agentic_rag `
   --case-id compare-clip-dinov2-supervision-en `
   --limit 5 `
-  --output /reports/agentic-rag-smoke.json
+  --output /reports/archive/m11-14-smoke/agentic-rag-smoke.json
 ```
 
 La campagne complète réutilise les 30 cas vérifiés :

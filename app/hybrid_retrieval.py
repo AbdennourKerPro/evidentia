@@ -33,6 +33,10 @@ CROSS_ENCODER_REQUIRED_FILES = (
 BM25_K1 = 1.5
 BM25_B = 0.75
 RRF_K = 60
+# Bibliography chunks match many queries but never support an answer.
+REFERENCE_SECTION_PATTERN = re.compile(
+    r"^\s*(?:\d+(?:\.\d+)*\.?\s*)?(?:references|bibliography)\s*$", re.IGNORECASE,
+)
 
 _STOP_WORDS = {
     "about",
@@ -196,6 +200,18 @@ def search_bm25(*, query: str, document_id: str, limit: int) -> list[SearchResul
     ]
 
 
+def is_reference_section(section: str) -> bool:
+    """Detect a References/Bibliography heading, optionally numbered."""
+
+    return bool(REFERENCE_SECTION_PATTERN.match(section or ""))
+
+
+def drop_reference_sections(results: Sequence[SearchResult]) -> list[SearchResult]:
+    """Filter retrieved bibliography chunks; the index itself is unchanged."""
+
+    return [result for result in results if not is_reference_section(result.section)]
+
+
 def reciprocal_rank_fusion(
     rankings: Sequence[Sequence[SearchResult]],
     *,
@@ -264,6 +280,8 @@ def retrieve_multifacet_candidates(
     fusion_limit: int = 30,
     expansion_weight: float = 2.0,
     preserve_primary: bool = False,
+    keep_primary_hits: bool = False,
+    exclude_references: bool = False,
 ) -> MultiFacetCandidates:
     """Fuse dense and BM25 rankings from one primary and several facet queries."""
 
@@ -288,6 +306,8 @@ def retrieve_multifacet_candidates(
             document_id=document_id,
             limit=lexical_limit,
         )
+        if exclude_references:
+            dense, lexical = drop_reference_sections(dense), drop_reference_sections(lexical)
         # The original question keeps half the total budget, regardless of how
         # many expansions were generated. Baseline weights remain reproducible.
         query_weight = 1.0 if position == 0 else (
@@ -298,15 +318,16 @@ def retrieve_multifacet_candidates(
         rankings.extend([dense, lexical])
         weights.extend([query_weight, query_weight])
 
+    protect_primary = preserve_primary or keep_primary_hits
     fused = reciprocal_rank_fusion(
         rankings,
         limit=(
             sum(len(ranking) for ranking in rankings)
-            if preserve_primary else fusion_limit
+            if protect_primary else fusion_limit
         ),
         weights=weights,
     )
-    if preserve_primary:
+    if protect_primary:
         fused = preserve_primary_pool(
             fused, [dense_rankings[0], lexical_rankings[0]], limit=fusion_limit,
         )
@@ -320,29 +341,20 @@ def retrieve_multifacet_candidates(
 def preserve_primary_pool(
     fused: Sequence[SearchResult],
     primary_rankings: Sequence[Sequence[SearchResult]],
-    *, limit: int, reserve_per_ranking: int = 5,
+    *, limit: int,
 ) -> list[SearchResult]:
     """Protect original-query candidates before truncation, not final answers.
 
-    Keep the top few dense/BM25 hits even when expansion votes dominate RRF.
+    Keep the RRF top ``limit`` plus every dense/BM25 hit of the original
+    query, even when expansion votes or RRF ties push it past the cut.
     All retained candidates are still reranked against the complete question.
     """
 
     if limit <= 0:
         return []
-    # Interleave the primary dense/lexical hits before reserving their slots.
-    protected_ids: list[int] = []
-    for rank in range(reserve_per_ranking):
-        for ranking in primary_rankings:
-            if rank < len(ranking) and ranking[rank].chunk_id not in protected_ids:
-                protected_ids.append(ranking[rank].chunk_id)
-    protected_ids = protected_ids[:limit]
-    retained_ids = set(protected_ids)
-    for result in fused:
-        if len(retained_ids) >= limit:
-            break
-        retained_ids.add(result.chunk_id)
-    return [result for result in fused if result.chunk_id in retained_ids][:limit]
+    retained_ids = {result.chunk_id for result in fused[:limit]}
+    retained_ids.update(result.chunk_id for ranking in primary_rankings for result in ranking)
+    return [result for result in fused if result.chunk_id in retained_ids]
 
 
 def rerank_candidate_groups(

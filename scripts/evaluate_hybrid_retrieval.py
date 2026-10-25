@@ -31,8 +31,8 @@ from app.query_expansion import (
 from app.schemas import SearchResult
 
 
-DEFAULT_BENCHMARK = Path("/data/evaluation/rag_benchmark.jsonl")
-DEFAULT_PLANS_REPORT = Path("/reports/agentic-rag-comparisons-verified.json")
+DEFAULT_BENCHMARK = Path("/data/evaluation/rag_english30.draft.jsonl")
+DEFAULT_PLANS_REPORT = Path("/reports/archive/m12-13-hybrid/agentic-rag-comparisons-verified.json")
 DEFAULT_OUTPUT = Path("/reports/hybrid-retrieval-comparisons.json")
 
 

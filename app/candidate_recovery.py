@@ -1,7 +1,8 @@
 """Fill question-coverage gaps from existing candidates.
 
 When no candidate exists for a gap, one optional fallback search (supplied by
-the caller, using the gap's English query) may fill the pool for that gap.
+the caller, using the gap's English query) may fill the pool for that gap. The
+v2 options also search every gap still unsupported after pool verification.
 
 Original evidence stays first, hence S1..S5 remain stable. Candidate relevance
 is scored per missing aspect. Only locally verified supporting quotes can cause
@@ -12,7 +13,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Sequence, Set
 
 from app.evidence_coverage import parse_coverage_assessment
 from app.hybrid_retrieval import rerank_candidate_groups
@@ -24,6 +25,7 @@ from app.schemas import (
 
 MAX_GAPS = 2
 CANDIDATES_PER_GAP = 3
+CANDIDATES_PER_GAP_V2 = 8
 MAX_ADDITIONS = 2
 MAX_ADDED_CHARACTERS = 16000
 
@@ -97,7 +99,24 @@ def _passages(results: Sequence[SearchResult]) -> list[dict[str, object]]:
     ]
 
 
-def assess_question_coverage(*, question: str, results: Sequence[SearchResult]) -> EvidenceCoverage:
+def plan_articles(results: Sequence[SearchResult], document_ids: Sequence[str] = ()) -> list[str]:
+    """Articles a requirement plan may target.
+
+    Without detected articles, every retrieved article. Otherwise the detected
+    articles present in the results (or all detected ones if none is present),
+    so an incidental chunk from another article cannot demand its own requirement.
+    """
+
+    retrieved = list(dict.fromkeys(item.document_id for item in results))
+    if not document_ids:
+        return retrieved
+    detected = list(dict.fromkeys(document_ids))
+    return [item for item in detected if item in retrieved] or detected
+
+
+def assess_question_coverage(
+    *, question: str, results: Sequence[SearchResult], document_ids: Sequence[str] = (),
+) -> EvidenceCoverage:
     """Question-only decomposition, then verification of the frozen requirements.
 
     The verifier cannot silently narrow requirements to whatever was retrieved.
@@ -106,22 +125,20 @@ def assess_question_coverage(*, question: str, results: Sequence[SearchResult]) 
 
     if not results:
         return EvidenceCoverage(sufficient=False, diagnostic="no_evidence")
+    articles = plan_articles(results, document_ids)
     raw = generate_chat(
         system_message=REQUIREMENTS_MESSAGE,
-        user_message=json.dumps({
-            "question": question,
-            "articles": list(dict.fromkeys(item.document_id for item in results)),
-        }, ensure_ascii=False),
+        user_message=json.dumps({"question": question, "articles": articles}, ensure_ascii=False),
         max_output_tokens=2048,
     )
-    requirements = parse_question_requirements(raw, results)
+    requirements = parse_question_requirements(raw, results, articles=articles)
     if requirements is None:
         return EvidenceCoverage(sufficient=None, diagnostic="invalid_question_requirements")
     return verify_fixed_requirements(requirements, results)
 
 
 def parse_question_requirements(
-    raw: str, results: Sequence[SearchResult],
+    raw: str, results: Sequence[SearchResult], *, articles: Sequence[str] | None = None,
 ) -> list[CoverageRequirement] | None:
     """Accept a small question-derived plan without invented article IDs."""
 
@@ -132,7 +149,7 @@ def parse_question_requirements(
     items = payload.get("requirements") if isinstance(payload, dict) else None
     if not isinstance(items, list) or not 1 <= len(items) <= 4:
         return None
-    allowed = {item.document_id for item in results}
+    allowed = set(articles) if articles is not None else {item.document_id for item in results}
     requirements = []
     seen = set()
     for item in items:
@@ -170,7 +187,10 @@ def verify_fixed_requirements(
         }, ensure_ascii=False),
         max_output_tokens=2048,
     )
-    verified = _parse_scoped_assessment(raw, results)
+    # A planned article absent from the passages can only be reported unsupported.
+    verified = _parse_scoped_assessment(
+        raw, results, extra_documents={item.document_id for item in requirements if item.document_id},
+    )
     if verified.sufficient is None or len(verified.requirements) != len(requirements) or any(
         (actual.aspect, actual.document_id) != (expected.aspect, expected.document_id)
         for actual, expected in zip(verified.requirements, requirements)
@@ -183,14 +203,16 @@ def verify_fixed_requirements(
     ]})
 
 
-def _parse_scoped_assessment(raw: str, results: Sequence[SearchResult]) -> EvidenceCoverage:
+def _parse_scoped_assessment(
+    raw: str, results: Sequence[SearchResult], extra_documents: Set[str] = frozenset(),
+) -> EvidenceCoverage:
     """Reuse exact-quote validation, then enforce the declared source scope."""
 
     assessment = parse_coverage_assessment(raw, results)
     if assessment.sufficient is None:
         return assessment
     payload = json.loads(raw)
-    allowed_documents = {result.document_id for result in results}
+    allowed_documents = {result.document_id for result in results} | set(extra_documents)
     requirements = []
     for item, requirement in zip(payload["requirements"], assessment.requirements, strict=True):
         document_id = item.get("document_id")
@@ -242,13 +264,19 @@ def recover_candidate_evidence(
     *, selected: Sequence[SearchResult], candidates: Sequence[SearchResult],
     coverage: EvidenceCoverage,
     fallback_search: Callable[[CoverageRequirement], Sequence[SearchResult]] | None = None,
+    candidates_per_gap: int = CANDIDATES_PER_GAP,
+    search_unresolved_gaps: bool = False,
+    added_support_only: bool = False,
 ) -> CandidateRecoveryResult:
-    """One recovery, two gaps, three proposals/gap, two verified additions max.
+    """One recovery, two gaps, a few proposals/gap, two verified additions max.
 
     An unknown decomposition is not guessed. API errors propagate, malformed
     verification keeps the original context. No selected passage is evicted.
     A gap without any candidate may use ``fallback_search``; its results are
-    verified exactly like pool candidates.
+    verified exactly like pool candidates. With ``search_unresolved_gaps``, each
+    gap still unsupported after that verification gets one fallback search and
+    one second verification. With ``added_support_only``, a gap can only be
+    closed by an added passage, never by an initial one judged insufficient.
     """
 
     initial = list(selected)
@@ -259,63 +287,106 @@ def recover_candidate_evidence(
         return CandidateRecoveryResult(initial, coverage, audit)
     selected_ids = {item.chunk_id for item in initial}
     pool = {item.chunk_id: item for item in candidates if item.chunk_id not in selected_ids}
+    searched: set[tuple[str, str | None]] = set()
+
+    def search(gap: CoverageRequirement, excluded: set[int]) -> list[SearchResult]:
+        searched.add(_identity(gap))
+        audit.fallback_used = True
+        return [item for item in fallback_search(gap) if item.chunk_id not in excluded]
+
     proposals: dict[int, SearchResult] = {}
     for gap in gaps:
         scoped = [item for item in pool.values() if gap.document_id is None or item.document_id == gap.document_id]
         if not scoped and fallback_search is not None:
-            scoped = [item for item in fallback_search(gap) if item.chunk_id not in selected_ids]
+            scoped = search(gap, selected_ids)
             pool.update((item.chunk_id, item) for item in scoped)
-        if not scoped:
-            continue
-        ranked = rerank_candidate_groups([(gap.search_query or gap.aspect, scoped)])
-        ordered = sorted(
-            [item for group in ranked.values() for item in group],
-            key=lambda item: item.score, reverse=True,
-        )
-        for item in ordered[:CANDIDATES_PER_GAP]:
-            proposals.setdefault(item.chunk_id, item)
+        _propose(proposals, gap, scoped, candidates_per_gap)
     audit.considered_chunk_ids = list(proposals)
-    if not proposals:
+
+    accepted: list[SearchResult] = []
+    supported: dict[tuple[str, str | None], tuple[CoverageRequirement, int]] = {}
+
+    def accept(checked_gaps: Sequence[CoverageRequirement], window: Sequence[SearchResult], verified: EvidenceCoverage) -> None:
+        """Keep verified links; only new passages consume the addition budget."""
+
+        for original, checked in zip(checked_gaps, verified.requirements, strict=True):
+            if not checked.reference:
+                continue
+            passage = window[int(checked.reference[1:]) - 1]
+            if passage.chunk_id in selected_ids and added_support_only:
+                continue
+            if passage.chunk_id not in selected_ids and all(item.chunk_id != passage.chunk_id for item in accepted):
+                added_characters = sum(len(item.text) for item in accepted)
+                if len(accepted) >= MAX_ADDITIONS or added_characters + len(passage.text) > MAX_ADDED_CHARACTERS:
+                    continue
+                accepted.append(passage)
+            supported[_identity(original)] = (checked, passage.chunk_id)
+
+    if proposals:
+        window = initial + list(proposals.values())
+        verified = verify_fixed_requirements(gaps, window)
+        if verified.sufficient is None:
+            audit.diagnostic = "invalid_or_changed_requirements"
+            return CandidateRecoveryResult(initial, coverage, audit)
+        accept(gaps, window, verified)
+
+    if search_unresolved_gaps and fallback_search is not None and len(accepted) < MAX_ADDITIONS:
+        excluded = selected_ids | set(proposals)
+        extra: dict[int, SearchResult] = {}
+        retried = []
+        for gap in gaps:
+            if _identity(gap) in supported or _identity(gap) in searched:
+                continue
+            found = search(gap, excluded)
+            if found:
+                retried.append(gap)
+                _propose(extra, gap, found, candidates_per_gap)
+        audit.considered_chunk_ids += list(extra)
+        if extra:
+            window = initial + list(extra.values())
+            verified = verify_fixed_requirements(retried, window)
+            if verified.sufficient is not None:
+                accept(retried, window, verified)
+
+    if not audit.considered_chunk_ids:
         audit.diagnostic = "no_additional_candidates"
         return CandidateRecoveryResult(initial, coverage, audit)
-    window = initial + list(proposals.values())
-    verified = verify_fixed_requirements(gaps, window)
-    if verified.sufficient is None:
-        audit.diagnostic = "invalid_or_changed_requirements"
-        return CandidateRecoveryResult(initial, coverage, audit)
-    accepted: list[SearchResult] = []
-    retained_ids = set(selected_ids)
-    added_characters = 0
-    for requirement in verified.requirements:
-        if not requirement.reference:
-            continue
-        passage = window[int(requirement.reference[1:]) - 1]
-        if passage.chunk_id in retained_ids:
-            continue
-        if len(accepted) >= MAX_ADDITIONS or added_characters + len(passage.text) > MAX_ADDED_CHARACTERS:
-            continue
-        accepted.append(passage)
-        retained_ids.add(passage.chunk_id)
-        added_characters += len(passage.text)
     final = initial + accepted
     # Candidate-window references are not final S-references: remap by chunk ID.
     final_references = {item.chunk_id: f"S{i}" for i, item in enumerate(final, 1)}
-    replacements = {}
-    for original, checked in zip(gaps, verified.requirements, strict=True):
-        if not checked.reference:
-            continue
-        chunk_id = window[int(checked.reference[1:]) - 1].chunk_id
-        if chunk_id in final_references:
-            replacements[(original.aspect, original.document_id)] = checked.model_copy(
-                update={"reference": final_references[chunk_id], "search_query": None},
-            )
-    requirements = [replacements.get((item.aspect, item.document_id), item) for item in coverage.requirements]
+    replacements = {
+        key: checked.model_copy(update={"reference": final_references[chunk_id], "search_query": None})
+        for key, (checked, chunk_id) in supported.items()
+        if chunk_id in final_references
+    }
+    requirements = [replacements.get(_identity(item), item) for item in coverage.requirements]
     updated = EvidenceCoverage(
         sufficient=all(item.reference is not None for item in requirements), requirements=requirements,
     )
     audit.added_chunk_ids = [item.chunk_id for item in accepted]
     audit.diagnostic = "verified_additions" if accepted else "no_supported_addition"
     return CandidateRecoveryResult(final, updated, audit)
+
+
+def _identity(requirement: CoverageRequirement) -> tuple[str, str | None]:
+    return requirement.aspect, requirement.document_id
+
+
+def _propose(
+    proposals: dict[int, SearchResult], gap: CoverageRequirement,
+    scoped: Sequence[SearchResult], limit: int,
+) -> None:
+    """Rank one gap's candidates against its own query and keep the best few."""
+
+    if not scoped:
+        return
+    ranked = rerank_candidate_groups([(gap.search_query or gap.aspect, scoped)])
+    ordered = sorted(
+        [item for group in ranked.values() for item in group],
+        key=lambda item: item.score, reverse=True,
+    )
+    for item in ordered[:limit]:
+        proposals.setdefault(item.chunk_id, item)
 
 
 def format_coverage_plan(coverage: EvidenceCoverage) -> str:

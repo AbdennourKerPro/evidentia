@@ -18,7 +18,7 @@ from app.evaluation import (
 from app.qdrant_gateway import ARXIV_COLLECTION_NAME, search_chunks
 
 
-DEFAULT_BENCHMARK = Path("/data/evaluation/rag_benchmark.jsonl")
+DEFAULT_BENCHMARK = Path("/data/evaluation/rag_english30.draft.jsonl")
 DEFAULT_OUTPUT = Path("/reports/retrieval-evaluation.json")
 
 

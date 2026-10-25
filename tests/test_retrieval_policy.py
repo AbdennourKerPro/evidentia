@@ -42,10 +42,8 @@ class RetrievalPolicyTests(unittest.TestCase):
 
     def test_original_candidate_survives_expansion_truncation(self):
         fused = [result(i, "Expansion hit") for i in range(1, 12)]
-        selected = preserve_primary_pool(fused, [[fused[-1]]], limit=3)
-        self.assertEqual(len(selected), 3)
-        self.assertIn(11, [hit.chunk_id for hit in selected])
-        self.assertEqual(len({hit.chunk_id for hit in selected}), 3)
+        selected = preserve_primary_pool(fused, [[fused[-1]], [fused[7], fused[1]]], limit=3)
+        self.assertEqual([hit.chunk_id for hit in selected], [1, 2, 3, 8, 11])
 
     def test_expansion_weights_share_one_budget(self):
         with patch("app.hybrid_retrieval.search_chunks", return_value=[]), patch(
@@ -57,6 +55,21 @@ class RetrievalPolicyTests(unittest.TestCase):
                 preserve_primary=True,
             )
         self.assertEqual(fusion.call_args.kwargs["weights"], [1.0, 1.0, 0.5, 0.5, 0.5, 0.5])
+
+    def test_kept_primary_hit_survives_weighted_expansions(self):
+        primary_lexical = [result(100 + i, "Original hit") for i in range(8)]
+        expansion = [result(i, "Expansion hit") for i in range(1, 40)]
+        rankings = iter([[], primary_lexical, expansion, expansion])
+        with patch("app.hybrid_retrieval.search_chunks", side_effect=lambda *a, **k: next(rankings)), patch(
+            "app.hybrid_retrieval.search_bm25", side_effect=lambda **k: next(rankings)
+        ):
+            candidates = retrieve_multifacet_candidates(
+                queries=["original", "facet"], query_vectors=[[0.1], [0.2]], document_id="paper",
+                fusion_limit=10, keep_primary_hits=True,
+            )
+        ids = [hit.chunk_id for hit in candidates.fused]
+        self.assertTrue(set(range(100, 108)) <= set(ids))
+        self.assertEqual(ids[:10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
 
 if __name__ == "__main__":

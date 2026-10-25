@@ -15,3 +15,6 @@ data/evaluation/*.backup.jsonl
 !.env.example
 __pycache__/
 *.py[cod]
+
+# Local IDE settings are personal, never versioned.
+.idea/

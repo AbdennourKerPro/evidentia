@@ -316,14 +316,14 @@ questions du benchmark ; ce n'est pas un jeu de test indépendant.
 
 ### Rapports conservés
 
-- `reports/retrieval-sam-00-baseline.json`
-- `reports/retrieval-sam-01-question-rerank.json`
-- `reports/retrieval-sam-02-original-query.json`
-- `reports/retrieval-sam-03-coverage-retry.json`
+- `reports/archive/m19-ablation-sam/retrieval-sam-00-baseline.json`
+- `reports/archive/m19-ablation-sam/retrieval-sam-01-question-rerank.json`
+- `reports/archive/m19-ablation-sam/retrieval-sam-02-original-query.json`
+- `reports/archive/m19-ablation-sam/retrieval-sam-03-coverage-retry.json`
 
 Chaque rapport contient les réponses complètes, preuves sélectionnées, traces,
 rangs cibles, usage LLM et configuration. Le rapport initial de 30 cas
-`reports/agentic-rag-evaluation-gpt6-luna.json` est conservé.
+`reports/archive/m18-gpt6-luna/agentic-rag-evaluation-gpt6-luna.json` est conservé.
 
 ## 7. Configuration et reproduction
 
@@ -410,9 +410,9 @@ Les mesures de cette trace viennent des rapports locaux, pas de ce guide.
 
 Après cette ablation, une évaluation complète a été explicitement demandée
 et exécutée avec le profil actif `question_rerank`, sans modification du code.
-Le rapport `reports/agentic-rag-v7-question-rerank-30-20260930.json` contient
+Le rapport `reports/archive/m19-ablation-sam/agentic-rag-v7-question-rerank-30-20260930.json` contient
 30/30 cas terminés. Son compte rendu détaillé se trouve dans
-`reports/agentic-rag-v7-question-rerank-30-20260930-summary.md`.
+`reports/archive/m19-ablation-sam/agentic-rag-v7-question-rerank-30-20260930-summary.md`.
 
 Résultat : 27/30 réussites (90 %), contre 28/30 auparavant. SAM est corrigé,
 mais deux régressions de sélection apparaissent sur `clip-data-scale-fr` et

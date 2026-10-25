@@ -17,11 +17,13 @@ from langgraph.types import Send
 from app.embeddings import embed_queries, embed_query
 from app.evidence_coverage import assess_evidence_coverage, missing_search_queries
 from app.candidate_recovery import (
+    CANDIDATES_PER_GAP, CANDIDATES_PER_GAP_V2,
     assess_question_coverage, recover_candidate_evidence, format_coverage_plan,
 )
 from app.fact_planning import plan_evidence_facts
 from app.hybrid_retrieval import (
     MultiFacetCandidates,
+    drop_reference_sections,
     rerank_candidate_groups,
     retrieve_multifacet_candidates,
     reciprocal_rank_fusion,
@@ -37,6 +39,8 @@ from app.query_expansion import (
     rerank_for_intents,
 )
 from app.rag_service import (
+    ABSTENTION_CORRECTION_NOTE,
+    SOURCE_FIDELITY_GUIDELINES,
     finalize_answer,
     generate_answer_draft,
     repair_corrected_answer_from_evidence,
@@ -49,7 +53,10 @@ from app.language_verification import validate_answer_with_language_check
 from app.retrieval_policy import (
     RetrievalProfile,
     get_retrieval_profile,
+    keeps_primary_hits,
     preserves_original_query,
+    recovers_candidates,
+    uses_recovery_v2,
     validate_retrieval_profile,
 )
 from app.schemas import (
@@ -367,13 +374,19 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
             primary_query=primary_query,
             preserve_original=preserves_original_query(state["retrieval_profile"]),
         )
-        if len(variants) > 1:
+        if uses_recovery_v2(state["retrieval_profile"]):
+            # Lexical matches need English text: add the translated question.
+            english_query = english_search_query(state["question"])
+            variants = list(dict.fromkeys([*variants, *([english_query] if english_query else [])]))
+        if len(variants) > 1 or uses_recovery_v2(state["retrieval_profile"]):
             candidates = retrieve_multifacet_candidates(
                 queries=variants,
                 query_vectors=embed_queries(variants),
                 document_id=document_id,
                 fusion_limit=max(30, state["limit"]),
                 preserve_primary=preserves_original_query(state["retrieval_profile"]),
+                keep_primary_hits=keeps_primary_hits(state["retrieval_profile"]),
+                exclude_references=uses_recovery_v2(state["retrieval_profile"]),
             )
             ranked_results = _rank_candidates(
                 question=state["question"],
@@ -412,15 +425,22 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
 
     english_query = english_search_query(state["question"])
     queries = [state["question"], *([english_query] if english_query else [])]
+    exclude_references = uses_recovery_v2(state["retrieval_profile"])
     rankings = [
         search_chunks(
-            vector, limit=state["limit"] if len(queries) == 1 else FALLBACK_SEARCH_LIMIT,
+            vector,
+            limit=state["limit"] if len(queries) == 1 and not exclude_references else FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME,
             document_ids=state.get("selected_document_ids"),
         )
         for vector in map(embed_query, queries)
     ]
-    results = rankings[0] if len(rankings) == 1 else reciprocal_rank_fusion(rankings, limit=state["limit"])
+    if exclude_references:
+        rankings = [drop_reference_sections(ranking) for ranking in rankings]
+    results = (
+        rankings[0][: state["limit"]] if len(rankings) == 1
+        else reciprocal_rank_fusion(rankings, limit=state["limit"])
+    )
     return {
         "plans": [
             {
@@ -531,6 +551,8 @@ def _retrieve_source(task: RetrievalTask) -> AgenticRagState:
         lexical_limit=task["candidate_limit"],
         fusion_limit=max(30, task["candidate_limit"]),
         preserve_primary=preserves_original_query(task["retrieval_profile"]),
+        keep_primary_hits=keeps_primary_hits(task["retrieval_profile"]),
+        exclude_references=uses_recovery_v2(task["retrieval_profile"]),
     )
     ranked_results = _rank_candidates(
         question=task["question"],
@@ -630,21 +652,23 @@ def _select_evidence(state: AgenticRagState) -> AgenticRagState:
 def _route_after_selection(state: AgenticRagState) -> Literal["check", "plan"]:
     """The additional LLM judge is opt-in, not a hidden cost on every request."""
 
-    return "check" if state["retrieval_profile"] in {
-        "coverage_retry", "coverage_diagnostic", "candidate_recovery", "coverage_answer_plan",
-    } else "plan"
+    profile = state["retrieval_profile"]
+    return "check" if profile in {"coverage_retry", "coverage_diagnostic"} or recovers_candidates(profile) else "plan"
 
 
 def _check_evidence_coverage(state: AgenticRagState) -> AgenticRagState:
     started = perf_counter()
-    checker = (
-        assess_question_coverage if state["retrieval_profile"] in {
-            "coverage_diagnostic", "candidate_recovery", "coverage_answer_plan",
-        } else assess_evidence_coverage
-    )
-    assessment = checker(
-        question=state["question"], results=state.get("selected_results", []),
-    )
+    profile = state["retrieval_profile"]
+    results = state.get("selected_results", [])
+    if uses_recovery_v2(profile):
+        assessment = assess_question_coverage(
+            question=state["question"], results=results,
+            document_ids=state.get("detected_document_ids", []),
+        )
+    elif profile == "coverage_diagnostic" or recovers_candidates(profile):
+        assessment = assess_question_coverage(question=state["question"], results=results)
+    else:
+        assessment = assess_evidence_coverage(question=state["question"], results=results)
     return {
         "coverage_checks": [assessment],
         "trace": [_trace(
@@ -675,7 +699,7 @@ def _route_after_coverage(state: AgenticRagState) -> Literal["retry", "recover",
     profile = state.get("retrieval_profile", "coverage_retry")
     if profile == "coverage_diagnostic":
         return "plan"
-    if profile in {"candidate_recovery", "coverage_answer_plan"}:
+    if recovers_candidates(profile):
         return "recover" if state["coverage_checks"][-1].sufficient is False else "plan"
     if (
         state["coverage_checks"][-1].sufficient is not True
@@ -690,19 +714,33 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
     """Add verified missing proof from the existing pool; never reselect top-k."""
 
     started = perf_counter()
+    v2 = uses_recovery_v2(state["retrieval_profile"])
 
     def fallback_search(gap: CoverageRequirement) -> list[SearchResult]:
-        """Local embedding only: search the gap's English query when no candidate exists."""
+        """Local models only: search the gap's English query.
 
+        v2 fuses dense and BM25 rankings when the gap names one article.
+        """
+
+        query = gap.search_query or gap.aspect
+        if v2 and gap.document_id:
+            return retrieve_multifacet_candidates(
+                queries=[query], query_vectors=[embed_query(query)], document_id=gap.document_id,
+                dense_limit=FALLBACK_SEARCH_LIMIT, lexical_limit=FALLBACK_SEARCH_LIMIT,
+                fusion_limit=2 * FALLBACK_SEARCH_LIMIT, exclude_references=True,
+            ).fused
         document_ids = [gap.document_id] if gap.document_id else state.get("selected_document_ids")
-        return search_chunks(
-            embed_query(gap.search_query or gap.aspect), limit=FALLBACK_SEARCH_LIMIT,
+        found = search_chunks(
+            embed_query(query), limit=FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME, document_ids=document_ids,
         )
+        return drop_reference_sections(found) if v2 else found
 
     recovered = recover_candidate_evidence(
         selected=state.get("selected_results", []), candidates=state.get("candidate_pool", []),
         coverage=state["coverage_checks"][-1], fallback_search=fallback_search,
+        candidates_per_gap=CANDIDATES_PER_GAP_V2 if v2 else CANDIDATES_PER_GAP,
+        search_unresolved_gaps=v2, added_support_only=v2,
     )
     return {
         "selected_results": recovered.results,
@@ -712,7 +750,8 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
             "recover_candidates",
             f"considered={len(recovered.audit.considered_chunk_ids)}; "
             f"added={len(recovered.audit.added_chunk_ids)}; preserved={len(state.get('selected_results', []))}; "
-            f"sufficient={recovered.coverage.sufficient}; diagnostic={recovered.audit.diagnostic}",
+            f"sufficient={recovered.coverage.sufficient}; diagnostic={recovered.audit.diagnostic}; "
+            f"fallback_used={recovered.audit.fallback_used}",
             started,
         )],
     }
@@ -826,6 +865,12 @@ def _generation_coverage_plan(state: AgenticRagState) -> str:
     return format_coverage_plan(state["coverage_checks"][-1])
 
 
+def _answer_guidelines(state: AgenticRagState) -> str:
+    """Prompt additions are profile-gated so earlier runs stay reproducible."""
+
+    return SOURCE_FIDELITY_GUIDELINES if uses_recovery_v2(state["retrieval_profile"]) else ""
+
+
 def _generate_answer(state: AgenticRagState) -> AgenticRagState:
     """Generate the first draft from the selected evidence only."""
 
@@ -837,6 +882,7 @@ def _generate_answer(state: AgenticRagState) -> AgenticRagState:
         planned_facts=state.get("fact_plan", []),
         retrieval_intents=detect_retrieval_intents(state["question"]),
         coverage_plan=_generation_coverage_plan(state),
+        answer_guidelines=_answer_guidelines(state),
     )
     return {
         "generated_answer": generated_answer,
@@ -897,6 +943,10 @@ def _correct_answer(state: AgenticRagState) -> AgenticRagState:
         planned_facts=state.get("fact_plan", []),
         retrieval_intents=detect_retrieval_intents(state["question"]),
         coverage_plan=_generation_coverage_plan(state),
+        answer_guidelines=_answer_guidelines(state),
+        correction_note=(
+            ABSTENTION_CORRECTION_NOTE if uses_recovery_v2(state["retrieval_profile"]) else ""
+        ),
     )
     repaired_answer, repair_kind = repair_corrected_answer_from_evidence(
         question=state["question"],

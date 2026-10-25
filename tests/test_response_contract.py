@@ -60,14 +60,15 @@ class QuestionLanguageTests(unittest.TestCase):
             with self.subTest(question=question):
                 self.assertEqual(detect_question_language(question), "en")
 
-    def test_matches_language_labels_of_the_benchmark(self) -> None:
-        benchmark = Path(__file__).parents[1] / "data/evaluation/rag_benchmark.jsonl"
-        for line in benchmark.read_text(encoding="utf-8").splitlines():
-            case = json.loads(line)
-            with self.subTest(case=case["id"]):
-                self.assertEqual(
-                    detect_question_language(case["question"]), case["language"]
-                )
+    def test_matches_language_labels_of_the_benchmarks(self) -> None:
+        evaluation = Path(__file__).parents[1] / "data/evaluation"
+        for name in ("rag_english30.draft.jsonl", "rag_heldout.draft.jsonl"):
+            for line in (evaluation / name).read_text(encoding="utf-8").splitlines():
+                case = json.loads(line)
+                with self.subTest(benchmark=name, case=case["id"]):
+                    self.assertEqual(
+                        detect_question_language(case["question"]), case["language"]
+                    )
 
     def test_detects_chinese_question(self) -> None:
         self.assertEqual(detect_question_language("这些模型如何使用图像？"), "zh")

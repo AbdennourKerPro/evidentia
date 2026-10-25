@@ -205,7 +205,7 @@ Résultat de la suite dans l'image reconstruite : **124 tests réussis**.
 
 ## 6. Évaluation réelle ciblée
 
-Rapport : `reports/language-v8-scienceqa-targeted-20260930.json`.
+Rapport : `reports/archive/m20-language-v8/language-v8-scienceqa-targeted-20260930.json`.
 
 Nous avons réutilisé `scripts.evaluate_retrieval_iteration` comme exécuteur de
 répétitions : il permet de garder explicitement `question_rerank`, trois essais
@@ -217,7 +217,7 @@ Commande exécutée depuis le dossier de l'application, sur le code monté en le
 seule dans l'image existante :
 
 ```powershell
-docker compose run --rm --no-deps --volume "C:/Users/abden/Documents/Codex/2026-07-30/je/work/evidentia:/app:ro" api python -m scripts.evaluate_retrieval_iteration --profile question_rerank --case-id llava-scienceqa-fr --repeats 3 --control-case-id sam-ambiguity-en --control-case-id sam-prompt-types-fr --output /reports/language-v8-scienceqa-targeted-20260930.json
+docker compose run --rm --no-deps --volume "C:/Users/abden/Documents/Codex/2026-07-30/je/work/evidentia:/app:ro" api python -m scripts.evaluate_retrieval_iteration --profile question_rerank --case-id llava-scienceqa-fr --repeats 3 --control-case-id sam-ambiguity-en --control-case-id sam-prompt-types-fr --output /reports/archive/m20-language-v8/language-v8-scienceqa-targeted-20260930.json
 ```
 
 | Cas | Essais | Réussites | Langue | Réécritures | Appels LLM par essai |
@@ -299,8 +299,8 @@ Il s'agit de notre implémentation applicative, pas d'une garantie fournie par l
 
 Après les essais ciblés, une campagne complète a été explicitement demandée et
 exécutée avec l'image v8 déployée, sans modification pendant la campagne. Rapport :
-`reports/agentic-rag-v8-language-30-20260930.json`. Analyse exhaustive, tableau des
-30 cas et limites : `reports/agentic-rag-v8-language-30-20260930-summary.md`.
+`reports/archive/m20-language-v8/agentic-rag-v8-language-30-20260930.json`. Analyse exhaustive, tableau des
+30 cas et limites : `reports/archive/m20-language-v8/agentic-rag-v8-language-30-20260930-summary.md`.
 
 Résultat : **28/30 (93,3 %)** contre 27/30 en v7. ScienceQA et la comparaison
 BLIP-2/LLaVA passent désormais ; la comparaison des prompts CLIP/SAM passe de

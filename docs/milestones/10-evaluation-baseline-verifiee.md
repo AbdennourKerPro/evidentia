@@ -24,7 +24,7 @@ La commande suivante n'appelle pas Qwen :
 ```powershell
 docker compose run --rm api python -m scripts.evaluate_retrieval `
   --limit 5 `
-  --output /reports/retrieval-evaluation-verified.json
+  --output /reports/archive/m10-baseline/retrieval-evaluation-verified.json
 ```
 
 Elle obtient 94,7 % de rappel documentaire, 76,0 % de rappel des preuves et un
@@ -37,7 +37,7 @@ La campagne complète utilise le même pipeline que `POST /ask` :
 ```powershell
 docker compose run --rm api python -u -m scripts.evaluate_rag `
   --limit 5 `
-  --output /reports/rag-evaluation-verified.json
+  --output /reports/archive/m10-baseline/rag-evaluation-verified.json
 ```
 
 Le modèle et l'embedding sont chargés une fois dans un conteneur temporaire,
@@ -98,5 +98,5 @@ campagne permettra de vérifier si le graphe améliore les comparaisons sans
 dégrader les questions simples, les abstentions ni la latence.
 
 Le rapport humain détaillé est enregistré dans
-`reports/rag-evaluation-verified-summary.md` et les données complètes restent
+`reports/archive/m10-baseline/rag-evaluation-verified-summary.md` et les données complètes restent
 dans les deux rapports JSON versionnés.

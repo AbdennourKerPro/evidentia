@@ -16,7 +16,7 @@ from app.evaluation import EvaluationCase, load_benchmark, phrase_group_is_prese
 
 
 BENCHMARK_PATH = Path(
-    os.getenv("BENCHMARK_PATH", "/data/evaluation/rag_benchmark.jsonl")
+    os.getenv("BENCHMARK_PATH", "/data/evaluation/rag_english30.draft.jsonl")
 )
 PROCESSED_ROOT = Path(os.getenv("PROCESSED_ROOT", "/data/processed"))
 _WRITE_LOCK = threading.Lock()

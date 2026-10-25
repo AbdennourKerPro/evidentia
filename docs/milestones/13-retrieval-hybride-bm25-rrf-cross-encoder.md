@@ -152,18 +152,18 @@ docker compose run --rm api python -m scripts.download_reranker_model
 ```powershell
 docker compose run --rm api python -u -m scripts.evaluate_hybrid_retrieval `
   --skip-cross-encoder `
-  --output /reports/hybrid-retrieval-comparisons-no-cross.json
+  --output /reports/archive/m12-13-hybrid/hybrid-retrieval-comparisons-no-cross.json
 ```
 
 Évaluer toutes les variantes :
 
 ```powershell
 docker compose run --rm api python -u -m scripts.evaluate_hybrid_retrieval `
-  --output /reports/hybrid-retrieval-comparisons.json
+  --output /reports/archive/m12-13-hybrid/hybrid-retrieval-comparisons.json
 ```
 
 Le rapport humain complet est
-`reports/hybrid-retrieval-comparisons-summary.md`.
+`reports/archive/m12-13-hybrid/hybrid-retrieval-comparisons-summary.md`.
 
 ## Résultats et décision
 

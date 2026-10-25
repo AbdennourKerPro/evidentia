@@ -154,9 +154,9 @@ En combinant cette campagne avec la régression des trois autres comparaisons :
 
 Rapports sources :
 
-- `reports/intent-multifacet-retrieval-two-failures.json` ;
-- `reports/agentic-rag-intent-multifacet-two-failures.json` ;
-- `reports/agentic-rag-intent-multifacet-regression-seven.json`.
+- `reports/archive/m15-multifacet/intent-multifacet-retrieval-two-failures.json` ;
+- `reports/archive/m15-multifacet/agentic-rag-intent-multifacet-two-failures.json` ;
+- `reports/archive/m15-multifacet/agentic-rag-intent-multifacet-regression-seven.json`.
 
 ## Audit des autres catégories
 

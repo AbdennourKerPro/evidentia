@@ -7,12 +7,14 @@ from typing import Literal, cast
 RetrievalProfile = Literal[
     "intent_baseline", "question_rerank", "original_query", "coverage_retry",
     "coverage_diagnostic", "candidate_recovery", "coverage_answer_plan",
+    "candidate_recovery_v2",
 ]
 RETRIEVAL_PROFILES = (
     "intent_baseline", "question_rerank", "original_query", "coverage_retry",
     "coverage_diagnostic", "candidate_recovery", "coverage_answer_plan",
+    "candidate_recovery_v2",
 )
-DEFAULT_RETRIEVAL_PROFILE: RetrievalProfile = "candidate_recovery"
+DEFAULT_RETRIEVAL_PROFILE: RetrievalProfile = "candidate_recovery_v2"
 
 
 def validate_retrieval_profile(profile: str) -> RetrievalProfile:
@@ -35,3 +37,21 @@ def preserves_original_query(profile: RetrievalProfile) -> bool:
     """The final profile includes the original-query change from step two."""
 
     return profile in {"original_query", "coverage_retry"}
+
+
+def keeps_primary_hits(profile: RetrievalProfile) -> bool:
+    """Recovery profiles keep every original-query hit past the RRF cut."""
+
+    return profile in {"candidate_recovery", "coverage_answer_plan", "candidate_recovery_v2"}
+
+
+def recovers_candidates(profile: RetrievalProfile) -> bool:
+    """Profiles that may add verified passages after the question-coverage check."""
+
+    return profile in {"candidate_recovery", "coverage_answer_plan", "candidate_recovery_v2"}
+
+
+def uses_recovery_v2(profile: RetrievalProfile) -> bool:
+    """Second-generation recovery fixes; earlier profiles stay exact ablations."""
+
+    return profile == "candidate_recovery_v2"
