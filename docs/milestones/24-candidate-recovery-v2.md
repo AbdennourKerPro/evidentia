@@ -87,14 +87,70 @@ seulement, sans BM25, alors que l'article est détecté. La recherche de secours
 elle aussi dense. Le texte du chunk est dominé par le pré-entraînement, ce qui le
 fait manquer. La réponse cite « ViT-L et ViT-G » sans `/14` ni EVA-CLIP.
 
-## 5. Décision et limites
+## 5. Itération v2b (25 octobre 2026)
 
-- Le profil par défaut reste `candidate_recovery` : la régression sur une
-  abstention bloque le passage de `candidate_recovery_v2` en défaut.
-- Pistes génériques : restreindre la consigne f aux réponses par ailleurs
-  appuyées (garder `INSUFFICIENT_EVIDENCE` si la question principale n'est pas
-  couverte) ; utiliser la recherche hybride dense+BM25 pour un article détecté,
-  même avec une seule variante, et pour la recherche de secours.
+**Règle d'évaluation.** À partir de cette date, l'évaluation porte uniquement sur
+des cas 100 % anglais : English30, plus les 20 cas `language="en"` du heldout.
+L'évaluateur accepte `--language en`. Le filtre est appliqué à la lecture, consigné
+dans le rapport (`language_filter`) et vérifié à la reprise ; les fichiers du
+benchmark ne changent pas.
+
+**Les échecs n'étaient pas propres au français.** Une sonde ponctuelle (questions
+traduites, hors benchmark) reproduisait les deux échecs en anglais : réponse
+partielle sur Midjourney 2 fois sur 2, encodeurs BLIP-2 incomplets 2 fois sur 2.
+
+**Correctifs v2b**, toujours limités à `candidate_recovery_v2` :
+
+- La consigne f ne couvre plus que les détails secondaires d'une réponse par
+  ailleurs appuyée. Quand la question porte principalement sur une entité ou un
+  sujet absent des passages, la sortie reste `INSUFFICIENT_EVIDENCE`. La consigne
+  de recopie exacte des identifiants est conservée.
+- La correction `premature_abstention` rappelle que l'abstention reste valide si
+  le sujet principal est absent.
+- Un article détecté passe toujours par la fusion dense+BM25, même avec une seule
+  variante de requête. La question traduite en anglais sert de variante
+  supplémentaire si besoin. La recherche de secours d'une lacune liée à un article
+  est elle aussi hybride.
+
+Sonde après correctifs (3 passes) : BLIP-2 retrouve le chunk `3.4 Model
+Pre-training` en S1 et cite « ViT-L/14 from CLIP and ViT-G/14 from EVA-CLIP »
+(3/3) ; Midjourney s'abstient (3/3).
+
+**Évaluation** : 3 passes v2b, `reasoning_effort=none`, top-k 5. Références :
+`candidate_recovery`, `keep-primary-hits` du 09/10 pour English30, et une passe
+du 25/10 pour heldout-en.
+
+| Benchmark | Référence | v2b run 1 / 2 / 3 | Moyenne v2b | Abstention | Couverture des faits | Latence | Appels LLM |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| English30 | 29/30 | 29 / 30 / 30 | 29,7/30 | 0,967 → 1,000 | 0,917 → 0,931 | 13,5 s → 19,3 s | 3,77 → 4,28 |
+| heldout-en | 20/20 | 20 / 20 / 20 | 20/20 | 1,000 → 1,000 | 0,917 → 0,927 | 16,6 s → 21,0 s | 3,95 → 4,33 |
+
+Rapports : `reports/agentic-rag-english30-recovery-v2b-20261025-run{1,2,3}.json`,
+`reports/agentic-rag-heldout-en-recovery-v2b-20261025-run{1,2,3}.json`,
+`reports/agentic-rag-heldout-en-candidate-recovery-20261025.json`.
+
+- `english20-blip2-peak-learning-rate` : échec de la référence, réussi 3/3.
+- **Régression** `english20-sam-vit-b-l-gpus` : réussi 2/3 (la référence passait
+  sur sa passe unique). Dans le run 1, retrieval et couverture sont corrects : S1
+  contient « To train ViT-B and ViT-L, … distributed across 128 GPUs », et le
+  vérificateur cite cette phrase pour les deux exigences. La réponse affirme
+  pourtant « The supplied passages do not state the number of GPUs used
+  specifically to train the ViT-B and ViT-L models. [S1] ». La formule vient
+  directement de la consigne f. S2, qui donne 256 GPUs pour le modèle ViT-H par
+  défaut, a probablement poussé le modèle à hésiter. Cause probable : la
+  consigne f donne au générateur une formule de repli qu'il emploie à tort sur un
+  détail pourtant présent. La référence n'ayant qu'une passe, sa propre stabilité
+  sur ce cas n'est pas mesurée.
+
+## 6. Décision et limites
+
+- Le profil par défaut reste `candidate_recovery`. La règle était un passage en
+  défaut seulement si v2b réussit 3/3 partout où la référence passait ;
+  `english20-sam-vit-b-l-gpus` ne réussit que 2/3.
+- Piste suivante : retirer la formule « les passages ne couvrent pas » de la
+  consigne f (garder la recopie exacte et la règle d'abstention), ou la
+  conditionner à l'absence réelle de la valeur dans la citation vérifiée. Puis
+  refaire 3 passes, et 3 passes de la référence pour mesurer sa variance.
 - Coût : la seconde vérification et la fenêtre plus large doublent environ la
   durée du nœud de récupération (médiane ≈ 11 s contre 3–5 s). Les cas sans
   récupération sont aussi plus lents qu'au 09/10, ce qui indique une variance de
