@@ -18,7 +18,7 @@ from app.rag_service import answer_question
 from scripts.rag_evaluation_common import aggregate_case_reports, score_answer
 
 
-DEFAULT_BENCHMARK = Path("/data/evaluation/rag_benchmark.jsonl")
+DEFAULT_BENCHMARK = Path("/data/evaluation/rag_english30.draft.jsonl")
 DEFAULT_OUTPUT = Path("/reports/rag-evaluation-gpt6-luna.json")
 
 

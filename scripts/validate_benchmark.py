@@ -10,7 +10,7 @@ from pathlib import Path
 from app.evaluation import load_benchmark, phrase_group_is_present
 
 
-DEFAULT_BENCHMARK = Path("/data/evaluation/rag_benchmark.jsonl")
+DEFAULT_BENCHMARK = Path("/data/evaluation/rag_english30.draft.jsonl")
 DEFAULT_PROCESSED_ROOT = Path("/data/processed")
 
 

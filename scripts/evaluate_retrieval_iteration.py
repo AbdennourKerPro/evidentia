@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--profile", required=True, choices=RETRIEVAL_PROFILES)
     parser.add_argument(
         "--benchmark", type=Path,
-        default=Path("/data/evaluation/rag_benchmark.jsonl"),
+        default=Path("/data/evaluation/rag_english30.draft.jsonl"),
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--case-id", action="append", required=True, dest="case_ids")
