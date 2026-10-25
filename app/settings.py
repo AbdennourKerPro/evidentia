@@ -81,17 +81,6 @@ def get_qdrant_url() -> str:
     return os.getenv("QDRANT_URL", "http://qdrant:6333")
 
 
-def get_llm_model_path() -> Path:
-    """Legacy downloader path only; the active LLM no longer reads these files."""
-
-    return Path(
-        os.getenv(
-            "LLM_MODEL_PATH",
-            "/models/huggingface/qwen2.5-7b-instruct-int4-ov",
-        )
-    )
-
-
 def get_reranker_model_path() -> Path:
     """Return the persistent local path of the multilingual cross-encoder."""
 
