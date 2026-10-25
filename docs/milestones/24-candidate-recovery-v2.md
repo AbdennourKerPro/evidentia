@@ -142,17 +142,63 @@ Rapports : `reports/agentic-rag-english30-recovery-v2b-20261025-run{1,2,3}.json`
   détail pourtant présent. La référence n'ayant qu'une passe, sa propre stabilité
   sur ce cas n'est pas mesurée.
 
-## 6. Décision et limites
+## 6. Itération v2c (25 octobre 2026) : comparaison à variance égale
 
-- Le profil par défaut reste `candidate_recovery`. La règle était un passage en
-  défaut seulement si v2b réussit 3/3 partout où la référence passait ;
-  `english20-sam-vit-b-l-gpus` ne réussit que 2/3.
-- Piste suivante : retirer la formule « les passages ne couvrent pas » de la
-  consigne f (garder la recopie exacte et la règle d'abstention), ou la
-  conditionner à l'absence réelle de la valeur dans la citation vérifiée. Puis
-  refaire 3 passes, et 3 passes de la référence pour mesurer sa variance.
-- Coût : la seconde vérification et la fenêtre plus large doublent environ la
-  durée du nœud de récupération (médiane ≈ 11 s contre 3–5 s). Les cas sans
-  récupération sont aussi plus lents qu'au 09/10, ce qui indique une variance de
-  latence de l'API.
-- Une passe par benchmark seulement, sur des benchmarks en brouillon.
+**Correctif.** La formule « les passages fournis ne couvrent pas » est retirée
+de la consigne f. Restent la recopie exacte des identifiants et valeurs avec
+leur provenance, la règle d'abstention quand le sujet principal est absent, et
+le rappel dans la correction `premature_abstention`.
+
+**Protocole.** 3 passes de `candidate_recovery_v2` (v2c) et 3 passes de la
+référence `candidate_recovery`, sur English30 et heldout-en, avec
+`reasoning_effort=none`. Les deux séries ont tourné en parallèle (une file
+chacune), donc dans les mêmes conditions de charge et d'API. Les latences
+absolues sont plus élevées qu'en exécution isolée.
+
+| Benchmark | Profil | Réussis par passe | Moyenne | Abstention | Couverture des faits | Latence | Appels LLM |
+|---|---|---|---:|---:|---:|---:|---:|
+| English30 | référence | 29 / 29 / 29 | 0,967 | 0,967 | 0,898 | 22,3 s | 3,76 |
+| English30 | v2c | 30 / 30 / 30 | **1,000** | 1,000 | 0,937 | 26,2 s | 4,20 |
+| heldout-en | référence | 20 / 20 / 20 | 1,000 | 1,000 | 0,927 | 24,4 s | 3,95 |
+| heldout-en | v2c | 20 / 20 / 20 | 1,000 | 1,000 | 0,892 | 28,3 s | 4,40 |
+
+Rapports : `reports/agentic-rag-{english30|heldout-en}-{recovery-v2c|candidate-recovery}-20261025-run{1,2,3}.json`.
+
+Cas par cas :
+
+- **Aucune régression.** Aucun cas réussi 3/3 par la référence n'échoue avec v2c.
+- `english20-sam-vit-b-l-gpus` : 3/3 pour la référence comme pour v2c. Les six
+  réponses donnent « 128 GPUs [S1] » ; le refus erroné vu en v2b a disparu
+  avec la formule.
+- `english20-blip2-peak-learning-rate` : référence 0/3 (abstention : la lacune
+  reste sans preuve), v2c 3/3 (« peak learning rate of 1e-4 »).
+
+Couverture des faits en baisse sur heldout-en (0,927 → 0,892) ; aucun cas ne
+passe sous le seuil de réussite :
+
+- `heldout-dinov2-sam-data-scale-en` : 0,5 sur les 6 passes v2c (English30 et
+  heldout), contre 1,0 sur les 3 passes English30 de la référence. Avec v2c, la
+  récupération ajoute pour SAM un passage `7.6 Ablations` au lieu du passage
+  d'introduction. La réponse cite alors « approximately 100M masks » au lieu de
+  « more than 1 billion masks ». La réserve plus large (8 candidats par lacune)
+  laisse le vérificateur choisir un passage qui couvre l'exigence formulée (une
+  échelle de données SAM) sans être le chiffre de référence. Effet systématique
+  à suivre.
+- `heldout-sam-ambiguous-prompt-en`, `heldout-llava-gpt4-data-en` : écarts de
+  formulation d'une passe à l'autre (0,67 contre 1,0), présents aussi dans la
+  référence.
+
+## 7. Décision et limites
+
+- **Le profil par défaut de `compose.yaml` passe à `candidate_recovery_v2`** :
+  aucune régression au sens défini (cas réussi 3/3 par la référence, raté au
+  moins une fois par v2c) et pass rate moyen supérieur ou égal (1,000 contre
+  0,967 sur English30, 1,000 contre 1,000 sur heldout-en).
+- `DEFAULT_RETRIEVAL_PROFILE` dans `app/retrieval_policy.py` reste
+  `candidate_recovery` hors Compose. Une variable `RAG_RETRIEVAL_PROFILE`
+  définie dans `.env` reste prioritaire sur la valeur par défaut de Compose.
+- Coût : environ +0,45 appel LLM par question et environ +4 s de latence moyenne
+  à charge égale.
+- Limites : benchmarks en brouillon, 3 passes seulement ; la baisse de
+  couverture sur l'échelle de données SAM montre qu'un vérificateur qui accepte
+  une preuve « suffisante » ne garantit pas le meilleur passage.
