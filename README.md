@@ -463,7 +463,7 @@ charge).
 | Heldout anglais | `candidate_recovery` | 20 / 20 / 20 | 1,000 | 1,000 | 0,927 | 24,4 s | 3,95 |
 | Heldout anglais | **`candidate_recovery_v2`** | 20 / 20 / 20 | 1,000 | 1,000 | 0,892 | 28,3 s | 4,40 |
 
-Rapports : `agentic-rag-{english30|heldout-en}-{candidate-recovery|recovery-v2c}-20261025-run{1,2,3}.json`.
+Rapports : `reports/current/m24/agentic-rag-{english30|heldout-en}-{candidate-recovery|recovery-v2c}-20261025-run{1,2,3}.json`.
 
 - Aucune régression : aucun cas réussi 3/3 par la référence n'est raté par v2.
 - `english20-blip2-peak-learning-rate` : référence 0/3, abstention à tort parce que
@@ -474,14 +474,13 @@ Rapports : `agentic-rag-{english30|heldout-en}-{candidate-recovery|recovery-v2c}
 
 | Date | Version | Benchmark | Résultat (anglais) | Rapport |
 |---|---|---|---|---|
-| 30/09/2026 | v9, `candidate_recovery`, effort `low` | ancien benchmark mixte, 22 cas anglais | 21/22 | `agentic-rag-v9-candidate-coverage-final-30-20260930.json` |
-| 07/10/2026 | v9, effort `none` | idem | 22/22 | `agentic-rag-v9-effort-none-20261007.json` |
-| 09/10/2026 | variantes exploratoires de `candidate_recovery` | English30 | `verified` 28/30, `primary-pool` 28/30, `widened` 29/30, `keep-primary-hits` 29/30 | `agentic-rag-english30-*-candidate-recovery-20261009.json` |
-| 24/10/2026 | v2, 1 passe | English30 | 30/30 | `agentic-rag-english30-recovery-v2-20261024.json` |
-| 25/10/2026 | v2b, 3 passes | English30 / heldout anglais | 29, 30, 30 / 20, 20, 20 | `agentic-rag-{english30|heldout-en}-recovery-v2b-20261025-run*.json` |
+| 30/09/2026 | v9, `candidate_recovery`, effort `low` | ancien benchmark mixte, 22 cas anglais | 21/22 | `archive/m21-coverage-v9/agentic-rag-v9-candidate-coverage-final-30-20260930.json` |
+| 07/10/2026 | v9, effort `none` | idem | 22/22 | `archive/m21-coverage-v9/agentic-rag-v9-effort-none-20261007.json` |
+| 09/10/2026 | variantes exploratoires de `candidate_recovery` | English30 | `verified` 28/30, `primary-pool` 28/30, `widened` 29/30, `keep-primary-hits` 29/30 | `archive/m24-recovery-v2/agentic-rag-english30-*-candidate-recovery-20261009.json` |
+| 24/10/2026 | v2, 1 passe | English30 | 30/30 | `archive/m24-recovery-v2/agentic-rag-english30-recovery-v2-20261024.json` |
+| 25/10/2026 | v2b, 3 passes | English30 / heldout anglais | 29, 30, 30 / 20, 20, 20 | `current/m24/agentic-rag-{english30|heldout-en}-recovery-v2b-20261025-run*.json` |
 | 25/10/2026 | v2 final, 3 passes | English30 / heldout anglais | 30, 30, 30 / 20, 20, 20 | voir 7.1 |
 
-Les rapports du 07/10 et du 09/10 sont présents localement mais non versionnés.
 `keep-primary-hits` (09/10) est le comportement actuel de la réserve de candidats
 pour les profils de récupération.
 
@@ -539,7 +538,9 @@ scripts/                 téléchargements, vérification API, évaluations
 tests/                   tests unitaires et d'intégration sans réseau (+ ui.test.mjs)
 data/sources/            catalogue des articles (versionné)
 data/evaluation/         benchmarks
-reports/                 rapports d'évaluation JSON
+reports/                 rapports d'évaluation (index : reports/README.md)
+  current/m24/           base de la décision actuelle
+  archive/<jalon>/       campagnes précédentes, par jalon
 docs/milestones/         journal détaillé de chaque étape (en français)
 compose.yaml, Dockerfile, .env.example, requirements.txt
 ```

@@ -48,7 +48,7 @@ LLM exécuterait librement des outils.
 
 ## 3. Des expériences isolées, y compris les échecs
 
-Les rapports suivants sont conservés dans `reports/`. Les premières variantes
+Les rapports suivants sont conservés dans `reports/archive/m21-coverage-v9/`. Les premières variantes
 ont été modifiées progressivement ; leurs empreintes de sources sont enregistrées
 dans les rapports. Les fichiers actuels représentent la dernière variante, pas
 toutes les anciennes versions de prompt.

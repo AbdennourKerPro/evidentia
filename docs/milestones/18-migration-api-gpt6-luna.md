@@ -216,7 +216,7 @@ evaluate_rag.py et evaluate_agentic_rag.py passent par le même gateway.
 Ils enregistrent configuration et usage par cas dans de nouveaux fichiers :
 
 - /reports/rag-evaluation-gpt6-luna.json ;
-- /reports/agentic-rag-evaluation-gpt6-luna.json.
+- /reports/archive/m18-gpt6-luna/agentic-rag-evaluation-gpt6-luna.json.
 
 Le pipeline agentique est identifié par
 `langgraph_fact_plan_intent_multifacet_response_contract_v6_openai_v1`.

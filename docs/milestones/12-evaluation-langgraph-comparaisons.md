@@ -76,8 +76,8 @@ les 25 questions répondables : elle sera beaucoup plus rapide et isolera le
 meilleur mécanisme avant une nouvelle campagne end-to-end.
 
 Le rapport JSON complet est
-`reports/agentic-rag-comparisons-verified.json`. Son résumé humain détaillé est
-`reports/agentic-rag-comparisons-verified-summary.md`.
+`reports/archive/m12-13-hybrid/agentic-rag-comparisons-verified.json`. Son résumé humain détaillé est
+`reports/archive/m12-13-hybrid/agentic-rag-comparisons-verified-summary.md`.
 
 Cette expérience a été poursuivie au milestone 13 avec BM25, RRF et un
 cross-encoder. Voir

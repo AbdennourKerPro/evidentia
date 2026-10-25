@@ -120,10 +120,10 @@ docker compose run --rm api python -m scripts.evaluate_agentic_rag `
   --case-id clip-zero-shot-classifier-en `
   --case-id blip2-bottleneck-fr `
   --case-id blip2-efficiency-en `
-  --output /reports/agentic-rag-v6-three-fixes-final.json
+  --output /reports/archive/m17-v6/agentic-rag-v6-three-fixes-final.json
 ```
 
-Résultat dans `reports/agentic-rag-v6-three-fixes-final.json` :
+Résultat dans `reports/archive/m17-v6/agentic-rag-v6-three-fixes-final.json` :
 
 - **3/3 réussites** ;
 - couverture factuelle moyenne : **1,00** ;
@@ -136,7 +136,7 @@ Puis, après revue, la campagne complète repart de zéro avec :
 
 ```powershell
 docker compose run --rm api python -m scripts.evaluate_agentic_rag `
-  --output /reports/agentic-rag-v6-final-30.json `
+  --output /reports/archive/m17-v6/agentic-rag-v6-final-30.json `
   --resume
 ```
 

@@ -107,8 +107,8 @@ Sur les cinq comparaisons :
 Le validateur prend environ 0,2 ms. Le coût vient des réponses plus longues,
 pas des contrôles Python.
 
-Le rapport détaillé est `reports/response-contract-v3-summary.md` et la preuve
-machine est `reports/agentic-rag-response-contract-v3-final.json`.
+Le rapport détaillé est `reports/archive/m14-contract/response-contract-v3-summary.md` et la preuve
+machine est `reports/archive/m14-contract/agentic-rag-response-contract-v3-final.json`.
 
 ## Limites
 

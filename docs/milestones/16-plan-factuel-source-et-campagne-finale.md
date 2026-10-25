@@ -145,7 +145,7 @@ Commande à exécuter plus tard depuis la racine du projet :
 
 ```powershell
 docker compose run --rm api python -m scripts.evaluate_agentic_rag `
-  --output /reports/agentic-rag-v5-final-30.json `
+  --output /reports/archive/m16-17-fact-plan/agentic-rag-v5-final-30.json `
   --resume
 ```
 
@@ -182,7 +182,7 @@ self-supervision et teacher/student pour DINOv2.
 
 Cette validation ciblée ne permet pas encore d'annoncer le score final sur les
 30 cas. Ce score devra provenir exclusivement de
-`reports/agentic-rag-v5-final-30.json` une fois la campagne exécutée.
+`reports/archive/m16-17-fact-plan/agentic-rag-v5-final-30.json` une fois la campagne exécutée.
 
 ## 8. Fichiers principaux
 

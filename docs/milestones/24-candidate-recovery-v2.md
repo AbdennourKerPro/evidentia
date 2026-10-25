@@ -47,8 +47,8 @@ Une passe par benchmark, `gpt-6-luna`, `reasoning_effort=none`, top-k 5.
 | english30 | 29/30 (`keep-primary-hits`, 09/10) | **30/30** | 0,967 → 1,000 | 0,917 → 0,931 | 13,5 s → 18,8 s |
 | heldout | 37/40 (`main-358445c`, 09/10) | **38/40** | 1,000 → 0,975 | 0,903 → 0,887 | 10,7 s → 20,3 s |
 
-Rapports : `reports/agentic-rag-english30-recovery-v2-20261024.json` et
-`reports/agentic-rag-heldout-draft-recovery-v2-20261024.json`.
+Rapports : `reports/archive/m24-recovery-v2/agentic-rag-english30-recovery-v2-20261024.json` et
+`reports/archive/m24-recovery-v2/agentic-rag-heldout-draft-recovery-v2-20261024.json`.
 
 Effets mesurés des mécanismes :
 
@@ -125,9 +125,9 @@ du 25/10 pour heldout-en.
 | English30 | 29/30 | 29 / 30 / 30 | 29,7/30 | 0,967 → 1,000 | 0,917 → 0,931 | 13,5 s → 19,3 s | 3,77 → 4,28 |
 | heldout-en | 20/20 | 20 / 20 / 20 | 20/20 | 1,000 → 1,000 | 0,917 → 0,927 | 16,6 s → 21,0 s | 3,95 → 4,33 |
 
-Rapports : `reports/agentic-rag-english30-recovery-v2b-20261025-run{1,2,3}.json`,
-`reports/agentic-rag-heldout-en-recovery-v2b-20261025-run{1,2,3}.json`,
-`reports/agentic-rag-heldout-en-candidate-recovery-20261025.json`.
+Rapports : `reports/current/m24/agentic-rag-english30-recovery-v2b-20261025-run{1,2,3}.json`,
+`reports/current/m24/agentic-rag-heldout-en-recovery-v2b-20261025-run{1,2,3}.json`,
+`reports/archive/m24-recovery-v2/agentic-rag-heldout-en-candidate-recovery-20261025.json`.
 
 - `english20-blip2-peak-learning-rate` : échec de la référence, réussi 3/3.
 - **Régression** `english20-sam-vit-b-l-gpus` : réussi 2/3 (la référence passait
@@ -162,7 +162,7 @@ absolues sont plus élevées qu'en exécution isolée.
 | heldout-en | référence | 20 / 20 / 20 | 1,000 | 1,000 | 0,927 | 24,4 s | 3,95 |
 | heldout-en | v2c | 20 / 20 / 20 | 1,000 | 1,000 | 0,892 | 28,3 s | 4,40 |
 
-Rapports : `reports/agentic-rag-{english30|heldout-en}-{recovery-v2c|candidate-recovery}-20261025-run{1,2,3}.json`.
+Rapports : `reports/current/m24/agentic-rag-{english30|heldout-en}-{recovery-v2c|candidate-recovery}-20261025-run{1,2,3}.json`.
 
 Cas par cas :
 
