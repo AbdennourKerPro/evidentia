@@ -295,7 +295,8 @@ class RecoveryV2Tests(unittest.TestCase):
 class RecoveryV2AnswerTests(unittest.TestCase):
     def test_guidelines_keep_abstention_for_an_absent_subject(self):
         self.assertIn("exactly as written", SOURCE_FIDELITY_GUIDELINES)
-        self.assertIn("never replaces abstention", SOURCE_FIDELITY_GUIDELINES)
+        self.assertIn("do not answer it", SOURCE_FIDELITY_GUIDELINES)
+        self.assertNotIn("do not cover", SOURCE_FIDELITY_GUIDELINES)
         self.assertIn("INSUFFICIENT_EVIDENCE", SOURCE_FIDELITY_GUIDELINES)
 
     def test_correction_note_is_only_added_to_corrections(self):

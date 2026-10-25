@@ -44,11 +44,9 @@ exact marker INSUFFICIENT_EVIDENCE and nothing else.
 SOURCE_FIDELITY_GUIDELINES = """Copy model names, dataset names, identifiers,
 and values exactly as written in the EVIDENCES, and state their provenance
 (for example "X from Y" when the evidence attributes X to Y).
-When the EVIDENCES answer the question but omit a secondary detail, never claim
-that an article does not say it; say instead that the supplied passages do not
-cover that detail. This never replaces abstention: if the question is mainly
-about an entity, system, or subject that the EVIDENCES do not describe, facts
-about another entity do not answer it, so reply only INSUFFICIENT_EVIDENCE."""
+If the question is mainly about an entity, system, or subject that the
+EVIDENCES do not describe, facts about another entity do not answer it, so
+reply only INSUFFICIENT_EVIDENCE."""
 
 ABSTENTION_CORRECTION_NOTE = """These errors do not forbid abstaining: if the
 main subject of the QUESTION is absent from EVIDENCES, return only
