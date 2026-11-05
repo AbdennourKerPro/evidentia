@@ -44,6 +44,14 @@ export function createConversationStore(storage, onError = () => {}) {
     active,
     list: () => [...conversations].sort((a, b) => b.updatedAt - a.updatedAt),
     create,
+    remove(id) {
+      const index = conversations.findIndex(chat => chat.id === id);
+      if (index < 0) return active();
+      conversations.splice(index, 1);
+      if (activeId === id) activeId = conversations[0]?.id ?? null;
+      if (!active()) create(); else save();
+      return active();
+    },
     activate(id) { if (conversations.some(chat => chat.id === id)) { activeId = id; save(); } return active(); },
     append(message) {
       if (!validMessage(message)) throw new Error("Invalid conversation message");

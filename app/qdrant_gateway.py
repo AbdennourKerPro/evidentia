@@ -205,6 +205,38 @@ def list_document_chunks(
     return sorted(results, key=lambda result: result.chunk_id)
 
 
+def delete_document_chunks(collection_name: str, document_id: str) -> None:
+    """Remove every chunk of one paper (used when no conversation needs it)."""
+
+    client = _new_client()
+    try:
+        if not client.collection_exists(collection_name):
+            return
+        client.delete(
+            collection_name=collection_name,
+            points_selector=models.FilterSelector(filter=_document_filter([document_id])),
+            wait=True,
+        )
+    finally:
+        client.close()
+
+
+def count_document_chunks(collection_name: str, document_id: str) -> int:
+    """Number of indexed chunks of one paper."""
+
+    client = _new_client()
+    try:
+        if not client.collection_exists(collection_name):
+            return 0
+        return client.count(
+            collection_name=collection_name,
+            count_filter=_document_filter([document_id]),
+            exact=True,
+        ).count
+    finally:
+        client.close()
+
+
 def _document_filter(document_ids: Sequence[str] | None) -> models.Filter | None:
     """Build one Qdrant keyword filter only when a scope was explicitly chosen."""
 
@@ -226,13 +258,17 @@ def _ensure_collection(
 ) -> None:
     """Create a cosine-similarity collection for this specific embedding model."""
 
-    if client.collection_exists(collection_name):
-        return
-
-    client.create_collection(
+    if not client.collection_exists(collection_name):
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config=models.VectorParams(
+                size=vector_size,
+                distance=models.Distance.COSINE,
+            ),
+        )
+    # Filtering by paper is the isolation mechanism; index it (idempotent).
+    client.create_payload_index(
         collection_name=collection_name,
-        vectors_config=models.VectorParams(
-            size=vector_size,
-            distance=models.Distance.COSINE,
-        ),
+        field_name="document_id",
+        field_schema=models.PayloadSchemaType.KEYWORD,
     )

@@ -48,6 +48,22 @@ If the question is mainly about an entity, system, or subject that the
 EVIDENCES do not describe, facts about another entity do not answer it, so
 reply only INSUFFICIENT_EVIDENCE."""
 
+# Agent mode only: a missing detail must not turn a well-covered subject into an abstention.
+PARTIAL_ANSWER_GUIDELINES = """Partial answers are allowed. This replaces the
+INSUFFICIENT_EVIDENCE rule above whenever the EVIDENCES address the subject of the
+question but lack one specific item it asks for (an equation, a value, a name, a
+detail). In that case do not return INSUFFICIENT_EVIDENCE: answer with what the
+EVIDENCES support, cited, and state plainly in one sentence which requested item
+the retrieved passages do not contain (say "the retrieved passages", never
+"EVIDENCES"). Never fill the gap with outside knowledge. Reply only
+INSUFFICIENT_EVIDENCE when the EVIDENCES say nothing relevant about the subject
+of the question."""
+
+PARTIAL_CORRECTION_NOTE = """These errors do not forbid abstaining: if the main
+subject of the QUESTION is absent from EVIDENCES, return only INSUFFICIENT_EVIDENCE.
+If the subject is covered but one requested item is missing, give the supported
+partial answer and state which item the EVIDENCES do not contain."""
+
 ABSTENTION_CORRECTION_NOTE = """These errors do not forbid abstaining: if the
 main subject of the QUESTION is absent from EVIDENCES, return only
 INSUFFICIENT_EVIDENCE instead of a partial answer about something else."""

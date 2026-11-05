@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import operator
 import re
-import unicodedata
 from functools import lru_cache
+from dataclasses import replace
 from math import ceil
 from time import perf_counter
 from typing import Annotated, Literal, TypedDict
@@ -21,6 +21,7 @@ from app.candidate_recovery import (
     assess_question_coverage, recover_candidate_evidence, format_coverage_plan,
 )
 from app.fact_planning import plan_evidence_facts
+from app.formula_fidelity import unsupported_equations
 from app.hybrid_retrieval import (
     MultiFacetCandidates,
     drop_reference_sections,
@@ -32,6 +33,7 @@ from app.hybrid_retrieval import (
 from app.llm_gateway import generate_chat
 from app.qdrant_gateway import ARXIV_COLLECTION_NAME, search_chunks
 from app.query_translation import english_search_query
+from app.text_normalization import normalize_text
 from app.query_expansion import (
     RetrievalIntent,
     build_query_variants,
@@ -40,12 +42,15 @@ from app.query_expansion import (
 )
 from app.rag_service import (
     ABSTENTION_CORRECTION_NOTE,
+    PARTIAL_ANSWER_GUIDELINES,
+    PARTIAL_CORRECTION_NOTE,
     SOURCE_FIDELITY_GUIDELINES,
     finalize_answer,
     generate_answer_draft,
     repair_corrected_answer_from_evidence,
 )
 from app.response_contract import (
+    LOCALIZED_ABSTENTIONS,
     AnswerValidation,
     detect_question_language,
 )
@@ -117,6 +122,13 @@ measurement that is relevant to the question. Do not write an answer and do
 not add markdown. This planning may use model knowledge only to improve search;
 the final answer will still be restricted to retrieved evidence."""
 
+class CatalogEntry(TypedDict):
+    """Title and name-detection patterns (on accent-free lowercase text) of a paper."""
+
+    title: str
+    aliases: tuple[str, ...]
+
+
 class RetrievalPlan(TypedDict, total=False):
     """Internal description of one source-restricted vector search."""
 
@@ -154,6 +166,13 @@ class AgenticRagState(TypedDict, total=False):
     candidate_recovery: CandidateRecoveryAudit
     limit: int
     selected_document_ids: list[str] | None
+    # Hard search scope and name catalogue. The classic pipeline uses the five
+    # historical papers; a conversation supplies its own papers.
+    corpus_document_ids: list[str]
+    catalog: dict[str, "CatalogEntry"]
+    focus_document_ids: list[str]
+    check_formulas: bool
+    partial_answers: bool
     strategy: Strategy
     detected_document_ids: list[str]
     plans: list[RetrievalPlan]
@@ -183,16 +202,36 @@ class RetrievalTask(TypedDict):
 def answer_agentic_question(
     *, question: str, limit: int, document_ids: list[str] | None = None,
     retrieval_profile: RetrievalProfile | None = None,
+    corpus_document_ids: list[str] | None = None,
+    catalog: dict[str, CatalogEntry] | None = None,
+    focus_document_ids: list[str] | None = None,
+    check_formulas: bool = False,
+    partial_answers: bool = False,
 ) -> AgenticAskResponse:
-    """Invoke the graph and expose both the grounded answer and its decisions."""
+    """Invoke the graph and expose both the grounded answer and its decisions.
 
+    Without ``corpus_document_ids``/``catalog`` the five historical papers are used,
+    exactly as before. Searches are always filtered: they never reach papers that
+    belong to another conversation.
+    """
+
+    catalog = dict(DOCUMENT_CATALOG) if catalog is None else catalog
+    corpus = list(catalog) if corpus_document_ids is None else list(corpus_document_ids)
+    profile = (
+        validate_retrieval_profile(retrieval_profile)
+        if retrieval_profile is not None else get_retrieval_profile()
+    )
+    if not corpus:
+        return _empty_corpus_response(question, profile)
     final_state = get_agentic_rag_graph().invoke(
         {
             "question": question,
-            "retrieval_profile": (
-                validate_retrieval_profile(retrieval_profile)
-                if retrieval_profile is not None else get_retrieval_profile()
-            ),
+            "corpus_document_ids": corpus,
+            "catalog": catalog,
+            "focus_document_ids": list(focus_document_ids or []),
+            "check_formulas": check_formulas,
+            "partial_answers": partial_answers,
+            "retrieval_profile": profile,
             "retrieval_audit": [],
             "coverage_checks": [],
             "supplementary_search_attempted": False,
@@ -251,6 +290,24 @@ def answer_agentic_question(
             fact_contract_valid=final_state["answer_validation"].fact_contract_valid,
             contract_issues=list(final_state["answer_validation"].issues),
             steps=[AgenticTraceStep(**step) for step in final_state.get("trace", [])],
+        ),
+    )
+
+
+def _empty_corpus_response(question: str, profile: RetrievalProfile) -> AgenticAskResponse:
+    """No paper is attached yet: abstain without any retrieval or LLM call."""
+
+    language = detect_question_language(question)
+    return AgenticAskResponse(
+        question=question,
+        answer=LOCALIZED_ABSTENTIONS[language],
+        citations=[], evidence=[], retrieved_chunks=0, abstained=True,
+        reason="No paper is attached to this conversation yet.",
+        execution=AgenticExecution(
+            strategy="global", retrieval_profile=profile, expected_language=language,
+            detected_document_ids=[], planned_queries=[], candidate_chunks=0,
+            selected_chunks=0, correction_attempted=False,
+            response_contract_valid=True, steps=[],
         ),
     )
 
@@ -321,12 +378,19 @@ def _analyze_question(state: AgenticRagState) -> AgenticRagState:
     started = perf_counter()
     normalized_question = _normalize(state["question"])
     selected_ids = state.get("selected_document_ids")
-    allowed_ids = set(selected_ids or DOCUMENT_CATALOG)
+    catalog = _catalog(state)
+    allowed_ids = set(selected_ids or catalog)
     detected_ids = [
         document_id
-        for document_id, metadata in DOCUMENT_CATALOG.items()
+        for document_id, metadata in catalog.items()
         if document_id in allowed_ids
         and any(re.search(alias, normalized_question) for alias in metadata["aliases"])
+    ]
+    # Papers the source-selection agent explicitly marked as targeted by the question.
+    detected_ids += [
+        document_id for document_id in state.get("focus_document_ids", [])
+        if document_id in allowed_ids and document_id in catalog
+        and document_id not in detected_ids
     ]
 
     comparison_requested = bool(COMPARISON_PATTERN.search(normalized_question))
@@ -364,10 +428,13 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
     if not focused_document_ids:
         selected_ids = state.get("selected_document_ids") or []
         focused_document_ids = selected_ids if len(selected_ids) == 1 else []
+        corpus_ids = state.get("corpus_document_ids") or []
+        if not selected_ids and len(corpus_ids) == 1:
+            focused_document_ids = list(corpus_ids)  # a one-paper conversation
 
     if len(focused_document_ids) == 1:
         document_id = focused_document_ids[0]
-        title = str(DOCUMENT_CATALOG.get(document_id, {}).get("title", document_id))
+        title = str(_catalog(state).get(document_id, {}).get("title", document_id))
         primary_query = f"{title}. {state['question']}"
         variants = build_query_variants(
             question=state["question"],
@@ -431,7 +498,7 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
             vector,
             limit=state["limit"] if len(queries) == 1 and not exclude_references else FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME,
-            document_ids=state.get("selected_document_ids"),
+            document_ids=_search_scope(state),
         )
         for vector in map(embed_query, queries)
     ]
@@ -470,6 +537,7 @@ def _plan_source_retrieval(state: AgenticRagState) -> AgenticRagState:
     planned_queries, used_fallback = _plan_retrieval_queries(
         question=state["question"],
         document_ids=state["detected_document_ids"],
+        catalog=_catalog(state),
     )
     retrieval_intents = list(detect_retrieval_intents(state["question"]))
     variant_groups = [
@@ -681,6 +749,22 @@ def _check_evidence_coverage(state: AgenticRagState) -> AgenticRagState:
     }
 
 
+def _search_scope(state: AgenticRagState) -> list[str]:
+    """Documents a search may touch: the user's selection, else the whole corpus."""
+
+    return list(
+        state.get("selected_document_ids")
+        or state.get("corpus_document_ids")
+        or DOCUMENT_CATALOG
+    )
+
+
+def _catalog(state: AgenticRagState) -> dict[str, CatalogEntry]:
+    """Nodes may be invoked with a partial state in tests: default to the classic corpus."""
+
+    return state.get("catalog") or DOCUMENT_CATALOG
+
+
 def _coverage_document_ids(state: AgenticRagState) -> list[str]:
     """Never expand beyond the requested/detected articles during a retry."""
 
@@ -690,7 +774,7 @@ def _coverage_document_ids(state: AgenticRagState) -> list[str]:
     retrieved = list(dict.fromkeys(
         result.document_id for result in state.get("selected_results", [])
     ))
-    return retrieved[:5] or (state.get("selected_document_ids") or [])[:5]
+    return retrieved[:5] or _search_scope(state)[:5]
 
 
 def _route_after_coverage(state: AgenticRagState) -> Literal["retry", "recover", "plan"]:
@@ -729,7 +813,7 @@ def _recover_candidates(state: AgenticRagState) -> AgenticRagState:
                 dense_limit=FALLBACK_SEARCH_LIMIT, lexical_limit=FALLBACK_SEARCH_LIMIT,
                 fusion_limit=2 * FALLBACK_SEARCH_LIMIT, exclude_references=True,
             ).fused
-        document_ids = [gap.document_id] if gap.document_id else state.get("selected_document_ids")
+        document_ids = [gap.document_id] if gap.document_id else _search_scope(state)
         found = search_chunks(
             embed_query(query), limit=FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME, document_ids=document_ids,
@@ -868,7 +952,10 @@ def _generation_coverage_plan(state: AgenticRagState) -> str:
 def _answer_guidelines(state: AgenticRagState) -> str:
     """Prompt additions are profile-gated so earlier runs stay reproducible."""
 
-    return SOURCE_FIDELITY_GUIDELINES if uses_recovery_v2(state["retrieval_profile"]) else ""
+    guidelines = SOURCE_FIDELITY_GUIDELINES if uses_recovery_v2(state["retrieval_profile"]) else ""
+    if state.get("partial_answers"):
+        guidelines = (guidelines + "\n" + PARTIAL_ANSWER_GUIDELINES).strip()
+    return guidelines
 
 
 def _generate_answer(state: AgenticRagState) -> AgenticRagState:
@@ -908,6 +995,10 @@ def _validate_answer(state: AgenticRagState) -> AgenticRagState:
         required_document_ids=_required_answer_documents(state),
         planned_facts=state.get("fact_plan", []),
     )
+    if state.get("check_formulas") and not validation.abstained:
+        unsupported = unsupported_equations(state["generated_answer"], state.get("selected_results", []))
+        if unsupported:
+            validation = replace(validation, issues=(*validation.issues, "unsupported_formula"))
     detail = (
         f"valid={validation.is_valid}; language={validation.expected_language}; "
         f"language_status={validation.language_status}; "
@@ -945,7 +1036,8 @@ def _correct_answer(state: AgenticRagState) -> AgenticRagState:
         coverage_plan=_generation_coverage_plan(state),
         answer_guidelines=_answer_guidelines(state),
         correction_note=(
-            ABSTENTION_CORRECTION_NOTE if uses_recovery_v2(state["retrieval_profile"]) else ""
+            PARTIAL_CORRECTION_NOTE if state.get("partial_answers")
+            else ABSTENTION_CORRECTION_NOTE if uses_recovery_v2(state["retrieval_profile"]) else ""
         ),
     )
     repaired_answer, repair_kind = repair_corrected_answer_from_evidence(
@@ -1002,38 +1094,36 @@ def _required_answer_documents(state: AgenticRagState) -> list[str]:
     return state.get("detected_document_ids", [])
 
 
-def _normalize(text: str) -> str:
-    """Lowercase text and remove accents so French routing stays predictable."""
-
-    decomposed = unicodedata.normalize("NFKD", text.lower())
-    without_accents = "".join(
-        character for character in decomposed if not unicodedata.combining(character)
-    )
-    return re.sub(r"\s+", " ", without_accents).strip()
+_normalize = normalize_text
 
 
-def _build_source_query(question: str, document_id: str) -> str:
+def _build_source_query(
+    question: str, document_id: str, catalog: dict[str, CatalogEntry] | None = None,
+) -> str:
     """Turn a cross-paper question into one focused retrieval query per paper."""
 
     topic = _normalize(question)
-    for metadata in DOCUMENT_CATALOG.values():
+    catalog = DOCUMENT_CATALOG if catalog is None else catalog
+    for metadata in catalog.values():
         for alias in metadata["aliases"]:
             topic = re.sub(alias, " ", topic)
     topic = COMPARISON_PATTERN.sub(" ", topic)
     topic = re.sub(r"\b(and|et|versus|vs)\b", " ", topic)
     topic = re.sub(r"\s+", " ", topic).strip(" .,:;?!-")
-    title = str(DOCUMENT_CATALOG[document_id]["title"])
+    title = str(catalog[document_id]["title"])
     facet_hint = _facet_hint(topic)
     return f"{title}. {facet_hint}. Evidence from this paper about: {topic}."
 
 
 def _plan_retrieval_queries(
-    *, question: str, document_ids: list[str]
+    *, question: str, document_ids: list[str],
+    catalog: dict[str, CatalogEntry] | None = None,
 ) -> tuple[list[str], bool]:
     """Ask the API LLM for source-specific searches and validate its JSON."""
 
+    catalog = DOCUMENT_CATALOG if catalog is None else catalog
     article_lines = [
-        f"- {document_id}: {DOCUMENT_CATALOG[document_id]['title']}"
+        f"- {document_id}: {catalog[document_id]['title']}"
         for document_id in document_ids
     ]
     user_message = "\n".join(
@@ -1053,7 +1143,7 @@ def _plan_retrieval_queries(
         return parsed_plan, False
 
     return [
-        _build_source_query(question, document_id) for document_id in document_ids
+        _build_source_query(question, document_id, catalog) for document_id in document_ids
     ], True
 
 

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
+from dataclasses import dataclass, field
 from time import perf_counter
+from typing import Any, Literal
 
 import openai
 from openai import OpenAI
@@ -162,6 +165,127 @@ def generate_chat(
             "The LLM returned no answer text.", code="empty_llm_response", http_status=502
         )
     return text
+
+
+@dataclass
+class ToolCallRecord:
+    """One tool call requested by the model and what we answered."""
+
+    name: str
+    arguments: dict[str, Any]
+    result: dict[str, Any]
+    duration_ms: int
+
+
+@dataclass
+class ToolLoopResult:
+    """Outcome of a bounded tool-calling loop."""
+
+    calls: list[ToolCallRecord] = field(default_factory=list)
+    final_call: ToolCallRecord | None = None
+    stopped_reason: Literal["finished", "budget", "no_tool_call"] = "no_tool_call"
+    model_calls: int = 0
+
+
+def run_tool_loop(
+    *,
+    system_message: str,
+    user_message: str,
+    tools: list[dict[str, Any]],
+    execute_tool: Callable[[str, dict[str, Any]], dict[str, Any]],
+    final_tool_name: str,
+    max_model_calls: int,
+    max_output_tokens: int = 2048,
+    on_event: Callable[[str, dict[str, Any]], None] | None = None,
+) -> ToolLoopResult:
+    """Let the model call ``tools`` until it calls ``final_tool_name`` or the budget ends.
+
+    Every model call goes through the same client, settings, error translation and
+    metrics as ``generate_chat``. Responses are stored client-side (``store=False``),
+    so the full item history is replayed on each turn. Tool failures must be returned
+    by ``execute_tool`` as ``{"ok": False, ...}`` so the model can adapt; only gateway
+    errors raise.
+    """
+
+    if max_model_calls < 1:
+        raise ValueError("max_model_calls must be at least 1.")
+    settings = _read_settings()
+    client = _get_client(settings)
+    token_limit = min(max_output_tokens, settings.max_output_tokens)
+    result = ToolLoopResult()
+    items: list[Any] = [{"role": "user", "content": user_message}]
+    emit = on_event or (lambda kind, payload: None)
+
+    for _ in range(max_model_calls):
+        started_at = perf_counter()
+        try:
+            response = client.responses.create(
+                model=settings.model_id,
+                instructions=system_message,
+                input=items,
+                tools=tools,
+                tool_choice="required",
+                parallel_tool_calls=False,
+                reasoning={"effort": settings.reasoning_effort},
+                max_output_tokens=token_limit,
+                store=False,
+            )
+        except openai.APIError as error:
+            safe_error = _translate_api_error(error)
+            _record_call(
+                settings=settings, started_at=started_at, token_limit=token_limit,
+                error_code=safe_error.code,
+            )
+            raise safe_error from None
+        _record_call(
+            settings=settings, started_at=started_at, token_limit=token_limit,
+            response=response,
+        )
+        result.model_calls += 1
+        if response.status != "completed":
+            raise LlmGatewayError(
+                "The tool-calling response was incomplete.",
+                code="incomplete_llm_response", http_status=502,
+            )
+        function_calls = [item for item in response.output if item.type == "function_call"]
+        if not function_calls:
+            result.stopped_reason = "no_tool_call"
+            return result
+        items.extend(response.output)
+        for call in function_calls:
+            tool_started = perf_counter()
+            try:
+                arguments = json.loads(call.arguments or "{}")
+                if not isinstance(arguments, dict):
+                    raise ValueError("arguments must be an object")
+            except ValueError:
+                arguments = {}
+                output: dict[str, Any] = {
+                    "ok": False, "error": "invalid_arguments",
+                    "message": "The arguments were not a valid JSON object.",
+                }
+            else:
+                emit("tool_call", {"name": call.name, "arguments": arguments})
+                output = execute_tool(call.name, arguments)
+            record = ToolCallRecord(
+                name=call.name, arguments=arguments, result=output,
+                duration_ms=round((perf_counter() - tool_started) * 1000),
+            )
+            result.calls.append(record)
+            emit("tool_result", {"name": call.name, "ok": bool(output.get("ok"))})
+            items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": call.call_id,
+                    "output": json.dumps(output, ensure_ascii=False),
+                }
+            )
+            if call.name == final_tool_name and output.get("ok"):
+                result.final_call = record
+                result.stopped_reason = "finished"
+                return result
+    result.stopped_reason = "budget"
+    return result
 
 
 def _translate_api_error(error: openai.APIError) -> LlmGatewayError:

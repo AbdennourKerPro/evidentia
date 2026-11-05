@@ -1,5 +1,7 @@
-import { renderMarkdown } from "./markdown.js?v=conversations-20260930";
-import { createConversationStore } from "./conversations.js?v=conversations-20260930";
+import { renderMarkdown, setMathRenderer } from "./markdown.js?v=math-20261105";
+import { createConversationStore } from "./conversations.js?v=agent-20261105";
+import { postEventStream, describeProgress } from "./sse.js?v=agent-20261105";
+import { loadAccess, describeQuota, canAsk } from "./access.js?v=access-20261106";
 
 const form = document.querySelector("#question-form");
 const questionInput = document.querySelector("#question");
@@ -25,6 +27,20 @@ const conversationList = document.querySelector("#conversation-list");
 const settingsDialog = document.querySelector("#settings-dialog");
 const settingsButton = document.querySelector("#settings-button");
 const diagnosticsToggle = document.querySelector("#show-diagnostics");
+const agentMode = document.querySelector("#agent-mode");
+const discoveryMode = document.querySelector("#discovery-mode");
+const discoveryRow = document.querySelector("#discovery-row");
+const modeHelp = document.querySelector("#mode-help");
+const corpusSection = document.querySelector("#corpus-section");
+const agentSection = document.querySelector("#agent-section");
+const agentPaperList = document.querySelector("#agent-paper-list");
+const agentPaperCount = document.querySelector("#agent-paper-count");
+const agentError = document.querySelector("#agent-error");
+const addPaperForm = document.querySelector("#add-paper-form");
+const addPaperInput = document.querySelector("#add-paper-input");
+const quotaBadge = document.querySelector("#quota-badge");
+const accessGate = document.querySelector("#access-gate");
+const testNotice = document.querySelector("#test-notice");
 
 const PREFERENCES_KEY = "evidentia.preferences.v1";
 let storage;
@@ -50,6 +66,8 @@ function persistPreferences() {
     storage?.setItem(PREFERENCES_KEY, JSON.stringify({
       documentIds: [...selectedDocumentIds],
       pipeline: pipelineMode.value,
+      mode: agentMode.value,
+      discovery: discoveryMode.value,
       diagnostics: diagnosticsToggle.checked,
       collapsed: shell.classList.contains("sidebar-collapsed"),
     }));
@@ -58,6 +76,34 @@ function persistPreferences() {
 
 pipelineMode.value = preferences.pipeline === "baseline" ? "baseline" : "agentic";
 diagnosticsToggle.checked = preferences.diagnostics === true;
+agentMode.value = preferences.mode === "agent" ? "agent" : "classic";
+discoveryMode.value = preferences.discovery === "off" ? "off" : "auto";
+let agentPapers = [];
+// Invitation access: in invite mode only the agent API exists, behind a session cookie.
+let access = await loadAccess(fetch, window.location.hash, () => window.history.replaceState(
+  null, "", window.location.pathname + window.location.search));
+const inviteMode = access.mode === "invite";
+document.body.dataset.access = access.mode;
+if (inviteMode) { agentMode.value = "agent"; discoveryMode.value = "auto"; }
+function renderAccess() {
+  const text = describeQuota(access.invite);
+  quotaBadge.hidden = !inviteMode || !text;
+  quotaBadge.textContent = text;
+  quotaBadge.classList.toggle("is-empty", Boolean(access.invite) && access.invite.remaining <= 0);
+  accessGate.hidden = !inviteMode || access.authenticated;
+  const gateError = document.querySelector("#access-gate-error");
+  gateError.hidden = !access.error; gateError.textContent = access.error || "";
+  if (inviteMode && access.authenticated) {
+    testNotice.hidden = false;
+    testNotice.textContent = `Version de test : vos questions sont envoyées à un service d’IA (OpenAI) et conservées ${access.retention_days || 7} jours sur le serveur. Ne saisissez pas de données personnelles.`;
+  }
+}
+async function refreshAccess() {
+  if (!inviteMode) return;
+  try { access = { ...(await (await fetch("/access/me")).json()), error: null }; } catch { /* keep last state */ }
+  renderAccess(); updateComposerAvailability();
+}
+const isAgentMode = () => agentMode.value === "agent";
 setSidebarCollapsed(typeof preferences.collapsed === "boolean"
   ? preferences.collapsed : window.matchMedia("(max-width: 760px)").matches);
 
@@ -75,7 +121,7 @@ questionInput.addEventListener("input", resizeComposer);
 document.querySelectorAll("[data-question]").forEach((button) => {
   button.addEventListener("click", () => {
     if (requestInProgress) return;
-    if (button.dataset.scope) {
+    if (button.dataset.scope && !isAgentMode()) {
       const available = new Set(documents.map(document => document.document_id));
       selectedDocumentIds = new Set(button.dataset.scope.split(",").filter(id => available.has(id)));
       renderSourceList();
@@ -113,6 +159,26 @@ settingsDialog.addEventListener("click", (event) => {
   }
 });
 pipelineMode.addEventListener("change", persistPreferences);
+discoveryMode.addEventListener("change", persistPreferences);
+agentMode.addEventListener("change", () => { applyMode(); persistPreferences(); });
+addPaperForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const arxivId = addPaperInput.value.trim();
+  if (!arxivId || requestInProgress) return;
+  addPaperForm.querySelector("button").disabled = true;
+  showAgentError("Ajout en cours : téléchargement, conversion et indexation (jusqu’à quelques minutes)…");
+  try {
+    const response = await fetch(`/conversations/${history.active().id}/papers`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ arxiv_id: arxivId }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || "Ajout impossible.");
+    addPaperInput.value = "";
+    showAgentError("");
+    await loadAgentPapers();
+  } catch (error) { showAgentError(error.message); }
+  finally { addPaperForm.querySelector("button").disabled = false; }
+});
 diagnosticsToggle.addEventListener("change", () => {
   applyDiagnosticsVisibility(); persistPreferences();
 });
@@ -129,6 +195,8 @@ function renderConversationList() {
   const chats = history.list();
   document.querySelector("#history-empty").hidden = chats.some(chat => chat.messages.length);
   conversationList.replaceChildren(...chats.filter(chat => chat.messages.length).map(chat => {
+    const row = document.createElement("div");
+    row.className = "conversation-row";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "conversation-item";
@@ -142,8 +210,26 @@ function renderConversationList() {
       renderConversation();
       if (window.matchMedia("(max-width: 760px)").matches) setSidebarCollapsed(true);
     });
-    return button;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "conversation-delete";
+    remove.textContent = "×";
+    remove.title = "Supprimer la conversation";
+    remove.setAttribute("aria-label", `Supprimer la conversation « ${chat.title} »`);
+    remove.disabled = requestInProgress;
+    remove.addEventListener("click", () => deleteConversation(chat));
+    row.append(button, remove);
+    return row;
   }));
+}
+
+async function deleteConversation(chat) {
+  if (requestInProgress) return;
+  if (!window.confirm(`Supprimer « ${chat.title} » ? Les articles ajoutés pour cette conversation seront aussi supprimés.`)) return;
+  // Best effort: the local history is the user's source of truth; the server also expires idle chats.
+  try { await fetch(`/conversations/${chat.id}`, { method: "DELETE" }); } catch { /* offline: TTL cleans up */ }
+  history.remove(chat.id);
+  renderConversation();
 }
 
 function renderConversation() {
@@ -160,6 +246,77 @@ function renderConversation() {
   }
   renderConversationList();
   if (messageList.lastElementChild) scrollToMessage(messageList.lastElementChild);
+  if (isAgentMode()) loadAgentPapers();
+}
+
+function applyMode() {
+  const agent = isAgentMode();
+  corpusSection.hidden = agent;
+  agentSection.hidden = !agent;
+  discoveryRow.hidden = !agent;
+  modeHelp.textContent = agent
+    ? "Un agent à appels d’outils cherche sur arXiv les articles utiles à chaque question, les télécharge et les indexe. Les articles restent attachés à la conversation."
+    : "Corpus fixe de cinq articles (CLIP, DINOv2, SAM, BLIP-2, LLaVA), sélectionnables ci-dessous.";
+  welcomeScope.textContent = agent
+    ? "Posez une question : les articles arXiv nécessaires seront trouvés et ajoutés pour vous."
+    : "Posez une question sur vos articles scientifiques.";
+  if (agent) { setStatus("Mode agent : les articles sont recherchés sur arXiv à la demande."); loadAgentPapers(); }
+  else updateScopeText();
+  updateComposerAvailability();
+}
+
+function showAgentError(message) {
+  agentError.hidden = !message;
+  agentError.textContent = message;
+}
+
+async function loadAgentPapers() {
+  if (!isAgentMode() || (inviteMode && !access.authenticated)) return;
+  try {
+    const response = await fetch(`/conversations/${history.active().id}/papers`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.detail || "Articles indisponibles.");
+    agentPapers = payload.papers;
+    renderAgentPapers();
+  } catch (error) { showAgentError(`Impossible de charger les articles : ${error.message}`); }
+}
+
+function renderAgentPapers() {
+  agentPaperCount.textContent = String(agentPapers.length);
+  agentPaperList.replaceChildren(...agentPapers.map((paper) => {
+    const row = document.createElement("div");
+    row.className = "source-option agent-paper";
+    const text = document.createElement("span");
+    const title = document.createElement("span");
+    title.className = "source-title";
+    const link = document.createElement("a");
+    link.href = `https://arxiv.org/abs/${paper.arxiv_id}`;
+    link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = paper.title;
+    title.append(link);
+    const meta = document.createElement("span");
+    meta.className = "source-meta";
+    meta.textContent = `arXiv ${paper.arxiv_id}${paper.version} · ${paper.chunk_count} passages`;
+    if (paper.added_by === "agent") {
+      const badge = document.createElement("span");
+      badge.className = "paper-badge"; badge.textContent = "ajouté par l’agent";
+      meta.append(badge);
+    }
+    text.append(title, meta);
+    const remove = document.createElement("button");
+    remove.type = "button"; remove.className = "paper-remove"; remove.textContent = "Retirer";
+    remove.disabled = requestInProgress;
+    remove.addEventListener("click", async () => {
+      remove.disabled = true;
+      try {
+        const response = await fetch(`/conversations/${history.active().id}/papers/${encodeURIComponent(paper.document_id)}`, { method: "DELETE" });
+        if (!response.ok) throw new Error((await response.json()).detail || "Retrait impossible.");
+        await loadAgentPapers();
+      } catch (error) { showAgentError(error.message); remove.disabled = false; }
+    });
+    row.append(text, remove);
+    return row;
+  }));
 }
 
 function applyDiagnosticsVisibility() {
@@ -198,6 +355,7 @@ function renderSourceList() {
 }
 
 function updateScopeText() {
+  if (isAgentMode()) return;
   const selected = getSelectedDocuments();
   const chunks = selected.reduce((total, document) => total + document.indexed_chunks, 0);
   sourceSummary.textContent = selected.length
@@ -210,19 +368,25 @@ function updateScopeText() {
 }
 
 function updateComposerAvailability() {
-  const canAsk = selectedDocumentIds.size > 0 && !requestInProgress;
-  submitButton.disabled = !canAsk;
-  questionInput.disabled = !canAsk;
+  const canAskNow = (isAgentMode() || selectedDocumentIds.size > 0) && !requestInProgress && canAsk(access);
+  agentMode.disabled = requestInProgress;
+  discoveryMode.disabled = requestInProgress;
+  addPaperInput.disabled = requestInProgress;
+  agentPaperList.querySelectorAll("button").forEach(button => { button.disabled = requestInProgress; });
+  submitButton.disabled = !canAskNow;
+  questionInput.disabled = !canAskNow;
   newChatButton.disabled = requestInProgress;
   pipelineMode.disabled = requestInProgress;
   selectAllButton.disabled = requestInProgress;
   clearSelectionButton.disabled = requestInProgress;
   sourceList.querySelectorAll("input").forEach(input => { input.disabled = requestInProgress; });
-  document.querySelectorAll("[data-question]").forEach(button => { button.disabled = !canAsk; });
+  document.querySelectorAll("[data-question]").forEach(button => { button.disabled = !canAskNow; });
 }
 
 async function sendQuestion(question) {
-  if (requestInProgress || question.length < 3 || selectedDocumentIds.size === 0) return;
+  if (requestInProgress || question.length < 3) return;
+  if (isAgentMode()) return sendAgentQuestion(question);
+  if (selectedDocumentIds.size === 0) return;
   const scope = describeScope(getSelectedDocuments());
   const documentIds = [...selectedDocumentIds];
   history.append({ role: "user", text: question, scope });
@@ -249,6 +413,57 @@ async function sendQuestion(question) {
     setStatus(error.message, true);
   } finally {
     setLoading(false);
+    if (!questionInput.disabled) questionInput.focus();
+  }
+}
+
+/** Agent mode: the server streams progress events, then the usual answer payload. */
+async function sendAgentQuestion(question) {
+  const scope = `Agent · ${agentPapers.length} article(s) dans la conversation`;
+  history.append({ role: "user", text: question, scope });
+  welcome.hidden = true;
+  appendUserMessage(question, scope);
+  const assistantMessage = appendLoadingMessage();
+  const progress = document.createElement("ul");
+  progress.className = "progress-lines";
+  assistantMessage.querySelector(".answer-content").append(progress);
+  const addProgress = (text) => {
+    const item = document.createElement("li");
+    item.textContent = text;
+    progress.append(item);
+    setStatus(text);
+    scrollToMessage(assistantMessage);
+  };
+  questionInput.value = ""; resizeComposer();
+  setLoading(true);
+  scrollToMessage(assistantMessage);
+  let payload = null, failure = null;
+  try {
+    await postEventStream(`/conversations/${history.active().id}/ask`, {
+      question, limit: 5, pipeline: pipelineMode.value, discovery: discoveryMode.value,
+    }, (event, data) => {
+      if (event === "answer") payload = data;
+      else if (event === "error") failure = data.detail || "La réponse n’a pas pu être produite.";
+      else if (event === "quota") { access = { ...access, invite: data }; renderAccess(); }
+      else {
+        const line = describeProgress(event, data);
+        if (line) addProgress(line);
+        if (event === "paper.added") loadAgentPapers();
+      }
+    });
+    if (failure) throw new Error(failure);
+    if (!payload) throw new Error("La connexion a été interrompue avant la réponse. Vos articles restent ajoutés : réessayez.");
+    history.append({ role: "assistant", payload });
+    renderAssistantMessage(assistantMessage, payload);
+    setStatus("Vérifiez les informations dans les sources.");
+  } catch (error) {
+    history.append({ role: "error", text: error.message });
+    renderError(assistantMessage, error.message);
+    setStatus(error.message, true);
+  } finally {
+    setLoading(false);
+    refreshAccess();
+    loadAgentPapers();
     if (!questionInput.disabled) questionInput.focus();
   }
 }
@@ -354,6 +569,7 @@ function renderAssistantMessage(message, payload) {
   const executionDisclosure = message.querySelector(".execution-disclosure");
 
   renderMarkdown(answer, payload.answer);
+  setupFeedback(message, payload);
   state.hidden = !payload.abstained && !diagnosticsToggle.checked;
   state.textContent = payload.abstained
     ? `Abstention — ${payload.reason}`
@@ -397,6 +613,29 @@ function renderAssistantMessage(message, payload) {
   evidenceList.append(
     ...payload.evidence.map((evidence) => makeEvidencePanel(evidence, citedReferences))
   );
+}
+
+function setupFeedback(message, payload) {
+  const box = message.querySelector(".feedback");
+  if (!box) return;
+  box.hidden = false;
+  const form = box.querySelector(".feedback-form");
+  const input = form.querySelector("input");
+  const done = box.querySelector(".feedback-done");
+  const send = async (rating, comment) => {
+    try {
+      const response = await fetch(`/conversations/${history.active().id}/feedback`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, comment: comment || null, question: payload.question, answer: payload.answer.slice(0, 6000) }),
+      });
+      if (!response.ok) throw new Error();
+      box.querySelectorAll("button, .feedback-label").forEach(node => { node.hidden = true; });
+      form.hidden = true; done.hidden = false;
+    } catch { done.hidden = false; done.textContent = "Le retour n’a pas pu être envoyé."; }
+  };
+  box.querySelector(".feedback-up").addEventListener("click", () => send("up"));
+  box.querySelector(".feedback-down").addEventListener("click", () => { form.hidden = false; input.focus(); });
+  form.addEventListener("submit", (event) => { event.preventDefault(); send("down", input.value.trim()); });
 }
 
 function renderExecutionTrace(disclosure, execution) {
@@ -541,7 +780,15 @@ function scrollToMessage(message) {
   message.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+try {
+  // MathML output needs no CSS or fonts. If the module cannot load, formulas stay as TeX text.
+  const katex = (await import("./vendor/katex.mjs?v=0.19.1")).default;
+  setMathRenderer((element, tex, display) => katex.render(tex, element, {
+    displayMode: display, output: "mathml", throwOnError: true, strict: "ignore", trust: false,
+  }));
+} catch { /* optional enhancement */ }
+applyMode();
+renderAccess();
 renderConversation();
 updateComposerAvailability();
-loadCorpus();
-loadLlmStatus();
+if (!inviteMode) { loadCorpus(); loadLlmStatus(); }

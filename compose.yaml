@@ -22,12 +22,30 @@ services:
       OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-60}
       OPENAI_MAX_RETRIES: ${OPENAI_MAX_RETRIES:-1}
       OPENAI_MAX_OUTPUT_TOKENS: ${OPENAI_MAX_OUTPUT_TOKENS:-4096}
+      STATE_DB_PATH: /data/state/evidentia.sqlite3
+      ARXIV_CACHE_DIR: /data/cache
+      CONVERSATION_TTL_DAYS: ${CONVERSATION_TTL_DAYS:-30}
+      MAX_PAPERS_PER_CONVERSATION: ${MAX_PAPERS_PER_CONVERSATION:-12}
+      # Sharing with testers: ACCESS_MODE=invite restricts the API to invited sessions.
+      ACCESS_MODE: ${ACCESS_MODE:-open}
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-}
+      MAX_CONCURRENT_QUESTIONS: ${MAX_CONCURRENT_QUESTIONS:-}
+      MAX_NEW_PAPERS_PER_DAY: ${MAX_NEW_PAPERS_PER_DAY:-0}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+      MAX_NEW_PAPERS_PER_TURN: ${MAX_NEW_PAPERS_PER_TURN:-2}
+      ARXIV_MAX_PDF_MB: ${ARXIV_MAX_PDF_MB:-40}
+      ARXIV_MAX_PAGES: ${ARXIV_MAX_PAGES:-60}
     ports:
       # The benchmark review API can write files, so keep it local to this PC.
       - "127.0.0.1:8000:8000"
     volumes:
       - model_cache:/models/huggingface
       - ./data/raw:/data/raw:ro
+      # Declared historical papers (registered as pinned in the paper registry).
+      - ./data/sources:/data/sources:ro
+      # Tool-calling agent mode: papers fetched on demand and the SQLite registry.
+      - ./data/cache:/data/cache
+      - ./data/state:/data/state
       - ./data/processed:/data/processed
       # The review UI updates the versioned benchmark; writes are atomic and backed up.
       - ./data/evaluation:/data/evaluation
@@ -35,6 +53,19 @@ services:
     # The current retrieval pipeline still uses the existing Qdrant collection.
     depends_on:
       - qdrant
+
+  cloudflared:
+    # Optional public access (docker compose --profile tunnel up -d). The tunnel is created
+    # in the Cloudflare dashboard; its public hostname must point to http://api:8000.
+    # It reaches the API on the compose network, so no extra port is opened on this PC.
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    restart: unless-stopped
+    depends_on:
+      - api
 
   qdrant:
     # Pin an explicit version so that the local environment is reproducible.

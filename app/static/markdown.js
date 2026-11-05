@@ -1,13 +1,48 @@
 /** Small, safe Markdown subset for model answers. No raw HTML is interpreted.
  * Supports paragraphs, headings, lists, quotes, code, tables and HTTP(S) links.
- * It deliberately does not claim full CommonMark or LaTeX support.
+ * Math ($..$, $$..$$, \(..\), \[..\]) is parsed first so that its backslashes,
+ * asterisks and underscores are never read as Markdown. It is typeset by an optional
+ * renderer (KaTeX, registered by app.js); without one the TeX source stays visible.
+ * It deliberately does not claim full CommonMark support.
  */
+let mathRenderer = null;
+/** renderer(element, tex, display) typesets into element and may throw on bad TeX. */
+export function setMathRenderer(renderer) { mathRenderer = renderer; }
+
+const MATH_DELIMITERS = [
+  { open: "$$", close: "$$", display: true },
+  { open: "\\[", close: "\\]", display: true },
+  { open: "\\(", close: "\\)", display: false },
+  { open: "$", close: "$", display: false },
+];
+
+/** Math starting exactly at text[i], or null. A lone $ must look like math, not money. */
+function mathAt(text, i) {
+  for (const { open, close, display } of MATH_DELIMITERS) {
+    if (!text.startsWith(open, i)) continue;
+    const from = i + open.length;
+    let end = text.indexOf(close, from);
+    if (open === "$") {
+      while (end > 0 && text[end - 1] === "\\") end = text.indexOf(close, end + 1);
+      if (end < 0 || /\s/.test(text[from] || " ") || /\s/.test(text[end - 1]) || /\d/.test(text[end + 1] || "")) continue;
+    }
+    if (end < 0 || end === from || end - from > 2000) continue;
+    // `\[S1\]` is an escaped citation, not a formula.
+    if (/^S\d+(\s*,\s*S\d+)*$/.test(text.slice(from, end).trim())) continue;
+    return { tex: text.slice(from, end).trim(), display, length: end + close.length - i };
+  }
+  return null;
+}
 export function inlineTokens(text, depth = 0) {
   if (depth > 12) return [{ type: "text", text }];
   const tokens = [];
   let plain = "";
   const flush = () => { if (plain) tokens.push({ type: "text", text: plain }); plain = ""; };
   for (let i = 0; i < text.length;) {
+    if (text[i] === "$" || (text[i] === "\\" && /[(\[]/.test(text[i + 1] || ""))) {
+      const math = mathAt(text, i);
+      if (math) { flush(); tokens.push({ type: "math", text: math.tex, display: math.display }); i += math.length; continue; }
+    }
     if (text[i] === "\\" && /[\\*_`\[\]]/.test(text[i + 1] || "")) {
       plain += text[i + 1]; i += 2; continue;
     }
@@ -113,10 +148,26 @@ export function markdownBlocks(text, depth = 0) {
   return blocks;
 }
 
+function mathNode(token) {
+  const node = document.createElement("span");
+  node.className = token.display ? "math math-display" : "math";
+  try {
+    if (!mathRenderer) throw new Error("no renderer");
+    mathRenderer(node, token.text, token.display);
+  } catch {
+    // Unsupported TeX or no renderer: show the source rather than hide or break it.
+    node.replaceChildren();
+    node.className += " math-source";
+    node.textContent = token.display ? `\\[${token.text}\\]` : `\\(${token.text}\\)`;
+  }
+  return node;
+}
+
 function appendInline(parent, text) {
   const append = (target, tokens) => {
     for (const token of tokens) {
       if (token.type === "text") { target.append(document.createTextNode(token.text)); continue; }
+      if (token.type === "math") { target.append(mathNode(token)); continue; }
       const node = document.createElement(token.type === "link" ? "a" : token.type);
       if (token.type === "link") { node.href = token.href; node.target = "_blank"; node.rel = "noopener noreferrer"; }
       if (token.children) append(node, token.children); else node.textContent = token.text;

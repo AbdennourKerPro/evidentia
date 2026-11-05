@@ -90,3 +90,50 @@ def get_reranker_model_path() -> Path:
             "/models/huggingface/mmarco-minilmv2-l12-h384-v1",
         )
     )
+
+
+def get_state_db_path() -> Path:
+    """SQLite registry of conversations and ingested papers (read at call time)."""
+
+    return Path(os.getenv("STATE_DB_PATH", "/data/state/evidentia.sqlite3"))
+
+
+def get_arxiv_cache_dir() -> Path:
+    """Shared cache for PDFs and Docling artifacts of dynamically added papers."""
+
+    return Path(os.getenv("ARXIV_CACHE_DIR", "/data/cache"))
+
+
+def get_dynamic_limits() -> "DynamicLimits":
+    """Bounds that keep the tool-calling agent cheap and predictable."""
+
+    return DynamicLimits(
+        conversation_ttl_days=_integer_setting(
+            "CONVERSATION_TTL_DAYS", default=30, minimum=1, maximum=3650
+        ),
+        max_papers_per_conversation=_integer_setting(
+            "MAX_PAPERS_PER_CONVERSATION", default=12, minimum=1, maximum=100
+        ),
+        max_new_papers_per_turn=_integer_setting(
+            "MAX_NEW_PAPERS_PER_TURN", default=2, minimum=0, maximum=10
+        ),
+        max_pdf_megabytes=_integer_setting(
+            "ARXIV_MAX_PDF_MB", default=40, minimum=1, maximum=200
+        ),
+        max_pages=_integer_setting("ARXIV_MAX_PAGES", default=60, minimum=1, maximum=500),
+        max_new_papers_per_day=_integer_setting(
+            "MAX_NEW_PAPERS_PER_DAY", default=0, minimum=0, maximum=10000
+        ),
+    )
+
+
+@dataclass(frozen=True)
+class DynamicLimits:
+    """Resource limits of the dynamic paper acquisition feature."""
+
+    conversation_ttl_days: int
+    max_papers_per_conversation: int
+    max_new_papers_per_turn: int
+    max_pdf_megabytes: int
+    max_pages: int
+    max_new_papers_per_day: int = 0  # 0 = unlimited

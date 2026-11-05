@@ -324,6 +324,13 @@ def describe_validation_issues(issues: Sequence[str]) -> list[str]:
                 "Add a supported claim and citation for each missing article: "
                 f"{document_ids}."
             )
+        elif issue == "unsupported_formula":
+            descriptions.append(
+                "A formula in the draft is not written in any EVIDENCE passage, so it "
+                "comes from memory. Remove every equation that EVIDENCES do not contain. "
+                "Explain the terms in words using only EVIDENCES, and state that the "
+                "equation itself is not available in the retrieved passages."
+            )
         elif issue.startswith("missing_planned_fact_anchors:"):
             fact_ids = issue.split(":", maxsplit=1)[1]
             descriptions.append(

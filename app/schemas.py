@@ -206,6 +206,29 @@ class CandidateRecoveryAudit(BaseModel):
     fallback_used: bool = False
 
 
+class DiscoveryToolCall(BaseModel):
+    """One tool call made by the source-selection agent."""
+
+    name: str
+    arguments: dict = Field(default_factory=dict)
+    ok: bool
+    error: str | None = None
+    duration_ms: int = 0
+
+
+class DiscoveryAudit(BaseModel):
+    """What the tool-calling agent did before the answer pipeline ran."""
+
+    enabled: bool = True
+    tool_calls: list[DiscoveryToolCall] = Field(default_factory=list)
+    added_document_ids: list[str] = Field(default_factory=list)
+    focus_document_ids: list[str] = Field(default_factory=list)
+    rationale: str | None = None
+    stopped_reason: str = "finished"
+    model_calls: int = 0
+    conversation_document_ids: list[str] = Field(default_factory=list)
+
+
 class AgenticExecution(BaseModel):
     """Readable execution metadata returned with an agentic RAG answer."""
 
@@ -231,6 +254,8 @@ class AgenticExecution(BaseModel):
     fact_contract_valid: bool = True
     contract_issues: list[str] = Field(default_factory=list)
     steps: list[AgenticTraceStep]
+    discovery: DiscoveryAudit | None = None
+    rewritten_question: str | None = None
 
 
 class AgenticAskResponse(AskResponse):

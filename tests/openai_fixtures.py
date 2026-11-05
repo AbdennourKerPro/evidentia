@@ -51,3 +51,20 @@ def mock_client(handler) -> OpenAI:
         max_retries=0,
         http_client=httpx.Client(transport=httpx.MockTransport(handler)),
     )
+
+
+def function_call_body(name: str, arguments: dict, call_id: str = "call_1") -> dict:
+    """A real Responses payload in which the model requests one function call."""
+
+    import json as _json
+
+    body = response_body()
+    body["output"] = [{
+        "id": f"fc_{call_id}",
+        "type": "function_call",
+        "call_id": call_id,
+        "name": name,
+        "arguments": _json.dumps(arguments),
+        "status": "completed",
+    }]
+    return body

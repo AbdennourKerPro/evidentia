@@ -3,6 +3,11 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+# Papers fetched on demand by the tool-calling agent and the SQLite registry.
+data/cache/*
+!data/cache/.gitkeep
+data/state/*
+!data/state/.gitkeep
 docs/*
 !docs/milestones/
 docs/milestones/*

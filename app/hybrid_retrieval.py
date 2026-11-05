@@ -127,7 +127,7 @@ def get_cross_encoder() -> CrossEncoder:
     )
 
 
-@lru_cache(maxsize=20)
+@lru_cache(maxsize=64)
 def get_bm25_index(document_id: str) -> BM25Index:
     """Build and cache a BM25 index over all Qdrant chunks of one article."""
 

@@ -40,6 +40,7 @@
         <section id="welcome" class="welcome">
           <h1>Que souhaitez-vous explorer ?</h1>
           <p id="welcome-scope" class="welcome-copy">Posez une question sur vos articles scientifiques.</p>
+          <p id="test-notice" class="test-notice" hidden></p>
           <div class="suggestions" aria-label="Questions suggérées">
             <button type="button" data-question="Compare the training paradigms of CLIP, DINOv2, and BLIP-2." data-scope="clip-2021,dinov2-2023,blip2-2023">Comparer les apprentissages</button>
             <button type="button" data-question="What makes Segment Anything promptable, and how does this support zero-shot transfer?" data-scope="sam-2023">Comprendre SAM</button>
@@ -54,10 +55,19 @@
           <textarea id="question" name="question" rows="1" minlength="3" maxlength="500" required placeholder="Posez votre question…"></textarea>
           <button id="submit-button" class="send-button" type="submit" aria-label="Envoyer"><span aria-hidden="true">↑</span></button>
         </form>
+        <p id="quota-badge" class="quota-badge" hidden></p>
         <p id="form-status" class="form-status" aria-live="polite">Vérifiez les informations dans les sources.</p>
       </footer>
     </div>
   </div>
+
+  <section id="access-gate" class="access-gate" role="alertdialog" aria-labelledby="access-gate-title" hidden>
+    <div class="access-gate-card">
+      <h2 id="access-gate-title">Accès sur invitation</h2>
+      <p>Cette version de test est réservée aux personnes invitées. Ouvrez le lien d’invitation que vous avez reçu.</p>
+      <p id="access-gate-error" class="notice" hidden></p>
+    </div>
+  </section>
 
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
     <div class="settings-header">
@@ -65,7 +75,20 @@
       <form method="dialog"><button class="icon-button" aria-label="Fermer les réglages" title="Fermer">×</button></form>
     </div>
     <div class="settings-body">
-      <section class="settings-section" aria-labelledby="corpus-title">
+      <section class="settings-section owner-only" aria-labelledby="mode-title">
+        <h3 id="mode-title">Mode de recherche</h3>
+        <label class="setting-row" for="agent-mode"><span>Sources</span><select id="agent-mode" name="agent-mode"><option value="classic">Classique — corpus fixe</option><option value="agent">Agent — articles arXiv à la demande</option></select></label>
+        <p id="mode-help" class="settings-copy"></p>
+        <label id="discovery-row" class="setting-row owner-only" for="discovery-mode" hidden><span>Ajout d’articles</span><select id="discovery-mode" name="discovery-mode"><option value="auto">Automatique par l’agent</option><option value="off">Désactivé (articles actuels seulement)</option></select></label>
+      </section>
+      <section id="agent-section" class="settings-section" aria-labelledby="agent-papers-title" hidden>
+        <div class="section-heading"><h3 id="agent-papers-title">Articles de cette conversation</h3><span id="agent-paper-count" class="count-badge">0</span></div>
+        <p class="settings-copy">L’agent cherche sur arXiv les articles utiles à vos questions et les ajoute ici. Ils sont supprimés avec la conversation.</p>
+        <div id="agent-paper-list" class="source-list"></div>
+        <form id="add-paper-form" class="add-paper-form"><input id="add-paper-input" type="text" inputmode="text" placeholder="Ajouter un identifiant arXiv, ex. 2312.00752" maxlength="20" aria-label="Identifiant arXiv" /><button type="submit">Ajouter</button></form>
+        <p id="agent-error" class="notice" hidden></p>
+      </section>
+      <section id="corpus-section" class="settings-section" aria-labelledby="corpus-title">
         <div class="section-heading"><h3 id="corpus-title">Articles consultés</h3><span id="document-count" class="count-badge">…</span></div>
         <p class="settings-copy">Choisissez les sources utilisées pour vos prochaines questions.</p>
         <div class="source-actions"><button id="select-all-button" type="button">Tout sélectionner</button><button id="clear-selection-button" type="button">Tout désélectionner</button></div>
@@ -75,10 +98,10 @@
       </section>
       <section class="settings-section" aria-labelledby="pipeline-title">
         <h3 id="pipeline-title">Expérimentation</h3>
-        <label class="setting-row" for="pipeline-mode"><span>Pipeline de réponse</span><select id="pipeline-mode" name="pipeline-mode"><option value="agentic" selected>LangGraph</option><option value="baseline">Baseline</option></select></label>
+        <label class="setting-row owner-only" for="pipeline-mode"><span>Pipeline de réponse</span><select id="pipeline-mode" name="pipeline-mode"><option value="agentic" selected>LangGraph</option><option value="baseline">Baseline</option></select></label>
         <label class="setting-row" for="show-diagnostics"><span>Afficher les détails techniques des réponses</span><input id="show-diagnostics" type="checkbox" /></label>
-        <p id="llm-status" class="settings-copy">Vérification du modèle…</p>
-        <a class="review-link" href="/review/">Ouvrir l’évaluation du RAG <span aria-hidden="true">↗</span></a>
+        <p id="llm-status" class="settings-copy owner-only">Vérification du modèle…</p>
+        <a class="review-link owner-only" href="/review/">Ouvrir l’évaluation du RAG <span aria-hidden="true">↗</span></a>
       </section>
       <section class="settings-section">
         <h3>Historique local</h3>
@@ -98,9 +121,16 @@
       <p class="answer-state" hidden></p>
       <p class="llm-usage answer-state" hidden></p>
       <details class="execution-disclosure" hidden><summary>Détails de l’exécution</summary><p class="execution-summary"></p><ol class="execution-steps"></ol></details>
+      <div class="feedback" hidden>
+        <span class="feedback-label">Cette réponse est-elle utile ?</span>
+        <button type="button" class="feedback-up" aria-label="Réponse utile" title="Utile">👍</button>
+        <button type="button" class="feedback-down" aria-label="Réponse pas utile" title="Pas utile">👎</button>
+        <form class="feedback-form" hidden><input type="text" maxlength="1000" placeholder="Un commentaire ? (optionnel)" aria-label="Commentaire" /><button type="submit">Envoyer</button></form>
+        <span class="feedback-done" hidden>Merci pour votre retour.</span>
+      </div>
       <div class="sources-block"><div class="citation-list" aria-label="Citations de la réponse"></div><details class="evidence-disclosure"><summary><span class="sources-summary"></span></summary><div class="evidence-list"></div></details></div>
     </div></article>
   </template>
-  <script type="module" src="/ui/app.js?v=conversations-20260930"></script>
+  <script type="module" src="/ui/app.js?v=access-20261106"></script>
 </body>
 </html>

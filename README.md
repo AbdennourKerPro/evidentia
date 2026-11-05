@@ -37,8 +37,9 @@ l'installer, comment il est évalué et où en sont les résultats (état au
   compris, sous forme de texte) est utilisé.
 - Il ne garde pas de mémoire conversationnelle : l'historique de l'interface est un
   historique d'affichage, chaque question est traitée indépendamment.
-- Il ne télécharge pas d'articles à la volée : le corpus est fixé et versionné
-  (identifiants arXiv épinglés).
+- En mode **classique** (par défaut pour l'évaluation), il ne télécharge rien : le
+  corpus est fixé et versionné (identifiants arXiv épinglés). Le mode **agent**
+  (section 4.7) peut ajouter des articles arXiv au fil de la conversation.
 - C'est un prototype local (API liée à `127.0.0.1`), pas un service multi-utilisateur.
 
 ---
@@ -285,6 +286,9 @@ Le modèle d'embedding est téléchargé au premier usage et mis en cache dans l
 | `POST /documents/{id}/convert`, `POST /documents/{id}/index` | Préparation du corpus. |
 | `GET /evaluation/cases`, `PATCH /evaluation/cases/{id}` | API de l'interface de revue. |
 | `GET /search`, `POST /demo/index` | Collection de démonstration des premiers jalons. |
+| `POST /conversations/{id}/ask` | **Mode agent** : flux SSE de progression puis réponse. Corps : `{"question", "limit", "pipeline": "agentic"\|"baseline", "discovery": "auto"\|"off"}`. |
+| `PUT /conversations/{id}`, `DELETE /conversations/{id}` | Crée / supprime une conversation et les articles qu'elle seule utilisait. |
+| `GET/POST /conversations/{id}/papers`, `DELETE /conversations/{id}/papers/{document_id}` | Articles d'une conversation : liste, ajout manuel par identifiant arXiv, retrait. |
 
 Exemple :
 
@@ -295,12 +299,40 @@ curl -s -X POST http://127.0.0.1:8000/agentic/ask \
 # → "ViT-B and ViT-L are trained across 128 GPUs [S1]." (profil candidate_recovery_v2)
 ```
 
+### 4.7 Mode agent (appels d'outils)
+
+L'engrenage de l'interface propose deux modes de sources :
+
+| Mode | Comportement |
+|---|---|
+| **Classique** | Corpus fixe de cinq articles, sélectionnables. Aucun changement par rapport aux jalons précédents ; `/ask` et `/agentic/ask` ne voient que ces articles. |
+| **Agent** | Avant de répondre, un agent à appels d'outils (API OpenAI Responses) choisit les articles utiles. Il dispose de `search_arxiv`, `lookup_arxiv_ids`, `add_paper_to_conversation` et `finish_source_selection` (≤ 6 appels LLM, ≤ 3 recherches, ≤ 2 téléchargements par question, ≤ 12 articles par conversation). Un article ajouté est téléchargé, converti par Docling (sans OCR), découpé, indexé dans Qdrant (`document_id = arxiv-<id><version>`) et rattaché à la conversation. Le pipeline LangGraph répond ensuite, **uniquement** sur les articles de la conversation. |
+
+Les questions de suivi sont reformulées en questions autonomes, et une équation de la
+réponse absente des passages fournis déclenche une correction (voir le jalon 25).
+
+Détails : le registre SQLite (`data/state/`) relie conversations et articles ; les PDF et
+artefacts convertis sont mis en cache dans `data/cache/` et partagés entre
+conversations ; un article qui n'appartient plus à aucune conversation est supprimé
+(Qdrant, PDF, artefacts), sauf les cinq articles historiques qui sont épinglés. Les
+conversations inactives depuis 30 jours expirent. Le pipeline de réponse, les profils de
+récupération et le benchmark ne changent pas. Voir
+[`docs/milestones/25-agent-tool-calling-arxiv.md`](docs/milestones/25-agent-tool-calling-arxiv.md).
+
+### 4.8 Partager l'application avec des testeurs
+
+`ACCESS_MODE=invite` restreint l'API aux sessions invitées : une invitation donne un quota de
+questions (20 réponses non abstenues par défaut), un compteur dans l'interface et des boutons de
+retour. Les routes sensibles (API classique, évaluation, conversion) n'existent plus. Le guide
+complet (tunnel, plafond de dépense OpenAI, commandes `python -m app.invites …`) est dans
+[`docs/partage-testeurs.md`](docs/partage-testeurs.md).
+
 ### 4.6 Tests
 
 ```bash
 docker compose run --rm --no-deps -v "${PWD}/data/evaluation:/app/data/evaluation:ro" \
-  api python -m unittest discover -s tests -q     # 196 tests, sans réseau ni coût
-node --test tests/ui.test.mjs                     # 18 tests de l'interface
+  api python -m unittest discover -s tests -q     # 300 tests, sans réseau ni coût
+node --test tests/ui.test.mjs                     # 29 tests de l’interface
 ```
 
 Les tests n'appellent jamais l'API OpenAI : les réponses sont simulées par un

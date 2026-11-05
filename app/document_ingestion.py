@@ -63,6 +63,65 @@ def convert_source(source_id: str) -> ConversionReport:
     )
 
 
+@lru_cache
+def _get_fast_converter() -> Any:
+    """Docling converter for dynamically added papers: no OCR, with formula decoding.
+
+    arXiv PDFs carry a text layer, so OCR is skipped. Equations are not text, though:
+    without enrichment they become ``<!-- formula-not-decoded -->`` and can never be
+    retrieved or cited. The CodeFormula model turns them into LaTeX. The five
+    historical papers keep the default converter so their artifacts stay reproducible.
+    """
+
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import DocumentConverter, PdfFormatOption
+
+    options = PdfPipelineOptions()
+    options.do_ocr = False
+    options.do_formula_enrichment = True
+    return DocumentConverter(
+        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options)}
+    )
+
+
+def convert_pdf_to_artifacts(
+    *, pdf_path: Path, output_dir: Path, source: dict[str, str], max_pages: int
+) -> DoclingDocument:
+    """Convert an arbitrary local PDF and persist the same artifacts as ``convert_source``."""
+
+    document = _get_fast_converter().convert(pdf_path, max_num_pages=max_pages).document
+    output_dir.mkdir(parents=True, exist_ok=True)
+    markdown_path = output_dir / "document.md"
+    docling_json_path = output_dir / "document.json"
+    document.save_as_markdown(markdown_path)
+    document.save_as_json(docling_json_path)
+    _write_conversion_manifest(
+        conversion_manifest_path=output_dir / "conversion-manifest.json",
+        source=source,
+        markdown_path=markdown_path,
+        docling_json_path=docling_json_path,
+        extra={"formula_enrichment": True},
+    )
+    return document
+
+
+def chunk_document(
+    *, document_id: str, title: str, document: DoclingDocument, output_dir: Path
+) -> list[EvidenceChunk]:
+    """Chunk an in-memory Docling document and write ``chunks.json`` next to it."""
+
+    chunks = _build_evidence_chunks(
+        source_id=document_id, source={"title": title}, document=document
+    )
+    (output_dir / "chunks.json").write_text(
+        json.dumps([chunk.model_dump() for chunk in chunks], indent=2, ensure_ascii=False)
+        + "\n",
+        encoding="utf-8",
+    )
+    return chunks
+
+
 def chunk_source(source_id: str) -> tuple[list[EvidenceChunk], Path]:
     """Turn one converted Docling document into page-aware RAG passages.
 
@@ -193,6 +252,7 @@ def _write_conversion_manifest(
     source: dict[str, str],
     markdown_path: Path,
     docling_json_path: Path,
+    extra: dict[str, Any] | None = None,
 ) -> None:
     """Record the exact source hash and artifacts produced by this conversion."""
 
@@ -203,6 +263,7 @@ def _write_conversion_manifest(
             "markdown": markdown_path.name,
             "docling_json": docling_json_path.name,
         },
+        **(extra or {}),
     }
     conversion_manifest_path.write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
