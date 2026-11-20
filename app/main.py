@@ -333,9 +333,33 @@ def ask_agentic_question(request: AskRequest) -> AgenticAskResponse:
             question=request.question,
             limit=request.limit,
             document_ids=request.document_ids,
+            partial_answers=request.partial_answers,
         )
     response.llm = summarize_llm_calls(calls)
     return response
+
+
+@app.post("/agentic/ask/stream")
+def ask_agentic_question_stream(request: AskRequest) -> StreamingResponse:
+    """Same pipeline as ``/agentic/ask``, streamed: ``step`` events, then the answer."""
+
+    def ask(on_step) -> AgenticAskResponse:
+        with capture_llm_calls() as calls:
+            response = answer_agentic_question(
+                question=request.question,
+                limit=request.limit,
+                document_ids=request.document_ids,
+                partial_answers=request.partial_answers,
+                on_step=on_step,
+            )
+        response.llm = summarize_llm_calls(calls)
+        return response
+
+    return StreamingResponse(
+        conversation_service.classic_ask_stream(ask=ask),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
 
 
 # ----------------------------------------------------------------- conversations
@@ -366,6 +390,7 @@ class FeedbackRequest(BaseModel):
     comment: str | None = Field(default=None, max_length=1000)
     question: str | None = Field(default=None, max_length=500)
     answer: str | None = Field(default=None, max_length=6000)
+    context: dict | None = None
 
 
 QUOTA_MESSAGES = {
@@ -542,6 +567,7 @@ def conversation_feedback(conversation_id: str, request: Request, body: Feedback
     access_control.add_feedback(
         invite_id=invite.id if invite else None, conversation_id=conversation_id,
         rating=body.rating, comment=body.comment, question=body.question, answer=body.answer,
+        context=body.context,
     )
     return {"status": "recorded"}
 

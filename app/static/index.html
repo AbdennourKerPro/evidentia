@@ -6,7 +6,7 @@
   <title>Articles scientifiques — Conversations</title>
   <meta name="description" content="Discutez avec les articles scientifiques et vérifiez leurs sources." />
   <link rel="icon" type="image/svg+xml" href="/ui/logo.svg?v=pages-20261001" />
-  <link rel="stylesheet" href="/ui/styles.css?v=logo-20261001" />
+  <link rel="stylesheet" href="/ui/styles.css?v=diag-20261106" />
 </head>
 <body>
   <div id="app-shell" class="app-shell">
@@ -42,9 +42,12 @@
           <p id="welcome-scope" class="welcome-copy">Posez une question sur vos articles scientifiques.</p>
           <p id="test-notice" class="test-notice" hidden></p>
           <div class="suggestions" aria-label="Questions suggérées">
-            <button type="button" data-question="Compare the training paradigms of CLIP, DINOv2, and BLIP-2." data-scope="clip-2021,dinov2-2023,blip2-2023">Comparer les apprentissages</button>
-            <button type="button" data-question="What makes Segment Anything promptable, and how does this support zero-shot transfer?" data-scope="sam-2023">Comprendre SAM</button>
-            <button type="button" data-question="How does LLaVA use instruction data to connect a vision encoder and a language model?" data-scope="llava-2023">Explorer LLaVA</button>
+            <button type="button" data-mode="classic" data-question="Compare the training paradigms of CLIP, DINOv2, and BLIP-2." data-scope="clip-2021,dinov2-2023,blip2-2023">Comparer les apprentissages</button>
+            <button type="button" data-mode="classic" data-question="What makes Segment Anything promptable, and how does this support zero-shot transfer?" data-scope="sam-2023">Comprendre SAM</button>
+            <button type="button" data-mode="classic" data-question="How does LLaVA use instruction data to connect a vision encoder and a language model?" data-scope="llava-2023">Explorer LLaVA</button>
+            <button type="button" data-mode="agent" data-question="Trouve l’article original de Mamba et explique son mécanisme de sélection." hidden>Découvrir Mamba</button>
+            <button type="button" data-mode="agent" data-question="Compare les approches de Stable Diffusion et de DALL·E 2 pour la génération d’images à partir de texte." hidden>Comparer deux approches</button>
+            <button type="button" data-mode="agent" data-question="Quels articles récents présentent des modèles de vision-langage ouverts, et que proposent-ils ?" hidden>Explorer un sujet</button>
           </div>
         </section>
         <div id="message-list" class="message-list"></div>
@@ -131,6 +134,6 @@
       <div class="sources-block"><div class="citation-list" aria-label="Citations de la réponse"></div><details class="evidence-disclosure"><summary><span class="sources-summary"></span></summary><div class="evidence-list"></div></details></div>
     </div></article>
   </template>
-  <script type="module" src="/ui/app.js?v=access-20261106"></script>
+  <script type="module" src="/ui/app.js?v=diag-20261106"></script>
 </body>
 </html>

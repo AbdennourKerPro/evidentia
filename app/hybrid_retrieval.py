@@ -426,6 +426,32 @@ def round_robin_select(
     return selected
 
 
+def ensure_paper_representation(
+    ranked: Sequence[SearchResult], selected: Sequence[SearchResult], *, window: int,
+) -> list[SearchResult]:
+    """Give every paper whose passages rank near the top at least one selected passage.
+
+    ``ranked`` is the full ranking (best first), ``selected`` its top ``limit``. A paper absent
+    from ``selected`` but present in ``ranked[:window]`` contributes its best passage, replacing
+    the lowest-ranked selected passage of a paper that holds two or more. The size never changes
+    and a paper outside the window (not relevant enough) is never forced in.
+    """
+
+    result = list(selected)
+    present = {item.document_id for item in result}
+    for candidate in ranked[:window]:
+        if candidate.document_id in present:
+            continue
+        counts = Counter(item.document_id for item in result)
+        victim = next((i for i in range(len(result) - 1, -1, -1) if counts[result[i].document_id] >= 2), None)
+        if victim is None:
+            break
+        del result[victim]
+        result.append(candidate)
+        present.add(candidate.document_id)
+    return result
+
+
 def _format_cross_encoder_document(result: SearchResult) -> str:
     """Expose section and title metadata to the pairwise relevance model."""
 

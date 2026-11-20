@@ -67,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "feedback":
         rows = access_control.list_feedback()
         if args.csv:
-            writer = csv.DictWriter(sys.stdout, fieldnames=["created_at", "label", "rating", "comment", "question", "answer", "conversation_id"])
+            writer = csv.DictWriter(sys.stdout, fieldnames=["created_at", "label", "rating", "comment", "question", "answer", "conversation_id", "context"])
             writer.writeheader()
             writer.writerows(rows)
         else:

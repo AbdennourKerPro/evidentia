@@ -59,6 +59,18 @@ the retrieved passages do not contain (say "the retrieved passages", never
 INSUFFICIENT_EVIDENCE when the EVIDENCES say nothing relevant about the subject
 of the question."""
 
+# Conversations with several papers (agent mode only): attribution and comparison format.
+MULTI_PAPER_GUIDELINES = """Several papers are attached. Each EVIDENCE belongs to the paper named
+in its Title. Attribute every claim to the paper whose passage states it (for example
+"In <short paper title>, ..."). A paper that merely mentions another paper's method is not
+evidence about that other paper: if the question is about a method and no passage comes from
+the paper that introduces it, say so in one sentence, and present what the other papers say
+about it only as that paper's own description. When the question compares several papers or
+methods and the EVIDENCES cover at least two of them, present the comparison as a Markdown
+table with one row per paper and a short column per compared aspect, citing [Sn] inside the
+cells and writing "not covered by the retrieved passages" (in the answer language) for any cell
+the EVIDENCES do not support. End with one sentence of conclusion after the table."""
+
 PARTIAL_CORRECTION_NOTE = """These errors do not forbid abstaining: if the main
 subject of the QUESTION is absent from EVIDENCES, return only INSUFFICIENT_EVIDENCE.
 If the subject is covered but one requested item is missing, give the supported

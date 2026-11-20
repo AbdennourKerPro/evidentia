@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import threading
 import unittest
@@ -90,6 +91,17 @@ class InviteTests(RegistryTestCase):
         access.add_feedback(invite_id=invite.id, conversation_id=CONV, rating="down", comment="faux", question="q?", answer="a")
         rows = access.list_feedback()
         self.assertEqual([(r["label"], r["rating"], r["comment"]) for r in rows], [("Alice", "down", "faux")])
+
+    def test_feedback_keeps_the_diagnosis_unless_it_is_too_large(self):
+        invite, _ = access.create_invite("Alice")
+        access.add_feedback(invite_id=invite.id, conversation_id=CONV, rating="down", comment=None, question="q",
+                            answer="a", context={"strategy": "global", "sources": ["arxiv-1"]})
+        access.add_feedback(invite_id=invite.id, conversation_id=CONV, rating="down", comment=None, question="q",
+                            answer="a", context={"blob": "x" * (access.MAX_FEEDBACK_CONTEXT_CHARS + 1)})
+        access.add_feedback(invite_id=invite.id, conversation_id=CONV, rating="up", comment=None, question="q", answer="a")
+        rows = access.list_feedback()
+        self.assertEqual(json.loads(rows[0]["context"]), {"strategy": "global", "sources": ["arxiv-1"]})
+        self.assertEqual([rows[1]["context"], rows[2]["context"]], [None, None])
 
 
 class OwnershipTests(RegistryTestCase):

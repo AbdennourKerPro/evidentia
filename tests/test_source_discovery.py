@@ -38,7 +38,7 @@ class SourceDiscoveryTests(RegistryTestCase):
         p.start()
         self.addCleanup(p.stop)
 
-    def fake_ingest(self, arxiv_id, version=None, *, short_name=None, on_progress=None):
+    def fake_ingest(self, arxiv_id, version=None, *, short_name=None, extra_names=(), on_progress=None):
         if on_progress:
             on_progress("downloading", {})
         return paper_registry.upsert_paper(
@@ -83,6 +83,60 @@ class SourceDiscoveryTests(RegistryTestCase):
                          {"search_arxiv", "lookup_arxiv_ids", "add_paper_to_conversation", "finish_source_selection"})
         self.assertTrue(all(t["strict"] and t["parameters"]["additionalProperties"] is False
                             for t in self.requests[0]["tools"]))
+
+    def test_declaring_an_uncovered_subject_without_searching_is_sent_back_once(self):
+        paper = self.make_paper("2312.00752", "v2", pinned=True)
+        paper_registry.attach_paper(CID, paper.document_id, added_by="seed")
+        self.script([
+            ("finish_source_selection", {"focus_document_ids": [], "uncovered_subjects": ["Transformer"], "rationale": "r"}),
+            ("finish_source_selection", {"focus_document_ids": [], "uncovered_subjects": ["Transformer"], "rationale": "no luck"}),
+        ])
+        audit = source_discovery.run_discovery(CID, "Does the Transformer need a cache?")
+        self.assertEqual([c.error for c in audit.tool_calls], ["uncovered_subjects_not_searched", None])
+        self.assertTrue(audit.guard_triggered)
+        self.assertEqual(audit.uncovered_subjects, ["Transformer"])  # the second call is accepted as is
+
+    def test_an_uncovered_subject_after_a_search_is_accepted_and_recorded(self):
+        self.script([
+            ("search_arxiv", {"query": "obscure thing", "max_results": 3, "category": None, "sort_by": "relevance"}),
+            ("finish_source_selection", {"focus_document_ids": [], "uncovered_subjects": ["Obscure\nthing", " "], "rationale": "r"}),
+        ])
+        with patch.object(arxiv_client, "search", return_value=[]):
+            audit = source_discovery.run_discovery(CID, "What is the obscure thing?")
+        self.assertFalse(audit.guard_triggered)
+        self.assertEqual(audit.uncovered_subjects, ["Obscure thing"])
+
+    def test_agent_aliases_are_merged_and_generic_words_refused(self):
+        self.script([
+            ("add_paper_to_conversation", {"arxiv_id": "1706.03762", "short_name": "Transformer",
+                                           "aliases": ["Vaswani Transformer", "model"], "reason": "r"}),
+            ("finish_source_selection", {"focus_document_ids": [], "uncovered_subjects": [], "rationale": "r"}),
+        ])
+        with patch.object(paper_ingestion, "ingest_arxiv_paper", side_effect=self.fake_ingest):
+            source_discovery.run_discovery(CID, "Explain the Transformer")
+        aliases = paper_registry.get_paper("arxiv-1706.03762v1").aliases
+        self.assertIn(r"\bvaswani transformer\b", aliases)
+        self.assertIn(r"\btransformer\b", aliases)
+        self.assertNotIn(r"\bmodel\b", aliases)
+
+    def test_name_hints_flag_names_no_attached_paper_contains(self):
+        hints = source_discovery.name_hints
+        self.assertEqual(hints("How is build Mambar and how is it used?", ""), ["Mambar"])
+        self.assertEqual(hints("Compare DINOv2 and SimCLR.", "SimCLR: A Simple Framework"), ["DINOv2"])
+        self.assertEqual(hints("Compare how ViT-G/14 scales.", ""), ["ViT-G/14"])
+        self.assertEqual(hints("Do the transformer architecture generate text?", ""), [])  # left to the agent
+
+    def test_prompt_shows_abstracts_original_question_and_name_hints(self):
+        paper = self.make_paper("2312.00752", "v2", title="Mamba: Linear-Time Sequence Modeling", pinned=True)
+        paper_registry.set_paper_abstract(paper.document_id, "Selective state spaces for\nlong sequences.")
+        paper_registry.attach_paper(CID, paper.document_id, added_by="seed")
+        text = source_discovery.build_user_message(
+            CID, "Does Mamba beat BERT-Large?", original_question="Does it beat BERT-Large?")
+        self.assertIn("abstract: Selective state spaces for long sequences.", text)
+        self.assertIn("ORIGINAL QUESTION (as typed, before it was made standalone):\nDoes it beat BERT-Large?", text)
+        self.assertIn("MATCH NO ATTACHED PAPER", text)
+        self.assertIn("BERT-Large", text.split("MATCH NO ATTACHED PAPER")[1])
+        self.assertNotIn("ORIGINAL QUESTION", source_discovery.build_user_message(CID, "Same question?"))
 
     def test_download_budget_per_turn(self):
         adds = [("add_paper_to_conversation", {"arxiv_id": f"2401.0000{i}", "short_name": None, "reason": "r"})

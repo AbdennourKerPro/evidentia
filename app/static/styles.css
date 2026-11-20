@@ -180,8 +180,6 @@ textarea::placeholder { color: #929292; }
 .add-paper-form input { flex: 1; background: #303030; border: 1px solid #444; padding: 8px 10px; border-radius: 6px; font-size: 12px; color: inherit; }
 .add-paper-form button { padding: 7px 12px; border-radius: 6px; background: #303030; font-size: 12px; }
 .add-paper-form button:hover { background: #3c3c3c; }
-.progress-lines { margin: 6px 0 0; padding: 0; list-style: none; color: #9a9a9a; font-size: 12px; line-height: 1.7; }
-.progress-lines li:last-child { color: #d0d0d0; }
 [hidden] { display: none !important; }
 
 /* Formulas are typeset as MathML by KaTeX; the TeX source is the readable fallback. */
@@ -202,3 +200,35 @@ textarea::placeholder { color: #929292; }
 .feedback button:hover { background: #3c3c3c; }
 .feedback-form { display: flex; flex: 1 1 100%; gap: 8px; }
 .feedback-form input { flex: 1; background: #303030; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: inherit; }
+
+.inline-citation { padding: 0 3px; border: 0; border-bottom: 1px dotted #888; background: transparent; color: inherit; font: inherit; font-size: .88em; cursor: pointer; }
+.inline-citation:hover, .inline-citation:focus-visible { background: var(--surface-hover); color: #fff; }
+.chunk-pdf-link { color: #aaa; }
+.chunk-pdf-link:hover { color: #fff; }
+
+.answer-help { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--border); border-radius: 9px; font-size: 13px; line-height: 1.5; }
+.answer-help.is-partial { border-left: 3px solid #b8924a; }
+.answer-help-summary { margin: 0 0 8px; color: #ccc; }
+.gap-list { margin: 0 0 10px; padding: 0; list-style: none; }
+.gap-list li { padding: 2px 0 2px 18px; position: relative; color: #aaa; }
+.gap-list li::before { position: absolute; left: 0; }
+.gap-covered::before { content: "✓"; color: #7fb685; }
+.gap-missing::before { content: "✗"; color: #c97a6b; }
+.answer-help-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.answer-help-actions button { padding: 6px 11px; border: 1px solid var(--border); border-radius: 16px; background: transparent; color: #bdbdbd; font-size: 12px; }
+.answer-help-actions button:hover { color: var(--text); background: var(--surface); }
+
+/* Progress: the current task only, with an arrow that unfolds the whole path. */
+.progress { margin: 4px 0; font-size: 13px; color: #d0d0d0; }
+.progress-summary { display: flex; align-items: center; gap: 9px; cursor: pointer; list-style: none; }
+.progress-summary::-webkit-details-marker { display: none; }
+.progress-summary::after { content: ""; width: 7px; height: 7px; margin-left: 2px; border-right: 1.5px solid #888; border-bottom: 1.5px solid #888; transform: rotate(45deg) translateY(-2px); transition: transform .15s; }
+.progress[open] > .progress-summary::after { transform: rotate(-135deg) translate(-2px, -1px); }
+.progress-pulse { width: 7px; height: 7px; border-radius: 50%; background: #bbb; animation: progress-pulse 1.2s ease-in-out infinite; }
+@keyframes progress-pulse { 50% { opacity: .25; } }
+.progress-lines { margin: 8px 0 0 3px; padding: 0 0 0 16px; list-style: none; border-left: 1px solid var(--border); color: #8a8a8a; font-size: 12px; line-height: 1.8; }
+.progress-lines .is-done::before { content: "✓ "; color: #7fb685; }
+.progress-lines .is-current { color: #d0d0d0; }
+@media (prefers-reduced-motion: reduce) { .progress-pulse { animation: none; } }
+
+.execution-diagnosis { margin: 8px 0; padding: 0 0 0 16px; border-left: 1px solid var(--border); list-style: none; font-size: 12px; line-height: 1.7; color: #aaa; }

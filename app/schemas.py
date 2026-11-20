@@ -68,6 +68,8 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     limit: int = Field(default=3, ge=1, le=5)
     document_ids: list[str] | None = Field(default=None, max_length=20)
+    # Opt-in (the benchmark never sets it): answer what the passages support and name the gap.
+    partial_answers: bool = False
 
 
 class Citation(BaseModel):
@@ -227,6 +229,9 @@ class DiscoveryAudit(BaseModel):
     stopped_reason: str = "finished"
     model_calls: int = 0
     conversation_document_ids: list[str] = Field(default_factory=list)
+    uncovered_subjects: list[str] = Field(default_factory=list)
+    name_hints: list[str] = Field(default_factory=list)
+    guard_triggered: bool = False
 
 
 class AgenticExecution(BaseModel):

@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 import operator
 import re
-from functools import lru_cache
+from collections.abc import Callable
+from contextvars import ContextVar
+from functools import lru_cache, wraps
 from dataclasses import replace
 from math import ceil
 from time import perf_counter
@@ -28,6 +30,7 @@ from app.hybrid_retrieval import (
     rerank_candidate_groups,
     retrieve_multifacet_candidates,
     reciprocal_rank_fusion,
+    ensure_paper_representation,
     round_robin_select,
 )
 from app.llm_gateway import generate_chat
@@ -42,6 +45,7 @@ from app.query_expansion import (
 )
 from app.rag_service import (
     ABSTENTION_CORRECTION_NOTE,
+    MULTI_PAPER_GUIDELINES,
     PARTIAL_ANSWER_GUIDELINES,
     PARTIAL_CORRECTION_NOTE,
     SOURCE_FIDELITY_GUIDELINES,
@@ -173,6 +177,8 @@ class AgenticRagState(TypedDict, total=False):
     focus_document_ids: list[str]
     check_formulas: bool
     partial_answers: bool
+    multi_paper: bool
+    uncovered_subjects: list[str]
     strategy: Strategy
     detected_document_ids: list[str]
     plans: list[RetrievalPlan]
@@ -207,6 +213,9 @@ def answer_agentic_question(
     focus_document_ids: list[str] | None = None,
     check_formulas: bool = False,
     partial_answers: bool = False,
+    multi_paper: bool = False,
+    uncovered_subjects: list[str] | None = None,
+    on_step: Callable[[str], None] | None = None,
 ) -> AgenticAskResponse:
     """Invoke the graph and expose both the grounded answer and its decisions.
 
@@ -223,25 +232,30 @@ def answer_agentic_question(
     )
     if not corpus:
         return _empty_corpus_response(question, profile)
-    final_state = get_agentic_rag_graph().invoke(
-        {
-            "question": question,
-            "corpus_document_ids": corpus,
-            "catalog": catalog,
-            "focus_document_ids": list(focus_document_ids or []),
-            "check_formulas": check_formulas,
-            "partial_answers": partial_answers,
-            "retrieval_profile": profile,
-            "retrieval_audit": [],
-            "coverage_checks": [],
-            "supplementary_search_attempted": False,
-            "limit": limit,
-            "selected_document_ids": document_ids,
-            "retrieval_batches": [],
-            "candidate_pool": [],
-            "trace": [],
-        }
-    )
+    initial_state = {
+        "question": question,
+        "corpus_document_ids": corpus,
+        "catalog": catalog,
+        "focus_document_ids": list(focus_document_ids or []),
+        "check_formulas": check_formulas,
+        "partial_answers": partial_answers,
+        "multi_paper": multi_paper,
+        "uncovered_subjects": list(uncovered_subjects or []),
+        "retrieval_profile": profile,
+        "retrieval_audit": [],
+        "coverage_checks": [],
+        "supplementary_search_attempted": False,
+        "limit": limit,
+        "selected_document_ids": document_ids,
+        "retrieval_batches": [],
+        "candidate_pool": [],
+        "trace": [],
+    }
+    token = _step_callback.set(on_step)
+    try:
+        final_state = get_agentic_rag_graph().invoke(initial_state)
+    finally:
+        _step_callback.reset(token)
     response = final_state["response"]
     batches = final_state.get("retrieval_batches", [])
     counts_by_document = {
@@ -312,24 +326,46 @@ def _empty_corpus_response(question: str, profile: RetrievalProfile) -> AgenticA
     )
 
 
+# Progress reporting for streamed answers. The compiled graph is shared by all requests, so the
+# callback travels in a ContextVar: LangGraph runs nodes (even parallel ones) in copies of the
+# caller's context.
+_step_callback: ContextVar[Callable[[str], None] | None] = ContextVar("agentic_step_callback", default=None)
+
+
+def _announced(name: str, node):
+    """Tell the current request's callback (if any) that ``name`` is about to run."""
+
+    @wraps(node)
+    def run(state):
+        callback = _step_callback.get()
+        if callback is not None:
+            try:
+                callback(name)
+            except Exception:  # progress is cosmetic: it must never break an answer
+                pass
+        return node(state)
+
+    return run
+
+
 @lru_cache
 def get_agentic_rag_graph():
     """Build the graph once, then reuse the compiled workflow for every request."""
 
     builder = StateGraph(AgenticRagState)
-    builder.add_node("analyze_question", _analyze_question)
-    builder.add_node("retrieve_global", _retrieve_global)
-    builder.add_node("plan_source_retrieval", _plan_source_retrieval)
-    builder.add_node("retrieve_source", _retrieve_source)
-    builder.add_node("select_evidence", _select_evidence)
-    builder.add_node("check_evidence_coverage", _check_evidence_coverage)
-    builder.add_node("retrieve_missing_evidence", _retrieve_missing_evidence)
-    builder.add_node("recover_candidates", _recover_candidates)
-    builder.add_node("plan_answer", _plan_answer)
-    builder.add_node("generate_answer", _generate_answer)
-    builder.add_node("validate_answer", _validate_answer)
-    builder.add_node("correct_answer", _correct_answer)
-    builder.add_node("finalize_answer", _finalize_answer)
+    builder.add_node("analyze_question", _announced("analyze_question", _analyze_question))
+    builder.add_node("retrieve_global", _announced("retrieve_global", _retrieve_global))
+    builder.add_node("plan_source_retrieval", _announced("plan_source_retrieval", _plan_source_retrieval))
+    builder.add_node("retrieve_source", _announced("retrieve_source", _retrieve_source))
+    builder.add_node("select_evidence", _announced("select_evidence", _select_evidence))
+    builder.add_node("check_evidence_coverage", _announced("check_evidence_coverage", _check_evidence_coverage))
+    builder.add_node("retrieve_missing_evidence", _announced("retrieve_missing_evidence", _retrieve_missing_evidence))
+    builder.add_node("recover_candidates", _announced("recover_candidates", _recover_candidates))
+    builder.add_node("plan_answer", _announced("plan_answer", _plan_answer))
+    builder.add_node("generate_answer", _announced("generate_answer", _generate_answer))
+    builder.add_node("validate_answer", _announced("validate_answer", _validate_answer))
+    builder.add_node("correct_answer", _announced("correct_answer", _correct_answer))
+    builder.add_node("finalize_answer", _announced("finalize_answer", _finalize_answer))
 
     builder.add_edge(START, "analyze_question")
     builder.add_conditional_edges(
@@ -398,6 +434,11 @@ def _analyze_question(state: AgenticRagState) -> AgenticRagState:
         target_ids = detected_ids
     elif comparison_requested and selected_ids and 2 <= len(selected_ids) <= 5:
         target_ids = list(dict.fromkeys(selected_ids))
+    elif (
+        comparison_requested and state.get("multi_paper") and not detected_ids
+        and 2 <= len(corpus_ids := [d for d in state.get("corpus_document_ids", []) if d in catalog]) <= 5
+    ):
+        target_ids = corpus_ids  # "compare them" in a conversation: every attached paper
     else:
         target_ids = detected_ids
 
@@ -493,10 +534,11 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
     english_query = english_search_query(state["question"])
     queries = [state["question"], *([english_query] if english_query else [])]
     exclude_references = uses_recovery_v2(state["retrieval_profile"])
+    balanced = bool(state.get("multi_paper")) and len(_search_scope(state)) >= 2
     rankings = [
         search_chunks(
             vector,
-            limit=state["limit"] if len(queries) == 1 and not exclude_references else FALLBACK_SEARCH_LIMIT,
+            limit=state["limit"] if len(queries) == 1 and not exclude_references and not balanced else FALLBACK_SEARCH_LIMIT,
             collection_name=ARXIV_COLLECTION_NAME,
             document_ids=_search_scope(state),
         )
@@ -504,10 +546,13 @@ def _retrieve_global(state: AgenticRagState) -> AgenticRagState:
     ]
     if exclude_references:
         rankings = [drop_reference_sections(ranking) for ranking in rankings]
-    results = (
-        rankings[0][: state["limit"]] if len(rankings) == 1
-        else reciprocal_rank_fusion(rankings, limit=state["limit"])
+    ranked = (
+        rankings[0] if len(rankings) == 1
+        else reciprocal_rank_fusion(rankings, limit=FALLBACK_SEARCH_LIMIT if balanced else state["limit"])
     )
+    results = ranked[: state["limit"]]
+    if balanced:  # several papers: no relevant paper may be absent from the evidence
+        results = ensure_paper_representation(ranked, results, window=2 * state["limit"])
     return {
         "plans": [
             {
@@ -955,6 +1000,14 @@ def _answer_guidelines(state: AgenticRagState) -> str:
     guidelines = SOURCE_FIDELITY_GUIDELINES if uses_recovery_v2(state["retrieval_profile"]) else ""
     if state.get("partial_answers"):
         guidelines = (guidelines + "\n" + PARTIAL_ANSWER_GUIDELINES).strip()
+    if state.get("multi_paper") and len(state.get("corpus_document_ids") or []) >= 2:
+        guidelines = (guidelines + "\n" + MULTI_PAPER_GUIDELINES).strip()
+    if state.get("multi_paper") and state.get("uncovered_subjects"):
+        guidelines = (
+            guidelines + "\nNo attached paper was found for: "
+            + "; ".join(state["uncovered_subjects"])
+            + ". State this plainly instead of presenting other papers' passages as that paper's content."
+        ).strip()
     return guidelines
 
 

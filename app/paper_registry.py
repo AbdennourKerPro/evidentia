@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS papers (
     title TEXT NOT NULL,
     short_name TEXT,
     aliases_json TEXT NOT NULL DEFAULT '[]',
+    abstract TEXT NOT NULL DEFAULT '',
     pdf_path TEXT,
     processed_dir TEXT,
     chunk_count INTEGER NOT NULL DEFAULT 0,
@@ -86,6 +87,7 @@ CREATE TABLE IF NOT EXISTS feedback (
     comment TEXT,
     question TEXT,
     answer TEXT,
+    context TEXT,
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS conversation_turns (
@@ -113,6 +115,7 @@ class PaperRecord(BaseModel):
     status: PaperStatus
     error: str | None = None
     pinned: bool = False
+    abstract: str = ""
 
 
 class ConversationPaper(BaseModel):
@@ -168,6 +171,12 @@ def init_db() -> None:
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(conversations)")}
         if "owner" not in columns:  # database created before invitations existed
             connection.execute("ALTER TABLE conversations ADD COLUMN owner TEXT")
+        paper_columns = {row["name"] for row in connection.execute("PRAGMA table_info(papers)")}
+        if "abstract" not in paper_columns:  # added with the source-selection summaries
+            connection.execute("ALTER TABLE papers ADD COLUMN abstract TEXT NOT NULL DEFAULT ''")
+        feedback_columns = {row["name"] for row in connection.execute("PRAGMA table_info(feedback)")}
+        if "context" not in feedback_columns:  # diagnosis attached to tester feedback
+            connection.execute("ALTER TABLE feedback ADD COLUMN context TEXT")
 
 
 def _paper_from_row(row: sqlite3.Row) -> PaperRecord:
@@ -184,6 +193,7 @@ def _paper_from_row(row: sqlite3.Row) -> PaperRecord:
         status=row["status"],
         error=row["error"],
         pinned=bool(row["pinned"]),
+        abstract=row["abstract"],
     )
 
 
@@ -231,6 +241,31 @@ def upsert_paper(
     paper = get_paper(document_id)
     assert paper is not None
     return paper
+
+
+def set_paper_abstract(document_id: str, abstract: str) -> None:
+    """Remember the arXiv abstract (shown to the source-selection agent)."""
+
+    with _connect() as connection:
+        connection.execute(
+            "UPDATE papers SET abstract = ? WHERE document_id = ?", (abstract.strip()[:4000], document_id)
+        )
+
+
+def merge_aliases(document_id: str, aliases: list[str]) -> list[str]:
+    """Add detection patterns to a paper (existing ones are kept); returns the final list."""
+
+    with _connect() as connection:
+        row = connection.execute(
+            "SELECT aliases_json FROM papers WHERE document_id = ?", (document_id,)
+        ).fetchone()
+        if row is None:
+            return []
+        merged = list(dict.fromkeys([*json.loads(row["aliases_json"]), *aliases]))
+        connection.execute(
+            "UPDATE papers SET aliases_json = ? WHERE document_id = ?", (json.dumps(merged), document_id)
+        )
+    return merged
 
 
 def set_paper_status(

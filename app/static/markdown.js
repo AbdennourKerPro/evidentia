@@ -59,6 +59,13 @@ export function inlineTokens(text, depth = 0) {
       }
     }
     if (text[i] === "[") {
+      // Source references such as [S1] or [S1, S2]; rendered as buttons only when known.
+      const cite = text.slice(i).match(/^\[(S\d+(?:\s*,\s*S\d+)*)\](?!\()/);
+      if (cite) {
+        flush();
+        tokens.push({ type: "citation", references: cite[1].split(/\s*,\s*/), text: cite[0] });
+        i += cite[0].length; continue;
+      }
       const link = text.slice(i).match(/^\[([^\]\n]+)\]\(([^\s)]+)\)/);
       if (link) {
         flush();
@@ -163,10 +170,34 @@ function mathNode(token) {
   return node;
 }
 
+/** Set by renderMarkdown for the duration of one render: { references:Set, decorate(button, ref) }. */
+let citationOptions = null;
+
+function citationNodes(token) {
+  const known = citationOptions && citationOptions.references;
+  if (!known || !token.references.some(reference => known.has(reference))) {
+    return [document.createTextNode(token.text)];
+  }
+  const nodes = [document.createTextNode("[")];
+  token.references.forEach((reference, index) => {
+    if (index) nodes.push(document.createTextNode(", "));
+    if (!known.has(reference)) { nodes.push(document.createTextNode(reference)); return; }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "inline-citation";
+    button.textContent = reference;
+    citationOptions.decorate?.(button, reference);
+    nodes.push(button);
+  });
+  nodes.push(document.createTextNode("]"));
+  return nodes;
+}
+
 function appendInline(parent, text) {
   const append = (target, tokens) => {
     for (const token of tokens) {
       if (token.type === "text") { target.append(document.createTextNode(token.text)); continue; }
+      if (token.type === "citation") { target.append(...citationNodes(token)); continue; }
       if (token.type === "math") { target.append(mathNode(token)); continue; }
       const node = document.createElement(token.type === "link" ? "a" : token.type);
       if (token.type === "link") { node.href = token.href; node.target = "_blank"; node.rel = "noopener noreferrer"; }
@@ -202,6 +233,13 @@ function blockNode(block) {
   return node;
 }
 
-export function renderMarkdown(target, text) {
-  target.replaceChildren(...markdownBlocks(text).map(blockNode));
+/** `options.references` (a Set of "S1"…) turns those citations into buttons configured by
+ * `options.decorate(button, reference)`; other references stay plain text. */
+export function renderMarkdown(target, text, options = null) {
+  citationOptions = options;
+  try {
+    target.replaceChildren(...markdownBlocks(text).map(blockNode));
+  } finally {
+    citationOptions = null;
+  }
 }

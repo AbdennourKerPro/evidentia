@@ -30,6 +30,23 @@ export function createSseParser() {
   };
 }
 
+/** Steps of the answer pipeline (LangGraph node names), in French. */
+export const STEP_LABELS = {
+  analyze_question: "Analyse de la question…",
+  retrieve_global: "Recherche des passages pertinents…",
+  plan_source_retrieval: "Préparation de la recherche dans chaque article…",
+  retrieve_source: "Recherche des passages dans chaque article…",
+  select_evidence: "Sélection des meilleurs passages…",
+  check_evidence_coverage: "Vérification que les passages couvrent la question…",
+  retrieve_missing_evidence: "Recherche complémentaire des éléments manquants…",
+  recover_candidates: "Recherche complémentaire des éléments manquants…",
+  plan_answer: "Préparation de la réponse…",
+  generate_answer: "Rédaction de la réponse…",
+  validate_answer: "Contrôle des citations et de la langue…",
+  correct_answer: "Correction de la réponse…",
+  finalize_answer: "Finalisation de la réponse…",
+};
+
 /** Short French status line for a progress event, or null for silent events. */
 export function describeProgress(event, data) {
   switch (event) {
@@ -50,7 +67,8 @@ export function describeProgress(event, data) {
     case "queue.waiting": return "Serveur occupé : votre question est en file d’attente…";
     case "question.rewritten": return `Question reformulée : « ${data.question} »`;
     case "paper.added": return `Article ajouté : ${data.title}`;
-    case "answer.started": return "Rédaction de la réponse…";
+    case "answer.started": return "Recherche dans les articles de la conversation…";
+    case "step": return STEP_LABELS[data.node] ?? null;
     default: return null;
   }
 }

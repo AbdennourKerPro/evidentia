@@ -11,6 +11,10 @@ async function loadModule(name) {
 }
 const { markdownBlocks, inlineTokens, renderMarkdown } = await loadModule("markdown");
 const { createConversationStore, HISTORY_KEY } = await loadModule("conversations");
+const { coverageGaps, isPartialAnswer, abstentionActions, gapSummary } = await loadModule("abstention");
+const { diagnosisLines, feedbackContext } = await loadModule("diagnosis");
+const { createProgress } = await loadModule("progress");
+const { localizeMessage, describeAbstention, arxivPdfUrl } = await loadModule("messages");
 
 class Element {
   constructor(tag, text = "") { this.tag = tag; this.text = text; this.children = []; }
@@ -139,7 +143,7 @@ test("invalid messages cannot corrupt the history", () => {
   assert.equal(store.active().messages.length, 0);
 });
 
-const { createSseParser, describeProgress, postEventStream } = await loadModule("sse");
+const { createSseParser, describeProgress, postEventStream, STEP_LABELS } = await loadModule("sse");
 
 test("SSE parser reassembles events split across chunks and ignores keep-alives", () => {
   const parser = createSseParser();
@@ -285,4 +289,143 @@ test("loadAccess redeems the code once, clears the fragment and reports a refusa
   assert.equal(cleared, 1);  // no code in the link: nothing to clear
   const offline = await loadAccess(async () => { throw new Error("down"); }, "", () => {});
   assert.equal(offline.mode, "open");
+});
+
+test("known server messages are shown in French and unknown ones are left alone", () => {
+  assert.equal(localizeMessage("The language model judged the retrieved evidence insufficient."),
+    "Les passages retrouvés ont été jugés insuffisants pour répondre.");
+  assert.match(localizeMessage("The generated answer failed the response contract: truncated"), /^La réponse générée .* : truncated$/);
+  assert.equal(localizeMessage("anything", "server_busy"), "Le serveur est occupé : réessayez dans un instant.");
+  assert.equal(localizeMessage("Invitation invalide, expirée ou révoquée."), "Invitation invalide, expirée ou révoquée.");
+  assert.equal(describeAbstention("No evidence was found in the selected arXiv articles."),
+    "Abstention — Aucun passage pertinent n’a été trouvé dans les articles sélectionnés.");
+  assert.equal(describeAbstention(""), "Abstention");
+});
+test("arXiv PDF links cover the fixed corpus and added papers, never unknown ids", () => {
+  assert.equal(arxivPdfUrl("sam-2023", 7), "https://arxiv.org/pdf/2304.02643v1#page=7");
+  assert.equal(arxivPdfUrl("arxiv-2312.00752v2", 3), "https://arxiv.org/pdf/2312.00752v2#page=3");
+  assert.equal(arxivPdfUrl("arxiv-2312.00752v2", 0), "https://arxiv.org/pdf/2312.00752v2");
+  assert.equal(arxivPdfUrl("demo-doc", 1), null);
+  assert.equal(arxivPdfUrl("arxiv-../evil", 1), null);
+});
+test("known [Sn] references become buttons, unknown ones and plain rendering stay text", () => {
+  globalThis.document = { createElement: tag => new Element(tag), createTextNode: text => new Element("#text", text) };
+  const decorated = [];
+  const root = new Element("div");
+  renderMarkdown(root, "CLIP uses 400M pairs [S1], see [S2, S9] and [S7].", {
+    references: new Set(["S1", "S2"]), decorate: (button, reference) => decorated.push(reference),
+  });
+  assert.deepEqual(decorated, ["S1", "S2"]);
+  assert.equal(findTags(root, "button").length, 2);
+  assert.equal(root.textContent, "CLIP uses 400M pairs [S1], see [S2, S9] and [S7].");
+  const plain = render("Fact [S1].");
+  assert.equal(findTags(plain, "button").length, 0);
+  assert.equal(plain.textContent, "Fact [S1].");
+});
+
+const check = (requirements, sufficient = false) => ({ execution: { coverage_checks: [{ sufficient, requirements }] } });
+const found = (aspect) => ({ aspect, reference: "S1", quote: "exact quote" });
+const absent = (aspect) => ({ aspect, reference: null, quote: null });
+
+test("coverage gaps come from the last check only and ignore unknown verdicts", () => {
+  const payload = { execution: { coverage_checks: [
+    { sufficient: false, requirements: [absent("old gap")] },
+    { sufficient: false, requirements: [found("A"), absent("B")] },
+  ] } };
+  assert.deepEqual(coverageGaps(payload.execution), { covered: ["A"], missing: ["B"] });
+  assert.deepEqual(coverageGaps(check([absent("B")], null).execution), { covered: [], missing: [] });
+  assert.deepEqual(coverageGaps({ coverage_checks: [] }), { covered: [], missing: [] });
+  assert.deepEqual(coverageGaps(undefined), { covered: [], missing: [] });
+});
+test("only a published answer with uncovered aspects counts as partial", () => {
+  assert.equal(isPartialAnswer({ abstained: false, ...check([found("A"), absent("B")]) }), true);
+  assert.equal(isPartialAnswer({ abstained: false, ...check([found("A")], true) }), false);
+  assert.equal(isPartialAnswer({ abstained: true, ...check([absent("B")]) }), false);
+});
+test("gap summary distinguishes partial answers and partly or fully missing evidence", () => {
+  assert.equal(gapSummary({ covered: [], missing: [] }, true), "");
+  assert.match(gapSummary({ covered: ["A"], missing: ["B"] }, false), /^Réponse partielle/);
+  assert.match(gapSummary({ covered: ["A"], missing: ["B"] }, true), /partie de la question/);
+  assert.match(gapSummary({ covered: [], missing: ["B"] }, true), /Aucun point/);
+});
+test("abstention actions depend on the mode, the selection and the invitation", () => {
+  const ids = (payload, context) => abstentionActions(payload, context).map(action => action.id);
+  const base = { agentMode: false, inviteMode: false, discoveryAuto: true, allArticlesSelected: false };
+  assert.deepEqual(ids({ evidence: [{}] }, base), ["rephrase", "show-evidence", "all-articles", "agent-mode"]);
+  assert.deepEqual(ids({ evidence: [] }, { ...base, allArticlesSelected: true }), ["rephrase", "agent-mode"]);
+  assert.deepEqual(ids({ evidence: [] }, { ...base, agentMode: true, discoveryAuto: false }), ["rephrase", "enable-discovery"]);
+  assert.deepEqual(ids({ evidence: [] }, { ...base, agentMode: true }), ["rephrase"]);
+  assert.deepEqual(ids({ evidence: [{}] }, { ...base, inviteMode: true, agentMode: true, discoveryAuto: false }), ["rephrase", "show-evidence"]);
+});
+
+test("progress shows only the current task, keeps the whole path and ignores repeats", () => {
+  globalThis.document = { createElement: tag => new Element(tag), createTextNode: text => new Element("#text", text) };
+  const container = new Element("div");
+  const progress = createProgress(container);
+  const [details] = container.children;
+  const [summary, list] = details.children;
+  assert.equal(details.tag, "details");
+  assert.equal(findTags(summary, "span").find(node => node.className === "progress-current").textContent, "Envoi de la question…");
+  assert.equal(progress.add("Analyse de la question…"), true);
+  assert.equal(progress.add("Recherche des passages…"), true);
+  assert.equal(progress.add("Recherche des passages…"), false); // parallel nodes
+  assert.equal(progress.add(null), false);
+  const current = findTags(summary, "span").find(node => node.className === "progress-current");
+  assert.equal(current.textContent, "Recherche des passages…");
+  assert.deepEqual(progress.lines(), ["Envoi de la question…", "Analyse de la question…", "Recherche des passages…"]);
+  assert.deepEqual(list.children.map(item => item.className), ["is-done", "is-done", "is-current"]);
+});
+test("every answer-pipeline node has a French progress label", async () => {
+  const source = await readFile(new URL("../app/agentic_rag.py", import.meta.url), "utf8");
+  const nodes = [...source.matchAll(/builder\.add_node\("(\w+)"/g)].map(match => match[1]);
+  assert.ok(nodes.length >= 13);
+  for (const node of nodes) {
+    assert.ok(STEP_LABELS[node], node);
+    assert.equal(describeProgress("step", { node }), STEP_LABELS[node]);
+  }
+  assert.equal(describeProgress("step", { node: "unknown" }), null);
+});
+
+const agentPayload = () => ({
+  abstained: false, reason: null,
+  evidence: [{ document_id: "arxiv-1" }, { document_id: "arxiv-1" }, { document_id: "arxiv-2" }],
+  citations: [{ document_id: "arxiv-1" }],
+  execution: {
+    strategy: "global", expected_language: "en", retrieval_profile: "candidate_recovery_v2",
+    detected_document_ids: [], correction_attempted: false, contract_issues: [],
+    rewritten_question: "Does the Transformer generate text in constant time?",
+    discovery: {
+      stopped_reason: "finished", model_calls: 2, rationale: "Mamba covers it", added_document_ids: [],
+      focus_document_ids: ["arxiv-1"], conversation_document_ids: ["arxiv-1"], uncovered_subjects: ["Transformer"],
+      name_hints: [], guard_triggered: true,
+      tool_calls: [
+        { name: "finish_source_selection", arguments: {}, ok: false, error: "uncovered_subjects_not_searched" },
+        { name: "search_arxiv", arguments: { query: "attention is all you need" }, ok: true },
+      ],
+    },
+  },
+});
+test("the execution details tell what the agent and the pipeline decided", () => {
+  const text = diagnosisLines(agentPayload().execution).join("\n");
+  assert.match(text, /Question reformulée : « Does the Transformer/);
+  assert.match(text, /Agent · finish_source_selection ✗ uncovered_subjects_not_searched/);
+  assert.match(text, /Agent · search_arxiv « attention is all you need » ✓/);
+  assert.match(text, /Garde-fou/);
+  assert.match(text, /Sujets sans article attaché : Transformer/);
+  assert.match(text, /Justification de l’agent : Mamba covers it/);
+  assert.match(text, /Stratégie : recherche globale$/);
+  assert.deepEqual(diagnosisLines(undefined), []);
+  assert.deepEqual(diagnosisLines({ strategy: "per_source", detected_document_ids: ["a", "b"] }),
+    ["Stratégie : recherche parallèle par article — articles visés : a, b"]);
+});
+test("feedback carries a compact, JSON-safe diagnosis", () => {
+  const context = feedbackContext(agentPayload(), { covered: ["A"], missing: ["B"] });
+  assert.deepEqual(context.evidence_documents, ["arxiv-1", "arxiv-2"]);
+  assert.deepEqual(context.cited_documents, ["arxiv-1"]);
+  assert.deepEqual(context.coverage, { covered: ["A"], missing: ["B"] });
+  assert.equal(context.discovery.guard_triggered, true);
+  assert.deepEqual(context.discovery.tool_calls.map(call => call.argument), [null, "attention is all you need"]);
+  assert.equal(feedbackContext({ abstained: true, reason: "r" }).discovery, null);
+  assert.ok(JSON.stringify(context).length < 3000);
+  assert.deepEqual(JSON.parse(JSON.stringify(context)), context);
 });

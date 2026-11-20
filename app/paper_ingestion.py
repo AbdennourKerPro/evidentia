@@ -7,6 +7,7 @@ import re
 import shutil
 import threading
 from pathlib import Path
+from collections.abc import Sequence
 from typing import Callable
 
 from app import arxiv_client, document_ingestion, paper_registry
@@ -59,23 +60,37 @@ def _lock_for(document_id: str) -> threading.Lock:
         return _document_locks.setdefault(document_id, threading.Lock())
 
 
-def build_aliases(title: str, short_name: str | None) -> list[str]:
+# Words that would match ordinary sentences: refused as aliases even when an agent proposes them.
+GENERIC_ALIAS_WORDS = frozenset(
+    "attention model models paper papers method methods network networks learning vision language "
+    "image images deep neural training data text transfer scaling large small simple framework "
+    "approach approaches representation representations pretraining".split()
+)
+MAX_EXTRA_ALIASES = 4
+MAX_ALIAS_CHARS = 80
+
+
+def build_aliases(title: str, short_name: str | None, extra_names: Sequence[str] = ()) -> list[str]:
     """Regex aliases used to detect the paper's name in a question.
 
     Aliases apply to the accent-free lowercase question (see ``normalize_text``).
-    Very short aliases are refused: they would match ordinary words.
+    Very short aliases are refused: they would match ordinary words. ``extra_names`` are
+    other usual names given by the source-selection agent (full title, nickname, authors).
     """
 
-    candidates: list[str] = []
+    candidates: list[tuple[str, bool]] = []  # (name, proposed by the agent)
     if short_name:
-        candidates.append(short_name)
+        candidates.append((short_name, False))
     prefix = title.split(":", 1)[0].strip() if ":" in title else ""
     if prefix and len(prefix) <= MAX_TITLE_ALIAS_CHARS:
-        candidates.append(prefix)
+        candidates.append((prefix, False))
+    candidates.extend((name, True) for name in list(extra_names)[:MAX_EXTRA_ALIASES])
     aliases: list[str] = []
-    for candidate in candidates:
+    for candidate, proposed in candidates:
         normalized = normalize_text(candidate)
         if len(normalized) < MIN_ALIAS_CHARS:
+            continue
+        if proposed and (normalized in GENERIC_ALIAS_WORDS or len(normalized) > MAX_ALIAS_CHARS):
             continue
         pattern = r"\b" + re.escape(normalized).replace(r"\ ", " ") + r"\b"
         if pattern not in aliases:
@@ -88,6 +103,7 @@ def ingest_arxiv_paper(
     version: str | None = None,
     *,
     short_name: str | None = None,
+    extra_names: Sequence[str] = (),
     on_progress: ProgressCallback | None = None,
 ) -> paper_registry.PaperRecord:
     """Return a ready paper, ingesting it only if it is not already cached.
@@ -121,7 +137,7 @@ def ingest_arxiv_paper(
         cache_dir = get_arxiv_cache_dir()
         pdf_path = cache_dir / "raw" / f"{document_id}.pdf"
         processed_dir = cache_dir / "processed" / document_id
-        aliases = build_aliases(paper.title, short_name)
+        aliases = build_aliases(paper.title, short_name, extra_names)
         paper_registry.upsert_paper(
             document_id=document_id,
             arxiv_id=paper.arxiv_id,
@@ -131,6 +147,7 @@ def ingest_arxiv_paper(
             aliases=aliases,
             status="pending",
         )
+        paper_registry.set_paper_abstract(document_id, paper.abstract)
         try:
             notify("downloading", {"document_id": document_id, "title": paper.title})
             paper_registry.set_paper_status(document_id, "downloading")

@@ -184,6 +184,47 @@ class ApiLlmTests(unittest.TestCase):
         self.assertTrue(all(request["model"] == "gpt-6-luna" for request in self.requests))
         self.assertEqual(len(payload["citations"]), 2)
 
+    def test_partial_answers_are_opt_in_for_the_classic_endpoint(self) -> None:
+        from app.agentic_rag import _empty_corpus_response
+        from app.schemas import AskRequest
+
+        question = "What does the method do?"
+        self.assertFalse(AskRequest(question=question).partial_answers)
+        with patch("app.main.answer_agentic_question") as answer:
+            answer.side_effect = lambda **_: _empty_corpus_response(question, "candidate_recovery_v2")
+            for body, expected in (({}, False), ({"partial_answers": True}, True)):
+                self.http.post("/agentic/ask", json={"question": "What does the method do?", **body})
+                self.assertIs(answer.call_args.kwargs["partial_answers"], expected)
+
+    def test_streamed_question_reports_each_graph_step_then_the_answer(self) -> None:
+        self.install_answers(["The method learns representations from the input data [S1]."])
+        with patch("app.agentic_rag.embed_query", return_value=[0.1]), patch(
+            "app.agentic_rag.search_chunks", return_value=[evidence("clip-2021", 1)]
+        ):
+            response = self.http.post("/agentic/ask/stream", json={"question": "What does the method do?"})
+        self.assertEqual(response.status_code, 200)
+        frames = [frame for frame in response.text.split("\n\n") if frame.startswith("event:")]
+        events = [frame.split("\n")[0].removeprefix("event: ") for frame in frames]
+        steps = [
+            json.loads(frame.split("\ndata: ")[1])["node"]
+            for frame in frames if frame.startswith("event: step")
+        ]
+        self.assertEqual(steps[0], "analyze_question")
+        for node in ("select_evidence", "generate_answer", "validate_answer", "finalize_answer"):
+            self.assertIn(node, steps)
+        self.assertEqual(events[-2:], ["answer", "done"])
+        answer = json.loads(next(f for f in frames if f.startswith("event: answer")).split("\ndata: ")[1])
+        self.assertFalse(answer["abstained"], answer)
+        self.assertEqual(answer["llm"]["call_count"], 1)
+
+    def test_streamed_question_reports_pipeline_errors_as_events(self) -> None:
+        with patch("app.main.answer_agentic_question", side_effect=RuntimeError("boom")):
+            response = self.http.post("/agentic/ask/stream", json={"question": "What does the method do?"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("event: error", response.text)
+        self.assertIn("internal_error", response.text)
+        self.assertNotIn("boom", response.text)
+
     def test_langgraph_correction_uses_same_api_and_is_counted(self) -> None:
         self.install_answers([
             "La méthode apprend des représentations à partir des données [S1].",

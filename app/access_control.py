@@ -14,6 +14,7 @@ who only triggers abstentions cannot cost an unbounded amount.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import secrets
 import threading
@@ -251,18 +252,27 @@ def release_manual_paper(invite_id: str) -> None:
 # ---------------------------------------------------------------------- feedback
 
 
+MAX_FEEDBACK_CONTEXT_CHARS = 8000
+
+
 def add_feedback(
     *, invite_id: str | None, conversation_id: str, rating: Literal["up", "down"],
     comment: str | None, question: str | None, answer: str | None,
+    context: dict | None = None,
 ) -> None:
+    """``context`` is the answer's diagnosis (sources, strategy, agent choices); too large → dropped."""
+
+    serialized = json.dumps(context, ensure_ascii=False) if context else None
+    if serialized is not None and len(serialized) > MAX_FEEDBACK_CONTEXT_CHARS:
+        serialized = None
     with _connect() as connection:
         connection.execute(
             """
-            INSERT INTO feedback (invite_id, conversation_id, rating, comment, question, answer, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO feedback (invite_id, conversation_id, rating, comment, question, answer, context, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (invite_id, conversation_id, rating, (comment or "")[:1000] or None,
-             (question or "")[:500] or None, (answer or "")[:3000] or None, _now()),
+             (question or "")[:500] or None, (answer or "")[:3000] or None, serialized, _now()),
         )
 
 
@@ -271,7 +281,7 @@ def list_feedback() -> list[dict]:
         rows = connection.execute(
             """
             SELECT f.created_at, COALESCE(i.label, '') AS label, f.rating, f.comment,
-                   f.question, f.answer, f.conversation_id
+                   f.question, f.answer, f.conversation_id, f.context
             FROM feedback f LEFT JOIN invites i ON i.id = f.invite_id ORDER BY f.id
             """
         ).fetchall()

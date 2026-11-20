@@ -111,7 +111,10 @@ def answer_for_conversation(
             if question != original_question:
                 emit("question.rewritten", {"question": question})
         audit = (
-            run_discovery(conversation_id, question, emit, recorded_question=original_question)
+            run_discovery(
+                conversation_id, question, emit,
+                recorded_question=original_question, original_question=original_question,
+            )
             if discovery == "auto" else None
         )
         papers = paper_registry.list_conversation_papers(conversation_id, only_ready=True)
@@ -128,6 +131,9 @@ def answer_for_conversation(
                 focus_document_ids=audit.focus_document_ids if audit else [],
                 check_formulas=True,
                 partial_answers=True,
+                multi_paper=True,
+                uncovered_subjects=audit.uncovered_subjects if audit else [],
+                on_step=lambda node: emit("step", {"node": node}),
             )
         else:
             baseline = answer_question(
@@ -221,6 +227,33 @@ def ask_stream(
                         events.put(("quota", quota))
                 except Exception:
                     logger.exception("Quota settlement failed")
+            events.put(("done", {}))
+            events.put(None)
+
+    context = contextvars.copy_context()
+    threading.Thread(target=context.run, args=(work,), daemon=True).start()
+    return _drain(events)
+
+
+def classic_ask_stream(*, ask: Callable[[Callable[[str], None]], Any]) -> Iterator[str]:
+    """Stream ``step`` events, then the answer, for the fixed-corpus (classic) pipeline.
+
+    ``ask(on_step)`` runs the pipeline and returns the response model. Same framing as
+    ``ask_stream`` (``answer`` / ``error`` / ``done``), without conversations or quota.
+    """
+
+    events: queue.Queue[tuple[str, Any] | None] = queue.Queue()
+
+    def work() -> None:
+        try:
+            response = ask(lambda node: events.put(("step", {"node": node})))
+            events.put(("answer", response.model_dump()))
+        except LlmGatewayError as error:
+            events.put(("error", {"detail": str(error), "code": error.code}))
+        except Exception:
+            logger.exception("Classic question failed")
+            events.put(("error", {"detail": "The question could not be processed.", "code": "internal_error"}))
+        finally:
             events.put(("done", {}))
             events.put(None)
 

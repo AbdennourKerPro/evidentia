@@ -1,6 +1,10 @@
-import { renderMarkdown, setMathRenderer } from "./markdown.js?v=math-20261105";
+import { renderMarkdown, setMathRenderer } from "./markdown.js?v=ux-20261106";
 import { createConversationStore } from "./conversations.js?v=agent-20261105";
-import { postEventStream, describeProgress } from "./sse.js?v=agent-20261105";
+import { postEventStream, describeProgress } from "./sse.js?v=progress-20261106";
+import { diagnosisLines, feedbackContext } from "./diagnosis.js?v=diag-20261106";
+import { createProgress } from "./progress.js?v=progress-20261106";
+import { localizeMessage, describeAbstention, arxivPdfUrl } from "./messages.js?v=ux-20261106";
+import { coverageGaps, isPartialAnswer, abstentionActions, gapSummary } from "./abstention.js?v=help-20261106";
 import { loadAccess, describeQuota, canAsk } from "./access.js?v=access-20261106";
 
 const form = document.querySelector("#question-form");
@@ -172,7 +176,7 @@ addPaperForm.addEventListener("submit", async (event) => {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ arxiv_id: arxivId }),
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.detail || "Ajout impossible.");
+    if (!response.ok) throw new Error(localizeMessage(payload.detail, payload.code) || "Ajout impossible.");
     addPaperInput.value = "";
     showAgentError("");
     await loadAgentPapers();
@@ -236,11 +240,12 @@ function renderConversation() {
   messageList.replaceChildren();
   const messages = history.active().messages;
   welcome.hidden = messages.length > 0;
+  let lastQuestion = "";
   for (const entry of messages) {
-    if (entry.role === "user") appendUserMessage(entry.text, entry.scope || "");
+    if (entry.role === "user") { lastQuestion = entry.text; appendUserMessage(entry.text, entry.scope || ""); }
     else {
       const message = appendLoadingMessage();
-      if (entry.role === "assistant") renderAssistantMessage(message, entry.payload);
+      if (entry.role === "assistant") renderAssistantMessage(message, entry.payload, lastQuestion);
       else renderError(message, entry.text);
     }
   }
@@ -257,6 +262,9 @@ function applyMode() {
   modeHelp.textContent = agent
     ? "Un agent à appels d’outils cherche sur arXiv les articles utiles à chaque question, les télécharge et les indexe. Les articles restent attachés à la conversation."
     : "Corpus fixe de cinq articles (CLIP, DINOv2, SAM, BLIP-2, LLaVA), sélectionnables ci-dessous.";
+  document.querySelectorAll(".suggestions [data-mode]").forEach(button => {
+    button.hidden = (button.dataset.mode === "agent") !== agent;
+  });
   welcomeScope.textContent = agent
     ? "Posez une question : les articles arXiv nécessaires seront trouvés et ajoutés pour vous."
     : "Posez une question sur vos articles scientifiques.";
@@ -310,7 +318,7 @@ function renderAgentPapers() {
       remove.disabled = true;
       try {
         const response = await fetch(`/conversations/${history.active().id}/papers/${encodeURIComponent(paper.document_id)}`, { method: "DELETE" });
-        if (!response.ok) throw new Error((await response.json()).detail || "Retrait impossible.");
+        if (!response.ok) { const body = await response.json(); throw new Error(localizeMessage(body.detail, body.code) || "Retrait impossible."); }
         await loadAgentPapers();
       } catch (error) { showAgentError(error.message); remove.disabled = false; }
     });
@@ -320,6 +328,7 @@ function renderAgentPapers() {
 }
 
 function applyDiagnosticsVisibility() {
+  for (const score of messageList.querySelectorAll(".summary-score")) score.hidden = !diagnosticsToggle.checked;
   for (const node of messageList.querySelectorAll(".execution-disclosure, .llm-usage")) {
     node.hidden = !diagnosticsToggle.checked || node.dataset.available !== "true";
   }
@@ -397,15 +406,24 @@ async function sendQuestion(question) {
   setLoading(true);
   scrollToMessage(assistantMessage);
   try {
-    const endpoint = pipelineMode.value === "agentic" ? "/agentic/ask" : "/ask";
-    const response = await fetch(endpoint, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, limit: 5, document_ids: documentIds }),
-    });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.detail || "La réponse n’a pas pu être produite.");
+    const body = { question, limit: 5, document_ids: documentIds, partial_answers: true };
+    let payload;
+    if (pipelineMode.value === "agentic") {
+      payload = await streamAnswer("/agentic/ask/stream", body, assistantMessage, {
+        interrupted: "La connexion a été interrompue avant la réponse. Réessayez.",
+      });
+    } else {
+      // The baseline has no intermediate steps to report.
+      const progress = createProgress(assistantMessage.querySelector(".answer-content"), "Recherche et rédaction de la réponse…");
+      setStatus(progress.lines()[0]);
+      const response = await fetch("/ask", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      payload = await response.json();
+      if (!response.ok) throw new Error(localizeMessage(payload.detail, payload.code) || "La réponse n’a pas pu être produite.");
+    }
     history.append({ role: "assistant", payload });
-    renderAssistantMessage(assistantMessage, payload);
+    renderAssistantMessage(assistantMessage, payload, question);
     setStatus("Vérifiez les informations dans les sources.");
   } catch (error) {
     history.append({ role: "error", text: error.message });
@@ -417,6 +435,25 @@ async function sendQuestion(question) {
   }
 }
 
+/** POST to a streaming endpoint: show each step as it happens, return the final answer payload. */
+async function streamAnswer(url, body, assistantMessage, { interrupted, onEvent } = {}) {
+  const progress = createProgress(assistantMessage.querySelector(".answer-content"));
+  setStatus(progress.lines()[0]);
+  let payload = null, failure = null;
+  await postEventStream(url, body, (event, data) => {
+    if (event === "answer") payload = data;
+    else if (event === "error") failure = localizeMessage(data.detail, data.code) || "La réponse n’a pas pu être produite.";
+    else if (onEvent && onEvent(event, data)) return;
+    else {
+      const line = describeProgress(event, data);
+      if (progress.add(line)) { setStatus(line); scrollToMessage(assistantMessage); }
+    }
+  });
+  if (failure) throw new Error(failure);
+  if (!payload) throw new Error(interrupted || "La connexion a été interrompue avant la réponse.");
+  return payload;
+}
+
 /** Agent mode: the server streams progress events, then the usual answer payload. */
 async function sendAgentQuestion(question) {
   const scope = `Agent · ${agentPapers.length} article(s) dans la conversation`;
@@ -424,37 +461,22 @@ async function sendAgentQuestion(question) {
   welcome.hidden = true;
   appendUserMessage(question, scope);
   const assistantMessage = appendLoadingMessage();
-  const progress = document.createElement("ul");
-  progress.className = "progress-lines";
-  assistantMessage.querySelector(".answer-content").append(progress);
-  const addProgress = (text) => {
-    const item = document.createElement("li");
-    item.textContent = text;
-    progress.append(item);
-    setStatus(text);
-    scrollToMessage(assistantMessage);
-  };
   questionInput.value = ""; resizeComposer();
   setLoading(true);
   scrollToMessage(assistantMessage);
-  let payload = null, failure = null;
   try {
-    await postEventStream(`/conversations/${history.active().id}/ask`, {
+    const payload = await streamAnswer(`/conversations/${history.active().id}/ask`, {
       question, limit: 5, pipeline: pipelineMode.value, discovery: discoveryMode.value,
-    }, (event, data) => {
-      if (event === "answer") payload = data;
-      else if (event === "error") failure = data.detail || "La réponse n’a pas pu être produite.";
-      else if (event === "quota") { access = { ...access, invite: data }; renderAccess(); }
-      else {
-        const line = describeProgress(event, data);
-        if (line) addProgress(line);
+    }, assistantMessage, {
+      interrupted: "La connexion a été interrompue avant la réponse. Vos articles restent ajoutés : réessayez.",
+      onEvent: (event, data) => {
+        if (event === "quota") { access = { ...access, invite: data }; renderAccess(); return true; }
         if (event === "paper.added") loadAgentPapers();
-      }
+        return false; // also shown as a progress line
+      },
     });
-    if (failure) throw new Error(failure);
-    if (!payload) throw new Error("La connexion a été interrompue avant la réponse. Vos articles restent ajoutés : réessayez.");
     history.append({ role: "assistant", payload });
-    renderAssistantMessage(assistantMessage, payload);
+    renderAssistantMessage(assistantMessage, payload, question);
     setStatus("Vérifiez les informations dans les sources.");
   } catch (error) {
     history.append({ role: "error", text: error.message });
@@ -558,7 +580,7 @@ function appendLoadingMessage() {
   return messageList.lastElementChild;
 }
 
-function renderAssistantMessage(message, payload) {
+function renderAssistantMessage(message, payload, question = "") {
   const answer = message.querySelector(".answer-content");
   const state = message.querySelector(".answer-state");
   const sourcesBlock = message.querySelector(".sources-block");
@@ -568,11 +590,22 @@ function renderAssistantMessage(message, payload) {
   const evidenceList = message.querySelector(".evidence-list");
   const executionDisclosure = message.querySelector(".execution-disclosure");
 
-  renderMarkdown(answer, payload.answer);
+  const evidenceByReference = new Map(
+    payload.evidence.map((evidence) => [evidence.reference, evidence])
+  );
+  renderMarkdown(answer, payload.answer, {
+    references: new Set(evidenceByReference.keys()),
+    decorate: (button, reference) => {
+      const evidence = evidenceByReference.get(reference);
+      button.title = `${shortTitle(evidence.title)} · p. ${evidence.page} — ${excerpt(evidence.text)}`;
+      button.setAttribute("aria-label", `Source ${reference} : ${shortTitle(evidence.title)}, page ${evidence.page}`);
+      button.addEventListener("click", () => focusEvidence(disclosure, reference));
+    },
+  });
   setupFeedback(message, payload);
   state.hidden = !payload.abstained && !diagnosticsToggle.checked;
   state.textContent = payload.abstained
-    ? `Abstention — ${payload.reason}`
+    ? describeAbstention(payload.reason)
     : "Réponse fondée sur les passages récupérés";
   state.classList.toggle("is-abstained", payload.abstained);
   if (payload.llm) {
@@ -593,9 +626,6 @@ function renderAssistantMessage(message, payload) {
   }
 
   const citedReferences = new Set(payload.citations.map((citation) => citation.reference));
-  const evidenceByReference = new Map(
-    payload.evidence.map((evidence) => [evidence.reference, evidence])
-  );
   const sourceCount = new Set(payload.evidence.map((evidence) => evidence.document_id)).size;
 
   if (payload.citations.length === 0) {
@@ -613,6 +643,78 @@ function renderAssistantMessage(message, payload) {
   evidenceList.append(
     ...payload.evidence.map((evidence) => makeEvidencePanel(evidence, citedReferences))
   );
+  const help = makeAnswerHelp(payload, question, disclosure);
+  if (help) answer.after(help);
+}
+
+/** Explain an abstention or a partial answer, and offer the next step in one click. */
+function makeAnswerHelp(payload, question, disclosure) {
+  const partial = isPartialAnswer(payload);
+  if (!payload.abstained && !partial) return null;
+  const gaps = coverageGaps(payload.execution);
+  const box = document.createElement("aside");
+  box.className = payload.abstained ? "answer-help is-abstention" : "answer-help is-partial";
+  const summary = gapSummary(gaps, payload.abstained);
+  if (summary) {
+    const intro = document.createElement("p");
+    intro.className = "answer-help-summary";
+    intro.textContent = summary;
+    box.append(intro);
+    const list = document.createElement("ul");
+    list.className = "gap-list";
+    for (const aspect of gaps.covered) {
+      const item = document.createElement("li");
+      item.className = "gap-covered"; item.textContent = `Trouvé : ${aspect}`;
+      list.append(item);
+    }
+    for (const aspect of gaps.missing) {
+      const item = document.createElement("li");
+      item.className = "gap-missing"; item.textContent = `Non trouvé : ${aspect}`;
+      list.append(item);
+    }
+    box.append(list);
+  }
+  if (!payload.abstained || !question) return box.childElementCount ? box : null;
+
+  const actions = abstentionActions(payload, {
+    agentMode: isAgentMode(), inviteMode,
+    discoveryAuto: discoveryMode.value === "auto",
+    allArticlesSelected: documents.length > 0 && documents.every(doc => selectedDocumentIds.has(doc.document_id)),
+  });
+  const row = document.createElement("div");
+  row.className = "answer-help-actions";
+  for (const action of actions) {
+    const button = document.createElement("button");
+    button.type = "button"; button.textContent = action.label;
+    button.addEventListener("click", () => runAbstentionAction(action.id, question, disclosure));
+    row.append(button);
+  }
+  box.append(row);
+  return box;
+}
+
+function runAbstentionAction(id, question, disclosure) {
+  if (requestInProgress) return;
+  if (id === "show-evidence") {
+    disclosure.open = true;
+    disclosure.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  if (id === "rephrase") {
+    questionInput.value = question; resizeComposer(); questionInput.focus();
+    return;
+  }
+  if (!canAsk(access)) return;
+  if (id === "all-articles") {
+    selectedDocumentIds = new Set(documents.map(doc => doc.document_id));
+    renderSourceList();
+  } else if (id === "agent-mode") {
+    agentMode.value = "agent"; applyMode();
+  } else if (id === "enable-discovery") {
+    discoveryMode.value = "auto";
+  } else return;
+  persistPreferences();
+  sendQuestion(question);
 }
 
 function setupFeedback(message, payload) {
@@ -626,7 +728,10 @@ function setupFeedback(message, payload) {
     try {
       const response = await fetch(`/conversations/${history.active().id}/feedback`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, comment: comment || null, question: payload.question, answer: payload.answer.slice(0, 6000) }),
+        body: JSON.stringify({
+          rating, comment: comment || null, question: payload.question, answer: payload.answer.slice(0, 6000),
+          context: feedbackContext(payload, coverageGaps(payload.execution)),
+        }),
       });
       if (!response.ok) throw new Error();
       box.querySelectorAll("button, .feedback-label").forEach(node => { node.hidden = true; });
@@ -671,6 +776,14 @@ function renderExecutionTrace(disclosure, execution) {
     item.append(node, detail);
     return item;
   });
+  disclosure.querySelector(".execution-diagnosis")?.remove();
+  const diagnosis = diagnosisLines(execution);
+  if (diagnosis.length) {
+    const list = document.createElement("ul");
+    list.className = "execution-diagnosis";
+    list.append(...diagnosis.map((line) => { const item = document.createElement("li"); item.textContent = line; return item; }));
+    summary.after(list);
+  }
   steps.replaceChildren(
     ...execution.steps.map((step) => {
       const item = document.createElement("li");
@@ -685,6 +798,22 @@ function renderExecutionTrace(disclosure, execution) {
   );
 }
 
+/** Open the evidence list and highlight the passage behind a reference. */
+function focusEvidence(disclosure, reference) {
+  disclosure.open = true;
+  const target = [...disclosure.querySelectorAll("[data-reference]")].find(panel => panel.dataset.reference === reference);
+  if (!target) return;
+  target.open = true;
+  target.classList.add("is-targeted");
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => target.classList.remove("is-targeted"), 1600);
+}
+
+function excerpt(text) {
+  const flat = String(text).replace(/\s+/g, " ").trim();
+  return flat.length > 280 ? `${flat.slice(0, 277)}…` : flat;
+}
+
 function makeCitationButton(citation, disclosure, evidenceByReference) {
   const button = document.createElement("button");
   button.type = "button";
@@ -695,18 +824,7 @@ function makeCitationButton(citation, disclosure, evidenceByReference) {
   reference.textContent = `[${citation.reference}] `;
   button.append(reference, `${shortTitle(citation.title)} · p. ${citation.page}`);
 
-  button.addEventListener("click", () => {
-    disclosure.open = true;
-    const evidence = evidenceByReference.get(citation.reference);
-    const target = [...disclosure.querySelectorAll("[data-reference]")].find(panel => panel.dataset.reference === citation.reference);
-    if (!evidence || !target) {
-      return;
-    }
-    target.open = true;
-    target.classList.add("is-targeted");
-    target.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => target.classList.remove("is-targeted"), 1600);
-  });
+  button.addEventListener("click", () => focusEvidence(disclosure, citation.reference));
 
   return button;
 }
@@ -728,7 +846,12 @@ function makeEvidencePanel(evidence, citedReferences) {
   title.textContent = evidence.section;
   const meta = document.createElement("span");
   meta.className = "summary-meta";
-  meta.textContent = `${shortTitle(evidence.title)} · page ${evidence.page} · score de classement ${evidence.score.toFixed(3)}`;
+  meta.textContent = `${shortTitle(evidence.title)} · page ${evidence.page}`;
+  const score = document.createElement("span");
+  score.className = "summary-score";
+  score.textContent = ` · score de classement ${evidence.score.toFixed(3)}`;
+  score.hidden = !diagnosticsToggle.checked;
+  meta.append(score);
   main.append(title, meta);
   summary.append(reference, main);
 
@@ -747,6 +870,14 @@ function makeEvidencePanel(evidence, citedReferences) {
   const text = document.createElement("pre");
   text.className = "chunk-text";
   text.textContent = evidence.text;
+  const pdfUrl = arxivPdfUrl(evidence.document_id, evidence.page);
+  if (pdfUrl) {
+    const link = document.createElement("a");
+    link.className = "chunk-pdf-link";
+    link.href = pdfUrl; link.target = "_blank"; link.rel = "noopener noreferrer";
+    link.textContent = `Ouvrir la page ${evidence.page} du PDF ↗`;
+    provenance.append(" · ", link);
+  }
   body.append(provenance, text);
 
   panel.append(summary, body);

@@ -308,6 +308,18 @@ L'engrenage de l'interface propose deux modes de sources :
 | **Classique** | Corpus fixe de cinq articles, sélectionnables. Aucun changement par rapport aux jalons précédents ; `/ask` et `/agentic/ask` ne voient que ces articles. |
 | **Agent** | Avant de répondre, un agent à appels d'outils (API OpenAI Responses) choisit les articles utiles. Il dispose de `search_arxiv`, `lookup_arxiv_ids`, `add_paper_to_conversation` et `finish_source_selection` (≤ 6 appels LLM, ≤ 3 recherches, ≤ 2 téléchargements par question, ≤ 12 articles par conversation). Un article ajouté est téléchargé, converti par Docling (sans OCR), découpé, indexé dans Qdrant (`document_id = arxiv-<id><version>`) et rattaché à la conversation. Le pipeline LangGraph répond ensuite, **uniquement** sur les articles de la conversation. |
 
+**Plusieurs articles dans une conversation.** L'agent d'outils (a) voit le titre et le résumé de chaque
+article attaché ainsi que la question telle que saisie ; (b) doit déclarer les *sujets* de la question
+qu'aucun article attaché n'introduit (`uncovered_subjects`) : s'il en déclare sans avoir cherché, il est
+renvoyé chercher une fois ; (c) liste dans `focus_document_ids` tous les articles comparés ; (d) propose
+des alias en plus du nom court (les mots génériques comme « model » sont refusés). Côté réponse, ces
+comportements n'existent qu'en mode agent (drapeau `multi_paper`, jamais activé par le benchmark) : une
+comparaison sans noms porte sur tous les articles de la conversation (2 à 5), la recherche globale garantit
+au moins un passage par article proche du sommet du classement, la rédaction attribue chaque affirmation à
+son article et présente une comparaison en tableau. L'option « détails techniques » affiche la question
+reformulée, les appels de l'agent, sa justification et la stratégie ; un retour 👎/👍 les joint (colonne
+`context` de `python -m app.invites feedback --csv`).
+
 Les questions de suivi sont reformulées en questions autonomes, et une équation de la
 réponse absente des passages fournis déclenche une correction (voir le jalon 25).
 

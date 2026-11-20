@@ -123,6 +123,10 @@ class PaperIngestionTests(RegistryTestCase):
 
     def test_aliases_refuse_short_names(self):
         self.assertEqual(paper_ingestion.build_aliases("Foo", "AB"), [])
+        extra = paper_ingestion.build_aliases(
+            "Attention Is All You Need", "Transformer", ["Attention Is All You Need", "attention", "x" * 90, "Vaswani 2017"])
+        self.assertEqual(extra, [r"\btransformer\b", r"\battention is all you need\b", r"\bvaswani 2017\b"])
+        self.assertEqual(paper_ingestion.build_aliases("Segment Anything", "SAM"), [r"\bsam\b"])  # default unchanged
         self.assertEqual(paper_ingestion.build_aliases("Segment Anything", "SAM"), [r"\bsam\b"])
         self.assertEqual(
             paper_ingestion.build_aliases("DINOv2: Learning Robust Features", None), [r"\bdinov2\b"]
